@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - work/v1.0.1-results
+      - work/v1.0.2-ios-picker
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -36,9 +37,9 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Check development root (16 browser scenarios)
+      - name: Check development root browser scenarios
         run: TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs
-      - name: Check packaged PWA (16 browser scenarios)
+      - name: Check packaged PWA browser scenarios
         run: TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs
       - name: Prepare portable browser adapter
         run: |

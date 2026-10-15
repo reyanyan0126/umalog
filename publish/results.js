@@ -30,8 +30,19 @@ export function mountResults(form,lines,{save,onDirty,notify,guard}){
   const select=(values,current)=>values.map(([v,label])=>`<option value="${v}" ${v===current?'selected':''}>${label}</option>`).join('');
   function values(){return rows.map(r=>({...r,...resultValue(r,r.choice,r.payout,r.refund,r.status)}));}
   function preview(){try{const s=summarize(values());form.querySelector('#resultPreview').textContent=`保存後のこの記録の収支：${s.settledCount?(s.profit>0?'+':'')+yen(s.profit):'未計算'} ／ 結果待ち ${s.pendingCount}点`;}catch(e){form.querySelector('#resultPreview').textContent=e.message;}}
-  function draw(){container.innerHTML=rows.map((r,i)=>`<div class="line"><div class="line-head">${r.numbers.join('－')} <small>購入 ${yen(r.stake)}</small></div><label>馬券の結果<select data-choice="${i}">${select(choices,r.choice)}</select></label><label ${!['hit','advanced'].includes(r.choice)?'hidden':''}>的中で受け取った金額（払戻）<input data-payout="${i}" type="number" min="0" step="1" inputmode="numeric" value="${r.payout}"></label><div ${r.choice!=='advanced'?'hidden':''}><label>詳細な状態<select data-state="${i}">${select([['pending','結果待ち'],['settled','結果確定'],['void','全額返還のみ']],r.status)}</select></label><label>取消などで戻った金額（返還）<input data-refund="${i}" type="number" min="0" max="${r.stake}" step="1" inputmode="numeric" value="${r.refund}"></label></div>${r.choice==='refund'?`<p>返還 ${yen(r.stake)}（自動入力）</p>`:''}</div>`).join('');preview();}
-  container.addEventListener('change',e=>{const i=e.target.dataset.choice;if(i===undefined)return;rows[i].choice=e.target.value;onDirty();draw();container.querySelector(`[data-choice="${i}"]`).focus();});
+  function draw(){container.innerHTML=rows.map((r,i)=>`<div class="line" data-result-row="${i}"><div class="line-head">${r.numbers.join('－')} <small>購入 ${yen(r.stake)}</small></div><label>馬券の結果<select data-choice="${i}">${select(choices,r.choice)}</select></label><label data-payout-wrap ${!['hit','advanced'].includes(r.choice)?'hidden':''}>的中で受け取った金額（払戻）<input data-payout="${i}" type="number" min="0" step="1" inputmode="numeric" value="${r.payout}"></label><div data-advanced-wrap ${r.choice!=='advanced'?'hidden':''}><label>詳細な状態<select data-state="${i}">${select([['pending','結果待ち'],['settled','結果確定'],['void','全額返還のみ']],r.status)}</select></label><label>取消などで戻った金額（返還）<input data-refund="${i}" type="number" min="0" max="${r.stake}" step="1" inputmode="numeric" value="${r.refund}"></label></div><p data-refund-note ${r.choice==='refund'?'':'hidden'}>返還 ${yen(r.stake)}（自動入力）</p></div>`).join('');preview();}
+  // Never replace or refocus an open native picker. iOS Safari can reopen its menu.
+  container.addEventListener('change',e=>{
+    const i=e.target.dataset.choice;
+    if(i===undefined)return;
+    const row=rows[Number(i)],element=e.target.closest('[data-result-row]');
+    row.choice=e.target.value;
+    onDirty();
+    element.querySelector('[data-payout-wrap]').hidden=!['hit','advanced'].includes(row.choice);
+    element.querySelector('[data-advanced-wrap]').hidden=row.choice!=='advanced';
+    element.querySelector('[data-refund-note]').hidden=row.choice!=='refund';
+    preview();
+  });
   container.addEventListener('input',e=>{for(const key of ['payout','refund','state']){const i=e.target.dataset[key];if(i!==undefined){rows[i][key==='state'?'status':key]=key==='state'?e.target.value:(e.target.value===''?NaN:Number(e.target.value));onDirty();preview();}}});
   form.querySelector('#zero').onclick=()=>{for(const r of rows)if(r.choice==='pending')r.choice='miss';onDirty();draw();notify('結果待ちを不的中にしました。保存すると反映されます。');};
   form.onsubmit=guard(async e=>{e.preventDefault();await save(values().map(({choice,...r})=>r));});
