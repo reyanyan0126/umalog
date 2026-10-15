@@ -56,7 +56,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.goForward();await page.waitForTimeout(150);assert.equal(await page.locator('nav [aria-current]').getAttribute('href'),'#analysis');
   await page.setViewportSize({width:360,height:800});const style=await page.addStyleTag({content:'body{font-size:200%}'});
   for(const route of ['home','entry','history','analysis','growth','settings']){await nav(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' enlarged overflow');}
-  await style.evaluate(e=>e.remove());await page.locator('#motion').uncheck();await page.locator('#settingsForm button').click();await page.reload();await page.waitForSelector('#motion');assert.equal(await page.locator('#motion').isChecked(),false);
+  await style.evaluate(e=>e.remove());await page.locator('#motion').uncheck();await page.locator('#settingsForm button').click();await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('設定を保存しました'));await page.reload();await page.waitForSelector('#motion');assert.equal(await page.locator('#motion').isChecked(),false);
   await nav('home');await page.locator('#tipsOpen').click();assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');await page.locator('#tipsClose').click();
  });
  let backup;
