@@ -17,3 +17,12 @@ nav a span{transition:transform 150ms ease-out}
 nav a[aria-current=page] span{transform:translateY(-2px)}
 body.no-motion *,body.no-motion *::before,body.no-motion *::after{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.dock-icon{display:block;font-style:normal;line-height:1.1;transition:transform 210ms ease-out}
+nav a[aria-current=page] .dock-icon{transform:translateY(-2px) scale(1.08)}
+.tips-launch{display:flex;justify-content:flex-end;margin:-4px 0 12px}.tips-launch button{width:46px;padding:8px;border-radius:50%;font-size:20px}
+.tips-backdrop{position:fixed;inset:0;z-index:50;background:#152f25aa;display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+.tips-panel{width:min(100%,480px);max-height:100%;overflow:auto;background:#fffdf7;border-radius:22px;padding:22px;box-shadow:0 18px 60px #10271b40;animation:tip-enter 180ms ease-out}
+.tips-panel h2{margin:0}.tips-panel label{margin-top:16px}.tips-panel p{overflow-wrap:anywhere}.tips-panel small{display:block;margin-top:14px}.tips-panel .row{flex-wrap:wrap}#tipsContent{min-height:160px}
+@keyframes tip-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:430px){.row{flex-wrap:wrap}.row .pet{width:110px;height:110px}.filter{grid-template-columns:1fr}.chart-row{grid-template-columns:70px 1fr;}.chart-row strong{grid-column:2}.tips-panel{padding:18px}}
