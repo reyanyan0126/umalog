@@ -39,6 +39,26 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.locator('[data-choice="1"]').selectOption('hit');await page.locator('#settlement button[type=submit]').click();await page.waitForTimeout(100);assert.match(await page.locator('#notice').innerText(),/1円以上/);
   await page.evaluate(async original=>{const {save}=await import('./db.js');await save(original);},original);await nav('home');await page.reload();await page.waitForSelector('.hero');
  });
+ await pass('v1.0.1: 50 tips, categories, focus trap, offline and reduced motion',async()=>{
+  await nav('home');await page.locator('#tipsOpen').click();assert.equal(await page.locator('#tipsClose').evaluate(e=>e===document.activeElement),true);
+  const titles=new Set();for(let i=0;i<50;i++){titles.add(await page.locator('#tipTitle').innerText());await page.locator('#tipsNext').click();}assert.equal(titles.size,50);
+  await page.locator('#tipsPrev').click();assert.match(await page.locator('#tipsCount').innerText(),/50 \/ 50/);
+  await page.locator('#tipsCategory').selectOption('レースの言葉');assert.match(await page.locator('#tipsCount').innerText(),/1 \/ 10/);
+  await page.locator('#tipsNext').focus();await page.keyboard.press('Tab');assert.equal(await page.locator('#tipsClose').evaluate(e=>e===document.activeElement),true);
+  await page.keyboard.press('Shift+Tab');assert.equal(await page.locator('#tipsNext').evaluate(e=>e===document.activeElement),true);
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#tipsModal').count(),0);assert.equal(await page.locator('#tipsOpen').evaluate(e=>e===document.activeElement),true);
+  await context.setOffline(true);await page.reload();await page.locator('#tipsOpen').click();await page.locator('#tipsNext').click();assert.ok(await page.locator('#tipBody').innerText());
+  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');
+  await page.locator('#tipsClose').click();await context.setOffline(false);
+ });
+ await pass('v1.0.1: dock history navigation, enlarged text and settings persistence',async()=>{
+  await nav('home');await nav('analysis');await page.goBack();await page.waitForTimeout(150);assert.equal(await page.locator('nav [aria-current]').getAttribute('href'),'#home');
+  await page.goForward();await page.waitForTimeout(150);assert.equal(await page.locator('nav [aria-current]').getAttribute('href'),'#analysis');
+  await page.setViewportSize({width:360,height:800});const style=await page.addStyleTag({content:'body{font-size:200%}'});
+  for(const route of ['home','entry','history','analysis','growth','settings']){await nav(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' enlarged overflow');}
+  await style.evaluate(e=>e.remove());await page.locator('#motion').uncheck();await page.locator('#settingsForm button').click();await page.reload();await page.waitForSelector('#motion');assert.equal(await page.locator('#motion').isChecked(),false);
+  await nav('home');await page.locator('#tipsOpen').click();assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');await page.locator('#tipsClose').click();
+ });
  let backup;
  await pass('09: JSON export + preview + confirmed replacement restores data',async()=>{await nav('settings');await page.evaluate(()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false});});const dp=page.waitForEvent('download');await page.locator('#export').click();const dl=await dp;backup=JSON.parse(fs.readFileSync(await dl.path(),'utf8'));assert.equal(backup.lines.length,1);await nav('history');await page.locator('[data-detail]').first().click();await page.locator('#delete').click();await nav('settings');await page.locator('#import').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});await page.waitForSelector('#restore');await page.locator('#restoreAgree').check();await page.locator('#restore').click();await page.waitForSelector('.hero');const d=await page.evaluate(async()=>{const {load}=await import('./db.js');return load();});assert.deepEqual(d.lines,backup.lines);});
  await pass('Invalid restore keeps existing data',async()=>{await nav('settings');await page.locator('#import').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"schemaVersion":999}')});await page.waitForTimeout(100);assert.equal(await page.locator('#restore').count(),0);const d=await page.evaluate(async()=>{const {load}=await import('./db.js');return load();});assert.equal(d.lines.length,1);});
