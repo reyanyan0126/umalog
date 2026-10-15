@@ -1,0 +1,54 @@
+name: Umalog v1.0.1 development verification
+
+on:
+  push:
+    branches:
+      - work/v1.0.1-results
+    paths:
+      - '.github/workflows/verify-v101.yml'
+      - '**/*.js'
+      - 'tests/**'
+      - 'publish/**'
+      - 'index.html'
+      - 'style.css'
+      - 'manifest.webmanifest'
+      - 'PROGRESS.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Unit, browser and PWA upgrade regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Core, result-state and tips tests
+        run: npm test
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check development root (16 browser scenarios)
+        run: TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs
+      - name: Check packaged PWA (16 browser scenarios)
+        run: TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs
+      - name: Prepare portable browser adapter
+        run: |
+          cat > tests/ci-chromium.cjs <<'EOF'
+          module.exports = {
+            executablePath: async () => require('playwright').chromium.executablePath(),
+            args: []
+          };
+          EOF
+      - name: Old v1.0.0 to v1.0.1: preserve IndexedDB and offline behavior
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
+      - name: Fresh session update protects unsaved edits
+        run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
