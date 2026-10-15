@@ -1,16 +1,16 @@
-> 開発ブランチの現状は [PROGRESS.md](PROGRESS.md) を参照。以下はv1.0.0当時の記録です。公開中のmainは変更していません。
+> **公開URL:** https://reyanyan0126.github.io/umalog/ ｜ **現行版:** v1.0.1。初版との差分は [QA-V1.0.1.md](QA-V1.0.1.md) と [PROGRESS.md](PROGRESS.md) を参照。公開後の実機でのアップグレード検証は別途実施します。
 
-# うまログ（仮）MVP 1.0.0
+# うまログ（仮） v1.0.1
 
 競馬収支管理＋鉛筆画マスコット育成PWA。2026年10月15日の実装指示書に基づく初版です。
 
-**公開は未実施です。iPhone / LG V60 の実機確認は未実施です。**
+**GitHub Pagesは公開済み。旧v1.0.0のiPhone初期画面表示は確認済み。v1.0.1のiPhone/Android実機更新は未検証です。**
 HTML・CSS・ES Modules・IndexedDB・Service Workerのみで稼働します。利用時のNode.js、インストール用ビルド、CDN、アカウント、サーバーDBは不要です。公開前に「TEST-RESULTS.md」と「GUIDE.md」を読んでください。
 
 ## まず使うには
 
-1. `GUIDE.md` に沿って、`publish` フォルダ内の16ファイルをGitHubリポジトリ直下に配置します。
-2. 承認後にGitHub Pagesを有効化します。
+1. 既存公開サイト https://reyanyan0126.github.io/umalog/ を開きます。新規設置のみ `GUIDE.md` と `publish/` を参照。
+2. GitHub Pagesは設定済みです。
 3. HTTPSの公開URLをSafariまたはChromeで開きます。
 4. ホーム画面へ追加して利用します。初回読み込みはオンラインで行います。
 
@@ -21,11 +21,12 @@ ZIPを「ファイル」で展開してindex.htmlを直接開く方法は、ES M
 - ホーム／馬券登録／履歴／分析／育成の5画面と設定
 - JRA10場、1〜12R、8券種、同一レース複数券種
 - 通常・BOX入力、点数・金額計算、未確定買い目の追加合算または別行登録
-- 買い目単位の払戻・返還・未確定管理、0円一括精算補助
+- 買い目単位の的中・不的中・結果待ち・返還・詳細結果管理、一括不的中補助
 - 編集・削除・履歴フィルター、日／月／年／競馬場／券種の分析
 - 日本時間の月曜始まりによる週次EXP再計算、振り返り、5段階SVGと待機アニメーション
 - IndexedDB保存、JSON出力・検証・確認付き全件復元
 - オフラインキャッシュ、更新通知、モーション軽減設定
+- ホームでオフライン競馬豆知識50件、下部メニューのスライド、文言・表示の簡略化
 
 ## ファイル構成
 
@@ -43,7 +44,7 @@ ZIPを「ファイル」で展開してindex.htmlを直接開く方法は、ES M
 | `tests/core.test.js` | Node標準機能だけで実行可能な計算テスト |
 | `tests/browser.cjs` | Playwrightによるブラウザ操作テスト（開発者向け） |
 | `tools/prepare_publish.py` | ソースからフラットな公開用フォルダを作る任意の開発補助 |
-| `publish/` | iPhoneのファイル選択だけで配置できる公開用16ファイル |
+| `publish/` | iPhoneのファイル選択だけで配置できる公開用19ファイル |
 | `GUIDE.md` | iPhoneからの公開、iPhone・Android利用、バックアップ手順 |
 | `TEST-RESULTS.md` | 実施済み・未検証・仕様上の扱い |
 
