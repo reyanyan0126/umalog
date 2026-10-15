@@ -1,0 +1,23 @@
+{
+  "engine": "133.0.6943.0",
+  "viewportTests": [
+    "430x932",
+    "360x800"
+  ],
+  "results": [
+    "12 / 14: empty screens at mobile viewport, no horizontal overflow",
+    "02: BOX UI generates 10 lines and 1000 yen",
+    "Register multi-type same race and actual settlement",
+    "10: reload preserves IndexedDB records",
+    "06: zero shortcut settles pending rows / 04 race count is one",
+    "08: edit updates home + analysis; delete updates all",
+    "v1.0.1: dock tracks detail, settings, direct routes and reduced motion",
+    "v1.0.1: mixed partial refunds preserved and pending-only batch",
+    "09: JSON export + preview + confirmed replacement restores data",
+    "Invalid restore keeps existing data",
+    "11: review awards once and is retained across reload",
+    "13: offline cold page opens cached subpath app and saved records",
+    "14: Android-sized 360px layout and reduced-motion",
+    "No uncaught browser errors"
+  ]
+}
