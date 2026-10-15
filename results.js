@@ -1,0 +1,39 @@
+import {check,money,summarize} from './core.js';
+
+// UI choices never change the persisted schema.
+export function resultChoice(line){
+  if(line.status==='pending')return 'pending';
+  if(line.refund>0)return 'advanced'; // preserve even legacy settled full refunds
+  return line.payout>0?'hit':'miss';
+}
+export function resultValue(line,choice,payout=0,refund=0,status=line.status){
+  if(choice==='pending')return {status:'pending',payout:0,refund:0};
+  if(choice==='miss')return {status:'settled',payout:0,refund:0};
+  if(choice==='refund')return {status:'void',payout:0,refund:line.stake};
+  if(choice==='hit'){money(payout);check(payout>0,'的中で受け取った金額を1円以上で入力してください。');return {status:'settled',payout,refund:0};}
+  check(choice==='advanced','結果を選択してください。');
+  money(payout);money(refund);
+  check(['pending','settled','void'].includes(status),'結果の状態が不正です。');
+  check(refund<=line.stake,'返還額が購入額を超えています。');
+  check(status!=='pending'||(!payout&&!refund),'結果待ちには受取額を設定できません。');
+  check(status!=='void'||(!payout&&refund===line.stake),'全額返還では購入額だけが戻ります。');
+  check(!(refund===line.stake&&payout>0),'全額返還に払戻は設定できません。');
+  return {status,payout,refund};
+}
+
+export function mountResults(form,lines,{save,onDirty,notify,guard}){
+  const yen=n=>n.toLocaleString('ja-JP')+'円';
+  const rows=lines.map(l=>({...l,choice:resultChoice(l)}));
+  form.innerHTML='<section class="card"><h2>買い目ごとの結果入力</h2><p class="help">払戻は的中で受け取った合計額（100円あたりの配当ではありません）。返還は取消などで購入額が戻ることで、的中には含めません。</p><button type="button" id="zero" class="quiet full">残りの買い目をまとめて不的中にする</button><p class="help">結果待ちだけを変更します。入力済みの的中・返還は保持します。</p><div id="resultRows"></div><p id="resultPreview" role="status"></p><button type="submit" class="full accent">結果を保存・集計に反映</button></section>';
+  const container=form.querySelector('#resultRows');
+  const choices=[['pending','結果待ち'],['hit','的中'],['miss','不的中'],['refund','出走取消などで返金'],['advanced','詳細入力（一部返還など）']];
+  const select=(values,current)=>values.map(([v,label])=>`<option value="${v}" ${v===current?'selected':''}>${label}</option>`).join('');
+  function values(){return rows.map(r=>({...r,...resultValue(r,r.choice,r.payout,r.refund,r.status)}));}
+  function preview(){try{const s=summarize(values());form.querySelector('#resultPreview').textContent=`保存後のこの記録の収支：${s.settledCount?(s.profit>0?'+':'')+yen(s.profit):'未計算'} ／ 結果待ち ${s.pendingCount}点`;}catch(e){form.querySelector('#resultPreview').textContent=e.message;}}
+  function draw(){container.innerHTML=rows.map((r,i)=>`<div class="line"><div class="line-head">${r.numbers.join('－')} <small>購入 ${yen(r.stake)}</small></div><label>馬券の結果<select data-choice="${i}">${select(choices,r.choice)}</select></label><label ${!['hit','advanced'].includes(r.choice)?'hidden':''}>的中で受け取った金額（払戻）<input data-payout="${i}" type="number" min="0" step="1" inputmode="numeric" value="${r.payout}"></label><div ${r.choice!=='advanced'?'hidden':''}><label>詳細な状態<select data-state="${i}">${select([['pending','結果待ち'],['settled','結果確定'],['void','全額返還のみ']],r.status)}</select></label><label>取消などで戻った金額（返還）<input data-refund="${i}" type="number" min="0" max="${r.stake}" step="1" inputmode="numeric" value="${r.refund}"></label></div>${r.choice==='refund'?`<p>返還 ${yen(r.stake)}（自動入力）</p>`:''}</div>`).join('');preview();}
+  container.addEventListener('change',e=>{const i=e.target.dataset.choice;if(i===undefined)return;rows[i].choice=e.target.value;onDirty();draw();container.querySelector(`[data-choice="${i}"]`).focus();});
+  container.addEventListener('input',e=>{for(const key of ['payout','refund','state']){const i=e.target.dataset[key];if(i!==undefined){rows[i][key==='state'?'status':key]=key==='state'?e.target.value:(e.target.value===''?NaN:Number(e.target.value));onDirty();preview();}}});
+  form.querySelector('#zero').onclick=()=>{for(const r of rows)if(r.choice==='pending')r.choice='miss';onDirty();draw();notify('結果待ちを不的中にしました。保存すると反映されます。');};
+  form.onsubmit=guard(async e=>{e.preventDefault();await save(values().map(({choice,...r})=>r));});
+  draw();
+}
