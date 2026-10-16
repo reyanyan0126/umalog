@@ -1,4 +1,6 @@
-> dev.3 開発ブランチでの追加: 育成タップ改善、分析ゲージ/折りたたみ、重賞11件の部分収録と選択登録、ホーム3件/全件/4期間。未公開。詳細は [DEV3-PROGRESS.md](DEV3-PROGRESS.md)、[DEV3-DATA.md](DEV3-DATA.md)、[QA-DEV3.md](QA-DEV3.md)。以下のdev.2記録は公開済み履歴です。
+> **dev.4開発ブランチ（未公開）**：収支カレンダー（日別の小さな収支額・結果待ち・重賞名・タップ詳細）を追加。既存会計は読み取り専用で表示。重賞の年間全件化は別工程。詳細は [DEV4-CALENDAR.md](DEV4-CALENDAR.md) と [WORK-HANDOFF-GRADED-2026-2027.md](WORK-HANDOFF-GRADED-2026-2027.md)。
+
+ > dev.3公開済み履歴（当時の開発メモ）: 育成タップ改善、分析ゲージ/折りたたみ、重賞11件の部分収録と選択登録、ホーム3件/全件/4期間。未公開。詳細は [DEV3-PROGRESS.md](DEV3-PROGRESS.md)、[DEV3-DATA.md](DEV3-DATA.md)、[QA-DEV3.md](QA-DEV3.md)。以下のdev.2記録は公開済み履歴です。
 
 > **公開承認済み（2026-10-16）**：利用者の「次の作業に入って、公開までしていいよ」により、検証済みv1.1.0-dev.2のmain反映・公開を承認。公開対象コードはf7358be468c4e7fec791c701091c6d8a53ce522cから変更なし。GitHub CI成功：https://github.com/reyanyan0126/umalog/actions/runs/38918959335 。実レースデータは0件、本番自動取得・自動精算保存は未提供。iPhone/LG V60実機は未検証。以下の「未公開」「公開禁止」「main未変更」は承認前の作業記録です。
 
