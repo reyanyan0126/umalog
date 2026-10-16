@@ -33,3 +33,6 @@ nav a[aria-current=page] .dock-icon{transform:translateY(-2px) scale(1.08)}
 #raceInfoPanel button:disabled{cursor:not-allowed}
 /* Local metadata and nursery: bounded details, large touch targets. */
 .candidate-buttons{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.candidate-buttons button{max-width:100%;white-space:normal}.calendar-list{max-height:360px;overflow:auto;overflow-wrap:anywhere}.calendar-list pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}.nursery{text-align:center}.pet-touch{display:block;background:transparent;border:0;margin:auto;padding:0;min-width:200px}.nursery .pet{width:200px;height:170px;object-fit:contain;animation:none}.nursery .wide-number{display:block;font-size:1rem;margin:8px}.nursery progress{display:block;max-width:240px;margin:auto}.pet-touch.react .pet{animation:pet-nod .4s ease-in-out}summary{min-height:44px;padding:10px 0;cursor:pointer}button{min-height:44px}input[type=file]{max-width:100%}@keyframes pet-nod{50%{transform:rotate(-5deg) translateY(3px)}}@media(prefers-reduced-motion:reduce){.pet-touch.react .pet{animation:none}}.no-motion .pet-touch.react .pet{animation:none}
+
+/* Keep pinch zoom available; suppress double-tap zoom only on care controls. */
+.pet-touch, #care { touch-action: manipulation; }
