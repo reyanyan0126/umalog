@@ -40,3 +40,31 @@ nav a[aria-current=page] .dock-icon{transform:translateY(-2px) scale(1.08)}
 .graded-list{list-style:none;padding:0;margin:0}.graded-list li{padding:12px 0;border-bottom:1px solid #dce4df}.graded-link{display:flex;flex-direction:column;gap:6px;min-height:44px;text-decoration:none;color:inherit;overflow-wrap:anywhere}.graded-link[aria-disabled]{opacity:.65}.grade-one{border:1px solid currentColor;font-weight:700}#gradedFull{max-height:65vh;overflow:auto}#gradedPicker select{max-width:100%;width:100%}
 
 .share-row{padding:12px 0;border-bottom:1px solid #dce4df}.share-row meter{width:100%;height:18px;accent-color:#28634d}.share-row small{display:block;line-height:1.6}.share-row .row{flex-wrap:wrap}.share-chart{margin:12px 0}
+
+
+/* Read-only income calendar: seven small tap targets, large exact amounts in detail. */
+.ledger-calendar{padding:16px 11px}
+.ledger-calendar h2{margin-bottom:5px}
+.ledger-hint{font-size:12px;margin:0 0 12px}
+.ledger-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.ledger-weekday{font-size:11px;font-weight:600;text-align:center;color:var(--muted);padding-bottom:5px}
+.ledger-blank{min-width:0}
+.ledger-day{font:inherit;color:inherit;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:2px;min-width:0;min-height:68px;padding:4px 2px;border:1px solid var(--border);border-radius:8px;background:#fff;overflow:hidden;cursor:pointer}
+.ledger-number{font-size:11px;font-weight:700;line-height:1.2}
+.ledger-money{width:100%;font-size:clamp(9px,2.4vw,11px);line-height:1.25;letter-spacing:-.04em;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ledger-win .ledger-money{color:#28694a}
+.ledger-loss .ledger-money{color:#b64832}
+.ledger-even .ledger-money{color:#58645f}
+.ledger-pending{font-size:9px;color:#855b26;line-height:1.2}
+.ledger-event{font-size:9px;line-height:1.25;color:#3b6452;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ledger-today .ledger-number{text-decoration:underline;text-underline-offset:3px}
+.ledger-day[aria-pressed="true"]{border:2px solid var(--green);background:#edf6ef;padding:3px 1px}
+.ledger-day:focus-visible{outline:3px solid #d79a45;outline-offset:2px}
+.ledger-detail{margin-top:13px;padding:13px;background:#f6f8f4;border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}
+.ledger-detail h3{margin:0 0 8px;font-size:15px}
+.ledger-detail h4{margin:12px 0 5px;font-size:13px}
+.ledger-detail p{margin:5px 0;font-size:13px}
+.ledger-detail-profit{font-weight:700;font-variant-numeric:tabular-nums}
+.ledger-detail-list{margin:4px 0;padding-left:19px;font-size:13px;line-height:1.6}
+.ledger-detail-list li{margin:5px 0}
+@media(max-width:360px){.ledger-calendar{padding:13px 8px}.ledger-grid{gap:2px}.ledger-day{min-height:65px;padding:3px 1px}.ledger-day[aria-pressed="true"]{padding:2px 0}}
