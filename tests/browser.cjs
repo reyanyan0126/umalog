@@ -105,6 +105,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.evaluate(async()=>{const {saveCatalog}=await import('./db.js');await saveCatalog((await import('./race-info.js')).emptyCatalog());});
  });
  await nav('home');await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});
+ await nav('analysis');await page.locator('#racingStyle .style-group').first().evaluate(e=>e.open=true);await page.screenshot({path:'/tmp/umalog-style.png',fullPage:true});
  assert.deepEqual(errors,[]);results.push('No uncaught browser errors');
  fs.writeFileSync(process.env.RESULT_PATH||'/tmp/umalog-browser-results.json',JSON.stringify({engine:await browser.version(),viewportTests:['430x932','360x800'],results},null,2));
  await browser.close();if(server)server.close();console.log('ALL '+results.length+' BROWSER CHECKS PASSED');
