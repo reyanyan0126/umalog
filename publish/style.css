@@ -36,3 +36,7 @@ nav a[aria-current=page] .dock-icon{transform:translateY(-2px) scale(1.08)}
 
 /* Keep pinch zoom available; suppress double-tap zoom only on care controls. */
 .pet-touch, #care { touch-action: manipulation; }
+
+.graded-list{list-style:none;padding:0;margin:0}.graded-list li{padding:12px 0;border-bottom:1px solid #dce4df}.graded-link{display:flex;flex-direction:column;gap:6px;min-height:44px;text-decoration:none;color:inherit;overflow-wrap:anywhere}.graded-link[aria-disabled]{opacity:.65}.grade-one{border:1px solid currentColor;font-weight:700}#gradedFull{max-height:65vh;overflow:auto}#gradedPicker select{max-width:100%;width:100%}
+
+.share-row{padding:12px 0;border-bottom:1px solid #dce4df}.share-row meter{width:100%;height:18px;accent-color:#28634d}.share-row small{display:block;line-height:1.6}.share-row .row{flex-wrap:wrap}.share-chart{margin:12px 0}

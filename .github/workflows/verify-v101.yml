@@ -7,6 +7,7 @@ on:
       - work/v1.0.2-ios-picker
       - work/v1.1.0-style
       - work/v1.1-calendar-2026-2027
+      - work/v1.1.0-dev3-ui-graded-races
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -53,7 +54,7 @@ jobs:
             args: []
           };
           EOF
-      - name: 'Old v1.0.2 to development: preserve IndexedDB and offline behavior'
+      - name: 'Old dev.2 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
       - name: Fresh session update protects unsaved edits
         run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
@@ -61,3 +62,7 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs
       - name: Calendar and nursery publish browser checks
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs
+      - name: Graded race and dev3 UI source checks
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs
+      - name: Graded race and dev3 UI publish checks
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs
