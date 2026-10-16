@@ -2,7 +2,7 @@ import {TYPES,summarize} from './core.js';
 import {styleAnalysis,sampleComment} from './analytics.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const yen=n=>n.toLocaleString('ja-JP')+'円',rate=n=>n===null?'—':n.toFixed(1)+'％';
-export function styleView(data,records){const a=styleAnalysis(data,records),top=a.groups.type[0];
+export function styleView(data,records){const a=styleAnalysis(data,records);
  for(const type of TYPES)if(!a.groups.type.some(r=>r.label===type))a.groups.type.push({...summarize([]),label:type,records:0,points:0,stake:0,share:a.totalStake?0:null,averagePoints:0,averageStake:0,raceCount:0});
  const headings={type:'券種',venue:'競馬場',condition:'競走条件',grade:'格付け',surface:'芝・ダート・障害',distance:'距離帯',points:'1記録の購入点数',amount:'1記録の購入金額'};
  return `<section class="card" id="racingStyle"><h2>あなたの競馬スタイル</h2><p>対象：全期間・${a.races}レース / ${a.records}記録 / ${a.points}買い目行</p><p class="help">購入総額 ${yen(a.totalStake)}（結果待ち・返還分を含む）</p><p class="help">条件照合 ${a.matchedRaces} / ${a.races}レース。未取得は推測せず「情報未取得」にまとめます。更新された情報は過去の履歴にも表示時に再照合します。</p>
