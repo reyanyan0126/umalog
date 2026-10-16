@@ -30,3 +30,8 @@
 
 2026・2027年の実重賞データは11件の部分収録のまま。年間全件化は別作業。
 mainと公開サイトは新たな明示承認まで更新しない。
+
+## 開発ブランチのCI
+GitHub Actions 実行 38982514158 にて、単体・ブラウザ・旧版更新・source/publish一致は成功（最初の実装）。
+https://github.com/reyanyan0126/umalog/actions/runs/38982514158
+最終の文言整備後のコミットは、改めてGitHub Actions結果を確認すること。
