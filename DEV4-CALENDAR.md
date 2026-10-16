@@ -34,4 +34,5 @@ mainと公開サイトは新たな明示承認まで更新しない。
 ## 開発ブランチのCI
 GitHub Actions 実行 38982514158 にて、単体・ブラウザ・旧版更新・source/publish一致は成功（最初の実装）。
 https://github.com/reyanyan0126/umalog/actions/runs/38982514158
-最終の文言整備後のコミットは、改めてGitHub Actions結果を確認すること。
+最終の文言整備後の GitHub Actions 実行38982742860も成功。会計単体テスト計71件（既存66＋新規5）、既存ブラウザシナリオ計72件（root/publish合算）、新規カレンダーシナリオ計10件（root/publish合算）、PWA更新2シナリオ、source/publish29ファイルの整合性を確認。
+https://github.com/reyanyan0126/umalog/actions/runs/38982742860
