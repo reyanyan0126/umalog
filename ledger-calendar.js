@@ -1,5 +1,4 @@
 import {summarize,jstToday} from './core.js';
-import {STATUS} from './calendar.js';
 import {selectable} from './graded-races.js';
 
 // Derived read-only view: neither the source ledger nor IndexedDB is modified.
@@ -38,7 +37,7 @@ export function mountLedgerCalendar(host,data,events,month){
  const section=elem('section','card ledger-calendar');
  section.id='ledgerCalendar';
  const title=elem('h2',null,'収支カレンダー');
- const help=elem('p','help ledger-hint','日別の確定収支と登録済み重賞。日付を押すと詳細を表示');
+ const help=elem('p','help ledger-hint','確定収支（万は概数）と登録済み重賞。日付で詳細');
  section.append(title,help);
  const grid=elem('div','ledger-grid');
  grid.setAttribute('aria-label',month+'の収支カレンダー');
