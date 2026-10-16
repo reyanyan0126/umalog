@@ -88,7 +88,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
  await pass('13: offline cold page opens cached subpath app and saved records',async()=>{await context.setOffline(true);const offline=await context.newPage();await offline.goto(base+'#history');await offline.waitForSelector('[data-detail]');assert.equal(await offline.locator('[data-detail]').count(),1);await offline.close();await context.setOffline(false);});
  await pass('14: Android-sized 360px layout and reduced-motion',async()=>{await page.setViewportSize({width:360,height:800});await page.emulateMedia({reducedMotion:'reduce'});for(const r of ['home','entry','history','analysis','growth','settings']){await nav(r);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),r+' overflow');}await nav('growth');assert.equal(await page.locator('.pet').evaluate(e=>getComputedStyle(e).animationName),'none');});
  await pass('v1.1.0: style denominators, missing source, historical join and offline cache',async()=>{
-  await nav('home');assert.equal(await page.locator('#refreshRaces').isDisabled(),true);assert.match(await page.locator('#raceInfoStatus').innerText(),/提供元未設定/);assert.match(await page.locator('#raceInfoPanel').innerText(),/最終成功：未実施/);
+  await nav('home');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.equal(await page.locator('#refreshRaces').isDisabled(),true);assert.match(await page.locator('#raceInfoStatus').innerText(),/提供元未設定/);assert.match(await page.locator('#raceInfoPanel').innerText(),/最終成功：未実施/);
   await nav('entry');assert.match(await page.locator('#raceMatch').innerText(),/情報未取得/);
   await nav('analysis');assert.match(await page.locator('#racingStyle').innerText(),/購入総額/);assert.equal(await page.locator('#racingStyle .style-group').count(),8);
   await page.locator('#racingStyle .style-group').evaluateAll(els=>els.forEach(e=>e.open=true));
@@ -101,7 +101,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await context.setOffline(false);
   // Corrupt only disposable metadata; startup must still load accounting.
   await page.evaluate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('umalog',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put({version:999},'raceCatalog');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};}));
-  await nav('home');await page.reload();await page.waitForSelector('.hero');assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
+  await nav('home');await page.reload();await page.waitForSelector('.hero');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
   await page.evaluate(async()=>{const {saveCatalog}=await import('./db.js');await saveCatalog((await import('./race-info.js')).emptyCatalog());});
  });
  await nav('home');await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});

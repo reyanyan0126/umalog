@@ -1,3 +1,5 @@
+> **開発ブランチ：v1.1.0-dev.2（未公開）**。開催JSON取り込み・育成v2を追加。実レースデータの年間納品は未達（0件）。現行公開mainはv1.1.0-dev.1 / f890664。詳細は [開発報告](CALENDAR-GROWTH-V1.1.md) と [QA](QA-CALENDAR-GROWTH.md)。以下のリリース記録は過去の仕様です。
+
 > **公開更新対象：v1.1.0-dev.1（自己分析追加・先行公開版）**。2026-10-16に利用者からmain反映・公開更新の明示承認を取得。レース情報の本番取得は未提供です。GitHub CI成功：https://github.com/reyanyan0126/umalog/actions/runs/38880370243 。以下のv1.0.2説明は基準版の記録です。
 
 > **公開URL:** https://reyanyan0126.github.io/umalog/ ｜ **現行版:** v1.0.2。初版との差分は [QA-V1.0.1.md](QA-V1.0.1.md) と [PROGRESS.md](PROGRESS.md) を参照。公開後の実機でのアップグレード検証は別途実施します。
