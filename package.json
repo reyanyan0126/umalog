@@ -1,9 +1,9 @@
 {
   "name": "umalog-mvp",
-  "version": "1.0.2",
+  "version": "1.1.0-dev.1",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test tests/core.test.js tests/results.test.js tests/tips.test.js"
+    "test": "node --test tests/core.test.js tests/results.test.js tests/tips.test.js tests/analytics.test.js tests/race-info.test.js"
   }
 }
