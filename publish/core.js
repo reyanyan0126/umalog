@@ -1,9 +1,10 @@
+import {growthTotal,validateGrowthV2} from './growth-v2.js';
 // Pure domain functions; no DOM, network or database dependency.
 export const SCHEMA_VERSION = 1;
 export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
 export const TYPES = ['単勝','複勝','枠連','馬連','馬単','ワイド','三連複','三連単'];
 export const STAGES = [0,40,180,400,700];
-export const STAGE_NAMES = ['たまご','なぞの丸い生物','馬の気配','馬らしき生物','迫真の馬'];
+export const STAGE_NAMES = ['たまご','なぞの丸い生物','馬の気配','馬らしき生物','ちいさな馬'];
 export const MAX_MONEY = 1000000000000;
 export function uid(){ const a=new Uint32Array(4); crypto.getRandomValues(a); return [...a].map(n=>n.toString(16).padStart(8,'0')).join(''); }
 export function emptyData(){return {schemaVersion:SCHEMA_VERSION,races:[],tickets:[],lines:[],reviews:[],settings:{name:'うまたま',motion:true},character:{exp:0,level:1,stage:0},growth:[]};}
@@ -30,7 +31,7 @@ export function growth(data,today=jstToday()){const current=weekOf(today),weeks=
  const rs=data.races.filter(r=>weekOf(r.date)===week);const first=rs.some(r=>{const ids=new Set(data.tickets.filter(t=>t.raceId===r.id).map(t=>t.id));const ls=data.lines.filter(l=>ids.has(l.ticketId));return ls.length&&ls.every(l=>l.status!=='pending');});
  const a=first?10:0,b=closed&&all?10:0,c=closed&&data.reviews.some(r=>r.week===week)?20:0,eligible=closed&&all&&stats.raceCount>=3,d=eligible?(stats.returnRate>=120?40:stats.returnRate>=100?30:stats.returnRate>=80?15:0):0,e=eligible?(stats.raceRate>=50?20:stats.raceRate>=30?10:0):0;
  return {week,a,b,c,d,e,exp:a+b+c+d+e,closed,stats};});const exp=history.reduce((s,h)=>s+h.exp,0);return {character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)},history};}
-export function recalculate(data,today=jstToday()){const g=growth(data,today);return {...data,character:g.character,growth:g.history};}
+export function recalculate(data,today=jstToday()){if(data.growthV2){const exp=growthTotal(data.growthV2);return {...data,character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)}};}const g=growth(data,today);return {...data,character:g.character,growth:g.history};}
 export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===SCHEMA_VERSION,'対応していないバックアップ形式・バージョンです。');for(const k of ['races','tickets','lines','reviews','growth'])check(Array.isArray(d[k])&&d[k].length<=100000,`${k}の形式が不正です。`);
  const idsets={};for(const k of ['races','tickets','lines','reviews']){idsets[k]=new Set();for(const x of d[k]){check(x&&typeof x.id==='string'&&x.id.length>0&&x.id.length<=100&&!idsets[k].has(x.id),'IDの欠落・重複があります。');idsets[k].add(x.id);}}
  const keys=new Set();for(const r of d.races){check(validDate(r.date)&&VENUES.includes(r.venue)&&Number.isInteger(r.number)&&r.number>=1&&r.number<=12&&typeof r.name==='string'&&r.name.length<=100,'レース情報が不正です。');check(!keys.has(raceKey(r)),'レースが重複しています。');keys.add(raceKey(r));}
@@ -38,5 +39,5 @@ export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===
  for(const r of d.races)check(d.tickets.some(t=>t.raceId===r.id),'馬券がないレースがあります。');
  let total=0;for(const l of d.lines){check(idsets.tickets.has(l.ticketId),'買い目の参照先が不正です。');const t=d.tickets.find(t=>t.id===l.ticketId);const c=combination(t.type,l.numbers);check(JSON.stringify(c)===JSON.stringify(l.numbers),'買い目の順序が不正です。');money(l.stake,true);check(['pending','settled','void'].includes(l.status),'精算状態が不正です。');money(l.payout);money(l.refund);check(l.refund<=l.stake,'返還額が購入額を超えています。');check(l.status!=='pending'||(l.payout===0&&l.refund===0),'未確定の金額が不正です。');check(l.status!=='void'||fullRefund(l),'無効行は全額返還のみです。');check(!(l.refund===l.stake&&l.payout>0),'全額返還に払戻は設定できません。');total+=l.stake+l.payout+l.refund;check(Number.isSafeInteger(total),'金額合計が上限を超えています。');}
  const weeks=new Set();for(const r of d.reviews){check(validDate(r.week)&&weekOf(r.week)===r.week&&typeof r.text==='string'&&r.text.trim().length>0&&r.text.length<=4000&&!weeks.has(r.week),'振り返りが不正・重複しています。');weeks.add(r.week);}
- check(d.settings&&typeof d.settings.name==='string'&&d.settings.name.length<=40&&d.settings.name.trim().length>0&&typeof d.settings.motion==='boolean','設定が不正です。');check(d.character&&Number.isSafeInteger(d.character.exp)&&d.character.exp>=0,'育成状態が不正です。');return recalculate(d);}
+ check(d.settings&&typeof d.settings.name==='string'&&d.settings.name.length<=40&&d.settings.name.trim().length>0&&typeof d.settings.motion==='boolean','設定が不正です。');check(d.character&&Number.isSafeInteger(d.character.exp)&&d.character.exp>=0,'育成状態が不正です。');if(d.growthV2)validateGrowthV2(d.growthV2);return recalculate(d);}
 export function removeTicket(data,id){data.lines=data.lines.filter(l=>l.ticketId!==id);data.tickets=data.tickets.filter(t=>t.id!==id);data.races=data.races.filter(r=>data.tickets.some(t=>t.raceId===r.id));return data;}
