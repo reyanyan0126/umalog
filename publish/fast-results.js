@@ -45,6 +45,8 @@ export function mountFastResults(host,{onChange,onAdvanced}){
   const l=lines[Number(e.target.dataset.fastPayout)];
   l.payout=e.target.value===''?NaN:Number(e.target.value);
   onChange({rerender:false});
+  const count=host.querySelector('.fast-outcome-header small');if(count)count.textContent=`的中 ${hitCount()}点 · 未入力 ${pending()}点 / 全${lines.length}点`;
+  const label=e.target.closest('[data-fast-row]')?.querySelector('.fast-bet-name small');if(label)label.textContent=`購入 ${yen(l.stake)} · ${status(l)}`;
  });
  return {render,stats:()=>({pending:pending(),hits:hitCount(),count:lines.length})};
 }
