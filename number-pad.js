@@ -13,6 +13,8 @@ export function mountNumberPad(host,input,typeSelector,modeSelector){
   const values=parseValues(input.value);
   const selection=values.map((n,i)=>slots?stepTitle(type,i)+': '+n:n).join(slots?' / ':'・');
   host.replaceChildren();
+  host.hidden=mode!=='normal'&&mode!=='box';
+  if(host.hidden)return;
   const title=document.createElement('div');title.className='number-pad-title';
   title.textContent=slots?'順番に番号を選択':'番号をタップして選択';
   host.append(title);
