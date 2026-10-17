@@ -68,6 +68,7 @@ await pass('JRA-style number tap: BOX expands 5 horses, ordered trifecta saves a
  assert.match(await page.locator('.entry-total').innerText(),/1,000円/);
  await nav('home');await nav('entry');
  await page.locator('#type').selectOption('三連単');
+ await page.locator('#mode').selectOption('normal');
  assert.equal(await page.locator('.number-pad-step').count(),3);
  for(const n of [3,4,5])await page.locator('.number-pad-choice').nth(n-1).click();
  assert.equal(await page.locator('#numbers').inputValue(),'3 4 5');
