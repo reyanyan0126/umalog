@@ -12,14 +12,26 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));await page.clock.install({time:new Date('2026-10-17T00:00:00Z')});
   const pass=async(name,fn)=>{await fn();results.push(name);console.log('PASS '+name);};
   await page.goto('http://127.0.0.1:8005'+prefix);await page.waitForSelector('.hero');assert.equal(await page.locator('#ledgerCalendar').count(),0);await page.locator('nav a[href="#calendar"]').click();await page.waitForSelector('#ledgerCalendar');
-  await pass('October seven-column month and verified racing dates',async()=>{
+  await pass('Sunday-first October month, flags and verified racing dates',async()=>{
    assert.equal(await page.locator('.ledger-grid > .ledger-day').count(),31);
-   assert.equal(await page.locator('.ledger-grid > .ledger-blank').count(),3);
+   assert.equal(await page.locator('.ledger-grid > .ledger-blank').count(),4);
    assert.match(await page.locator('[data-date="2026-10-17"]').getAttribute('aria-label'),/富士ステークス/);
-   assert.match(await page.locator('[data-date="2026-10-18"]').innerText(),/◆2/);
+   assert.equal(await page.locator('.ledger-weekday').first().innerText(),'日');
+   assert.equal(await page.locator('.ledger-weekday').last().innerText(),'土');
+   assert.equal(await page.locator('.ledger-number').first().evaluate(e=>getComputedStyle(e).alignSelf),'flex-start');
+   assert.match(await page.locator('[data-date="2026-10-18"]').innerText(),/⚐2/);
    await page.locator('[data-date="2026-10-18"]').click();
    assert.match(await page.locator('#ledgerDayDetail').innerText(),/秋華賞/);
    assert.match(await page.locator('#ledgerDayDetail').innerText(),/東京ハイジャンプ/);
+  });
+  await pass('official holidays are labelled and shown in Sunday-first view',async()=>{
+   await page.locator('#month').fill('2026-09');await page.locator('#month').dispatchEvent('change');
+   assert.match(await page.locator('[data-date="2026-09-22"]').getAttribute('aria-label'),/国民の休日/);
+   assert.ok(await page.locator('[data-date="2026-09-22"]').evaluate(e=>e.classList.contains('holiday')));
+   await page.locator('[data-date="2026-09-22"]').click();assert.match(await page.locator('#ledgerDayDetail h3').innerText(),/国民の休日/);
+   await page.locator('#month').fill('2027-03');await page.locator('#month').dispatchEvent('change');
+   assert.match(await page.locator('[data-date="2027-03-22"]').getAttribute('aria-label'),/振替休日/);
+   await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');
   });
   await pass('calendar graded race opens existing entry route',async()=>{
    await page.locator('[data-date="2026-10-17"]').click();

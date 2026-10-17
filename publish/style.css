@@ -91,3 +91,30 @@ nav a{width:calc(100% / 6);max-width:146px;min-width:44px;min-height:64px;paddin
 .ledger-day .ledger-money{font-size:clamp(.625rem,2.8vw,.75rem);font-weight:750;line-height:1.3;letter-spacing:-.05em;white-space:nowrap;overflow:visible;overflow-wrap:normal}
 .ledger-list-item.is-selected{border-left:3px solid var(--green);padding-left:9px;background:#f1f6ee;border-radius:0 8px 8px 0}
 .ledger-list-item button:focus-visible{outline-offset:2px}
+
+
+/* v1.2 dev.2: compact, aligned lists without compromising tap targets. */
+main ul, main ol{margin-block:6px 10px;padding-inline-start:20px}
+main li{margin-block:2px;line-height:1.45}
+main li p{margin-block:3px}
+.graded-list li{padding-block:5px}
+.ledger-detail-list li{margin-block:3px}
+
+/* Year first, month on demand. Annual/monthly values share the existing ledger aggregation. */
+.home-range-controls{display:flex;flex-wrap:wrap;align-items:end;gap:8px;min-width:0;margin-bottom:12px}
+.home-range-controls label{margin:0;font-size:.8125rem}
+.home-range-controls input{margin:3px 0 0;max-width:148px;padding:8px;font-size:1rem;min-height:46px}
+.home-range-switch{display:flex;gap:3px;padding:3px;border-radius:12px;background:#e9eee7}
+.home-range-switch button{min-height:42px;padding:7px 12px;border-radius:9px;background:transparent;color:var(--green)}
+.home-range-switch button[aria-pressed="true"]{background:var(--green);color:#fff}
+@media(max-width:360px){.home-range-controls{width:100%;justify-content:space-between}.home-range-controls input{max-width:132px}}
+
+/* Sunday-first calendar, top-left dates, and explicitly marked public holidays. */
+.ledger-day{position:relative;justify-content:flex-start;align-items:flex-start;text-align:left}
+.ledger-day .ledger-number,.ledger-day.ledger-today .ledger-number{align-self:flex-start;text-align:left;padding:1px 3px;margin:0}
+.ledger-day .ledger-money,.ledger-day .ledger-pending,.ledger-day .ledger-event{align-self:stretch;text-align:left}
+.ledger-day.holiday .ledger-number,.ledger-day.sunday .ledger-number{color:#a63e30}
+.ledger-day.holiday{background:#fff6f3}
+.ledger-day.holiday[aria-pressed="true"]{background:#e4efdf}
+.ledger-holiday-mark{position:absolute;right:2px;top:4px;font-size:.625rem;color:#a63e30;line-height:1.2;font-weight:700;pointer-events:none}
+.ledger-day .ledger-event{color:#37604b;font-weight:700;letter-spacing:.02em}
