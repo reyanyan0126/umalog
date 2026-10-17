@@ -174,7 +174,7 @@ function updateDraftTotals(){
   $('#quickLineTitle').textContent='購入した買い目 '+draft.length+'点を確認';
   $('#quickLines').innerHTML=draft.slice(0,12).map(l=>`<div class="quick-line"><span>${esc(l.type)} ${l.numbers.join(['馬単','三連単'].includes(l.type)?'→':'－')}</span><strong>${yen(l.stake)}</strong></div>`).join('')+(draft.length>12?`<small>ほか ${draft.length-12}点。全件は「買い目を追加」から確認できます。</small>`:'');
  }
-
+ if(dirty)scheduleEntryDraft();
 }
 function renderDraft(){
  const n=draft.length,total=draft.reduce((a,l)=>a+l.stake,0),visible=draft.slice(0,draftVisible);
