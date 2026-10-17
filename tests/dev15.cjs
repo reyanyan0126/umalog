@@ -21,7 +21,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('#entryPurchasePanel').isVisible(),true);
    assert.equal(await page.locator('#entryPurchasePanel').getAttribute('aria-modal'),'true');
    await page.locator('#numbers').fill('1 2');
-   await page.locator('.entry-sheet-head .sheet-close').click();
+   await page.locator('#entryPurchasePanel .sheet-close').click();
    assert.equal(await page.locator('#entryPurchasePanel').isVisible(),false);
    await page.locator('#openPurchaseSheet').click();
    assert.equal(await page.locator('#numbers').inputValue(),'1 2');
