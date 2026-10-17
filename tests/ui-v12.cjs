@@ -34,10 +34,10 @@ await pass('home defaults to annual ledger and switches to monthly without chang
 await pass('ledger-only ticket entry and breakdown filters respect pending state and historical records',async()=>{
  await nav('entry');
  assert.equal(await page.locator('#kind').count(),0);
- assert.match(await page.locator('#entryForm').innerText(),/購入した馬券を記録します/);
+ assert.match(await page.locator('#entryForm').innerText(),/買い目を入力/);
  await nav('analysis');
  assert.equal(await page.locator('#analysisRange').inputValue(),'all');
- assert.match(await page.locator('.analysis-filter-panel').innerText(),/結果未入力分は確定収支に含めません/);
+ assert.equal(await page.locator('#analysisType').isVisible(),true);
  await page.locator('#analysisType').selectOption('ワイド');
  assert.match(await page.locator('#app').innerText(),/まだ集計できる記録がありません/);
  await page.locator('#analysisType').selectOption('単勝');
@@ -55,5 +55,61 @@ await pass('ledger-only ticket entry and breakdown filters respect pending state
  assert.ok(await page.locator('#analysisMonth').isVisible());
  await page.locator('#analysisRange').selectOption('all');
 });
+
+await pass('JRA-style number tap: BOX expands 5 horses, ordered trifecta saves and pays',async()=>{
+ await nav('entry');
+ assert.equal(await page.locator('.number-pad-choice').count(),18);
+ await page.locator('#type').selectOption('三連複');
+ await page.locator('#mode').selectOption('box');
+ for(const n of [1,2,3,4,5])await page.locator('.number-pad-choice').nth(n-1).click();
+ assert.equal(await page.locator('#numbers').inputValue(),'1 2 3 4 5');
+ await page.locator('#addLine').click();
+ assert.equal(await page.locator('[data-amount]').count(),10);
+ assert.match(await page.locator('.entry-total').innerText(),/1,000円/);
+ await nav('home');await nav('entry');
+ await page.locator('#type').selectOption('三連単');
+ await page.locator('#mode').selectOption('normal');
+ assert.equal(await page.locator('.number-pad-step').count(),3);
+ for(const n of [3,4,5])await page.locator('.number-pad-choice').nth(n-1).click();
+ assert.equal(await page.locator('#numbers').inputValue(),'3 4 5');
+ await page.locator('#stake').fill('500');
+ await page.locator('#addLine').click();
+ await page.locator('#date').fill('2026-10-20');
+ await page.locator('#number').selectOption('8');
+ await page.locator('#raceName').fill('着順登録テスト');
+ await page.locator('#entryForm button[type=submit]').click();
+ await page.waitForSelector('[data-detail]');
+ await page.locator('#historySearch').fill('着順登録テスト');
+ assert.equal(await page.locator('[data-detail]').count(),1);
+ await page.locator('[data-detail]').click();
+ await page.waitForSelector('#settlement');
+ await page.locator('#podium1').selectOption('3');
+ await page.locator('#podium2').selectOption('4');
+ await page.locator('#podium3').selectOption('5');
+ await page.locator('[data-choice="0"]').selectOption('hit');
+ await page.locator('[data-payout="0"]').fill('3200');
+ await page.locator('#settlement button[type=submit]').click();
+ await page.waitForSelector('#settlement');
+ assert.equal(await page.locator('#podium1').inputValue(),'3');
+ const outcome=await page.evaluate(async()=>{const {load}=await import('./db.js');const d=await load();const race=d.races.find(r=>r.name==='着順登録テスト');const ticket=d.tickets.find(t=>t.raceId===race.id);const line=d.lines.find(l=>l.ticketId===ticket.id);return {podium:race.podium,stake:line.stake,payout:line.payout,profit:line.payout+line.refund-line.stake};});
+ assert.deepEqual(outcome,{podium:[3,4,5],stake:500,payout:3200,profit:2700});
+ await nav('entry');
+ await page.locator('#type').selectOption('枠連');
+ assert.equal(await page.locator('.number-pad-choice').count(),8);
+ await page.locator('.number-pad-choice').first().click();
+ await page.locator('.number-pad-choice').first().click();
+ assert.equal(await page.locator('#numbers').inputValue(),'1 1');
+});
+await pass('today badge and universal manipulation touch policy keep pinch accessibility',async()=>{
+ const meta=await page.locator('meta[name="viewport"]').getAttribute('content');
+ assert.doesNotMatch(meta,/user-scalable=no|maximum-scale=1/);
+ for(const route of ['home','entry','history','calendar','analysis','growth','settings']){
+  await nav(route);
+  for(const sel of ['main','button','input']){
+   const item=page.locator(sel).first();if(await item.count())assert.equal(await item.evaluate(e=>getComputedStyle(e).touchAction),'manipulation',route+' '+sel);
+  }
+ }
+});
+
 assert.deepEqual(errors,[]);console.log('ALL '+results.length+' V12 CHECKS PASSED');
 }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exit(1);});

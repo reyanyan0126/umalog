@@ -14,6 +14,16 @@ export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.t
 export function jstToday(now=new Date()){return new Date(now.getTime()+9*3600000).toISOString().slice(0,10);}
 export function weekOf(date){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);}
 export function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+// Optional manually entered finish positions. No JRA results or payouts are inferred.
+export function validatePodium(value){
+ check(Array.isArray(value)&&value.length===3,'着順の形式が不正です。');
+ const podium=value.map(n=>n===null||n===''?null:Number(n));
+ check(podium.every(n=>n===null||(Number.isInteger(n)&&n>=1&&n<=18)),'着順は1〜18番から選んでください。');
+ const filled=podium.filter(n=>n!==null);
+ check(new Set(filled).size===filled.length,'同じ馬番を複数の着順に登録できません。');
+ check(podium.every((n,i)=>n===null||i===0||podium[i-1]!==null),'着順は1着から順に入力してください。');
+ return podium;
+}
 export function raceKey(r){return `${r.date}|${r.venue}|${r.number}`;}
 export function combination(type,numbers){check(TYPES.includes(type),'券種が不正です。');const count=['単勝','複勝'].includes(type)?1:['三連複','三連単'].includes(type)?3:2;
  check(Array.isArray(numbers)&&numbers.length===count,'選択数が券種と一致しません。');check(numbers.every(n=>Number.isInteger(n)&&n>=1&&n<=(type==='枠連'?8:18)),'番号の範囲が不正です。');check(type==='枠連'||new Set(numbers).size===numbers.length,'同じ馬番は選択できません。');return ['馬単','三連単'].includes(type)?[...numbers]:[...numbers].sort((a,b)=>a-b);}
@@ -34,7 +44,7 @@ export function growth(data,today=jstToday()){const current=weekOf(today),weeks=
 export function recalculate(data,today=jstToday()){if(data.growthV2){const exp=growthTotal(data.growthV2);return {...data,character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)}};}const g=growth(data,today);return {...data,character:g.character,growth:g.history};}
 export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===SCHEMA_VERSION,'対応していないバックアップ形式・バージョンです。');for(const k of ['races','tickets','lines','reviews','growth'])check(Array.isArray(d[k])&&d[k].length<=100000,`${k}の形式が不正です。`);
  const idsets={};for(const k of ['races','tickets','lines','reviews']){idsets[k]=new Set();for(const x of d[k]){check(x&&typeof x.id==='string'&&x.id.length>0&&x.id.length<=100&&!idsets[k].has(x.id),'IDの欠落・重複があります。');idsets[k].add(x.id);}}
- const keys=new Set();for(const r of d.races){check(validDate(r.date)&&VENUES.includes(r.venue)&&Number.isInteger(r.number)&&r.number>=1&&r.number<=12&&typeof r.name==='string'&&r.name.length<=100,'レース情報が不正です。');check(!keys.has(raceKey(r)),'レースが重複しています。');keys.add(raceKey(r));}
+ const keys=new Set();for(const r of d.races){check(validDate(r.date)&&VENUES.includes(r.venue)&&Number.isInteger(r.number)&&r.number>=1&&r.number<=12&&typeof r.name==='string'&&r.name.length<=100,'レース情報が不正です。');if(r.podium!==undefined)validatePodium(r.podium);check(!keys.has(raceKey(r)),'レースが重複しています。');keys.add(raceKey(r));}
  for(const t of d.tickets){check(idsets.races.has(t.raceId)&&TYPES.includes(t.type)&&['reported','advance'].includes(t.kind)&&typeof t.memo==='string'&&t.memo.length<=4000&&typeof t.createdAt==='string'&&Number.isFinite(Date.parse(t.createdAt)),'馬券情報が不正です。');check(d.lines.some(l=>l.ticketId===t.id),'明細がない馬券があります。');}
  for(const r of d.races)check(d.tickets.some(t=>t.raceId===r.id),'馬券がないレースがあります。');
  let total=0;for(const l of d.lines){check(idsets.tickets.has(l.ticketId),'買い目の参照先が不正です。');const t=d.tickets.find(t=>t.id===l.ticketId);const c=combination(t.type,l.numbers);check(JSON.stringify(c)===JSON.stringify(l.numbers),'買い目の順序が不正です。');money(l.stake,true);check(['pending','settled','void'].includes(l.status),'精算状態が不正です。');money(l.payout);money(l.refund);check(l.refund<=l.stake,'返還額が購入額を超えています。');check(l.status!=='pending'||(l.payout===0&&l.refund===0),'未確定の金額が不正です。');check(l.status!=='void'||fullRefund(l),'無効行は全額返還のみです。');check(!(l.refund===l.stake&&l.payout>0),'全額返還に払戻は設定できません。');total+=l.stake+l.payout+l.refund;check(Number.isSafeInteger(total),'金額合計が上限を超えています。');}
