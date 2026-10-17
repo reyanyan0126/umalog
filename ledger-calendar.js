@@ -58,7 +58,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  function openDay(row){
   selectedDate=row.date;options.onState?.({date:selectedDate,view});
   for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.date===row.date));
-  for(const item of listItems)item.classList.toggle('is-selected',item.dataset.date===row.date);
+  for(const item of listItems)item.classList.toggle('is-selected',item.dataset.listDate===row.date);
   detail.replaceChildren();
   detail.append(elem('h3',null,row.date+' の記録'));const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);
   const stats=row.summary;
@@ -106,7 +106,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  }
  const dayList=elem('div','ledger-list');dayList.id='ledgerList';
  for(const row of model.days.filter(r=>r.summary||r.events.length)){
-  const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date);item.dataset.date=row.date;listItems.push(item);button.type='button';button.onclick=()=>{openDay(row);detail.scrollIntoView({block:'nearest',behavior:'auto'});};item.append(button);
+  const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date);item.dataset.listDate=row.date;listItems.push(item);button.type='button';button.onclick=()=>{openDay(row);detail.scrollIntoView({block:'nearest',behavior:'auto'});};item.append(button);
   item.append(elem('p',null,row.summary?.settledCount?'確定収支 '+exactMoney(row.summary.profit):'確定収支 —'));
   if(row.summary?.pendingCount)item.append(elem('small',null,'結果待ち '+row.summary.pendingCount+'点'));
   for(const event of row.events)item.append(elem('p','ledger-event-name',event.name+' · '+event.venue+' · '+event.grade));dayList.append(item);
