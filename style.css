@@ -216,3 +216,28 @@ nav a{min-width:44px}
 .graded-home-compact #gradedAll > summary{padding:8px 0;min-height:44px;display:flex;align-items:center;font-size:.8125rem}
 .pet-tips{margin-top:6px;width:100%;min-height:44px}
 @media(max-width:360px){.graded-home-compact{padding:8px 9px!important}.graded-soon-link{gap:4px;grid-template-columns:2.5rem minmax(0,1fr) auto}}
+
+
+/* v1.2 dev.6: highlight the calendar's current date independently from selection. */
+main .ledger-day.ledger-today{
+ position:relative;
+ background:#fff2bf;
+ border:2px solid #bd6c15;
+ box-shadow:inset 0 0 0 1px #f5de93;
+ padding:1px;
+}
+main .ledger-day.ledger-today[aria-pressed="true"]{background:#ffeb9a;box-shadow:0 0 0 2px #dfa435;}
+main .ledger-day.ledger-today .ledger-number{
+ font-weight:850;color:#6c360f;text-decoration:none;
+}
+main .ledger-day.ledger-today::after{
+ content:"今日";position:absolute;top:1px;right:1px;
+ font-size:.54rem;line-height:1.25;color:#fff;background:#995317;
+ border-radius:3px;padding:0 2px;pointer-events:none;
+}
+main .ledger-day.ledger-today .ledger-number{padding:0 1px;margin:0}
+main .ledger-day.ledger-today .ledger-money{color:#5a3817}
+
+/* Touch gestures: no double-tap zoom; scrolling and pinch-to-zoom remain available.
+   Avoid event prevention and viewport scaling restrictions. */
+html,body,body *{touch-action:manipulation}
