@@ -50,6 +50,9 @@ jobs:
           node-version: '22'
       - name: Check source and publish consistency
         run: python tools/check_publish.py
+      - name: Check ESM syntax in source and publish
+        run: |
+          for name in app.js entry-results.js fast-results.js entry-sheets.js; do node --check "$name"; node --check "publish/$name"; done
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
