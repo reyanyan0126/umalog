@@ -52,7 +52,7 @@ export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===
  check(d.settings&&typeof d.settings.name==='string'&&d.settings.name.length<=40&&d.settings.name.trim().length>0&&typeof d.settings.motion==='boolean','設定が不正です。');if(d.settings.monthlyBudgets!==undefined){
   const budgets=d.settings.monthlyBudgets;
   check(budgets&&typeof budgets==='object'&&!Array.isArray(budgets)&&Object.keys(budgets).length<=240,'月間予算が不正です。');
-  for(const [month,amount] of Object.entries(budgets))check(/^(20\\d\\d|21\\d\\d)-(0[1-9]|1[0-2])$/.test(month)&&Number.isSafeInteger(amount)&&amount>0&&amount<=MAX_MONEY,'月間予算の年月または金額が不正です。');
+  for(const [month,amount] of Object.entries(budgets))check(/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/.test(month)&&Number.isSafeInteger(amount)&&amount>0&&amount<=MAX_MONEY,'月間予算の年月または金額が不正です。');
  }
  check(d.character&&Number.isSafeInteger(d.character.exp)&&d.character.exp>=0,'育成状態が不正です。');if(d.growthV2)validateGrowthV2(d.growthV2);return recalculate(d);}
 export function removeTicket(data,id){data.lines=data.lines.filter(l=>l.ticketId!==id);data.tickets=data.tickets.filter(t=>t.id!==id);data.races=data.races.filter(r=>data.tickets.some(t=>t.raceId===r.id));return data;}
