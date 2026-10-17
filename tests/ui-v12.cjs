@@ -195,7 +195,7 @@ await pass('batch payout previews race-wide candidate statuses without touching 
  assert.equal(await page.locator('[data-batch-choice="4"]').inputValue(),'skip'); // 枠連：枠番は推定できない
  const before=await page.evaluate(async()=>{const d=await (await import('./db.js')).load();return d.lines.filter(x=>x.id.startsWith('batch-l')).map(x=>[x.id,x.status,x.payout]);});
  assert.equal(before.filter(x=>x[1]==='pending').length,6,'a preview must not change data');
- for(const [index,amount] of [[0,'500'],[3,'800'],[5,'1500']])await page.locator('[data-batch-payout="'+index+'"]').fill(amount);
+ for(const [index,amount] of [[0,'500'],[2,'800'],[5,'1500']])await page.locator('[data-batch-payout="'+index+'"]').fill(amount);
  await page.locator('#batchConfirm').check();
  await page.locator('#batchForm button[type=submit]').click();
  await page.waitForFunction(async()=>{const d=await (await import('./db.js')).load();return d.lines.find(x=>x.id==='batch-l1')?.payout===500;});
