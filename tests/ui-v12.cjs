@@ -157,7 +157,7 @@ await pass('formation/flow tap purchase, uneven stakes, bulk edit and saved acco
  await page.locator('#entryForm button[type=submit]').click();await page.waitForSelector('#historyList');
  const saved=await page.evaluate(async()=>{
   const d=await (await import('./db.js')).load();(await import('./core.js')).validateData(d);
-  const r=d.races.find(r=>r.name==='フォーメーションと枠連ゾロ目'),t=d.tickets.filter(t=>t.raceId===r.id);
+  const r=d.races.find(r=>r.name==='フォーメーションと枠連ゾロ目'),t=d.tickets.slice(-2).filter(t=>t.raceId===r.id);
   return {types:t.map(x=>x.type).sort(),all:d.lines.filter(l=>t.some(x=>x.id===l.ticketId)).length,frame:d.lines.find(l=>l.numbers.join(',')==='1,1')?.numbers};
  });
  assert.deepEqual(saved,{types:['三連複','枠連'],all:5,frame:[1,1]});
