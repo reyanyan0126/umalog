@@ -74,6 +74,11 @@ jobs:
           };
           EOF
 
+      - name: Dev19-21 recover drafts, protect backups and improve iPhone source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs
+      - name: Dev19-21 recover drafts, protect backups and improve iPhone publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs
+
       - name: Dev15 genuine entry sheets and fast multi-hit source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
       - name: Dev15 genuine entry sheets and fast multi-hit publish
@@ -83,11 +88,6 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs
       - name: Dev16-18 saved corrections, grouped history, budget and CSV publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs
-
-      - name: Dev19-21 recover drafts, protect backups and improve iPhone source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs
-      - name: Dev19-21 recover drafts, protect backups and improve iPhone publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs
 
       - name: 'Old dev.8 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
