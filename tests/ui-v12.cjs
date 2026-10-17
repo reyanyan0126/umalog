@@ -184,6 +184,7 @@ await pass('batch payout previews race-wide candidate statuses without touching 
   }
   await save(d);
  });
+ await page.reload();await page.waitForSelector('[data-detail]');
  await nav('history');await page.locator('#historySearch').fill('一括精算テスト2026');
  assert.equal(await page.locator('[data-detail]').count(),4);
  await page.locator('[data-detail]').first().click();await page.waitForSelector('#batchPreview');
