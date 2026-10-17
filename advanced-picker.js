@@ -92,5 +92,20 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
  typeSelect.addEventListener('change',change);
  modeSelect.addEventListener('change',change);
  change();
- return {selection,refresh:render};
+ const restore=payload=>{
+  reset();
+  if(payload&&typeof payload==='object'){
+   const safe=list=>Array.isArray(list)?[...new Set(list.filter(n=>Number.isInteger(n)&&n>=1&&n<=limit(typeSelect.value)))].slice(0,18):[];
+   if(modeSelect.value==='flow'){
+    axisCount=payload.axisCount===2?2:1;
+    position=['first','second','third','multi'].includes(payload.position)?payload.position:'first';
+    axes=safe(payload.axes).slice(0,axisCount);
+    partners=safe(payload.partners);
+   }else if(modeSelect.value==='formation'&&Array.isArray(payload.groups)){
+    groups=[0,1,2].map(i=>safe(payload.groups[i]));
+   }
+  }
+  active=0;render();
+ };
+ return {selection,refresh:render,restore};
 }
