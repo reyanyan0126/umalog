@@ -64,8 +64,16 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.waitForSelector('#restorePreview #restore');
    assert.match(await page.locator('#restorePreview').innerText(),/現在：/);
    assert.match(await page.locator('#restorePreview').innerText(),/復元後：/);
+   await page.locator('#backupConfirmed').click();
+   await page.waitForFunction(()=>document.querySelector('#lastBackupConfirmed')?.textContent.includes('確認した日'));
+   await page.evaluate(async()=>{const d=await import('./db.js');await d.saveEntryDraft('new',{from:'obsolete'});await d.saveEntryDraft('old-edit',{from:'obsolete'});});
+   await page.locator('#restoreAgree').check();await page.locator('#restore').click();await page.waitForSelector('#homeMonthly');
+   assert.equal(await stored(),null);
+   const old=await page.evaluate(async()=>(await (await import('./db.js')).loadEntryDraft('old-edit')));
+   assert.equal(old,null);
   });
   await pass('dev21 monthly home budget follows viewed month',async()=>{
+   await go('settings');
    await page.locator('#budgetMonth').fill('2026-09');await page.locator('#budgetMonth').dispatchEvent('change');
    await page.locator('#budgetAmount').fill('4500');await page.locator('#budgetForm button[type=submit]').click();
    await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('月間購入予算を保存しました'));
