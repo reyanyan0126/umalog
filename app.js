@@ -91,7 +91,7 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
   fastResultsEditor=mountFastResults($('#fastResults'),{onChange:()=>{dirty=true;entryResultsEditor.reset(draft);updateDraftTotals();},onAdvanced:index=>{
    $('#entryDetailedResults').open=true;
    const select=$('[data-entry-outcome="'+index+'"]');
-   if(select){select.value='advanced';select.dispatchEvent(new Event('change',{bubbles:true}));select.scrollIntoView({block:'center',behavior:'auto');}
+   if(select){select.value='advanced';select.dispatchEvent(new Event('change',{bubbles:true}));select.scrollIntoView({block:'center',behavior:'auto'});}
   }});
  }
 
