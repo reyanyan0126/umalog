@@ -44,7 +44,12 @@ test('multiple graded races remain accessible on the same day without truncation
 test('compact number is only a display value; exact result stays in summary',()=>{
  assert.equal(smallMoney(0),'0');
  assert.equal(smallMoney(999),'+999');
- assert.equal(smallMoney(-1200),'−1,200');
+ assert.equal(smallMoney(-1200),'−1.2千');
+ assert.equal(smallMoney(1000),'+1千');
+ assert.equal(smallMoney(9999),'+9.9千');
+ assert.equal(smallMoney(10000),'+1万');
+ assert.equal(smallMoney(10000000),'+0.1億');
+ assert.equal(smallMoney(100000000),'+1億');
  assert.equal(smallMoney(12345),'+1.2万');
  assert.equal(smallMoney(-1500000),'−150万');
 });
