@@ -74,5 +74,5 @@ export function mountEntryResults(host,{onDirty=()=>{}}={}){
   lines[Number(index)][key]=e.target.value===''?NaN:Number(e.target.value);
   updateSummary();onDirty();
  });
- return {render,values,updateSummary};
+ return {render,values,updateSummary,reset(next=lines){selections.clear();render(next);}};
 }
