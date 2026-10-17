@@ -18,6 +18,7 @@ on:
       - work/v1.2.0-dev7-bet-patterns
       - work/v1.2.0-dev8-method-analysis-batch-results
       - work/v1.2.0-dev9-entry-settlement-ux
+      - work/v1.2.0-dev10-entry-quick-review
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -89,3 +90,8 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs
       - name: Dev9 entry and safe settlement publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs
+
+      - name: Dev10 entry source browser checks
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs
+      - name: Dev10 entry publish browser checks
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs
