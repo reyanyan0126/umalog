@@ -71,6 +71,12 @@ jobs:
             args: []
           };
           EOF
+
+      - name: Dev15 genuine entry sheets and fast multi-hit source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
+      - name: Dev15 genuine entry sheets and fast multi-hit publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
+
       - name: 'Old dev.8 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
       - name: Fresh session update protects unsaved edits
@@ -111,8 +117,3 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs
       - name: Dev12-14 daily ledger, analysis and rewards browser publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs
-
-      - name: Dev15 genuine entry sheets and fast multi-hit source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
-      - name: Dev15 genuine entry sheets and fast multi-hit publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
