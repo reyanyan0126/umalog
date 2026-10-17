@@ -24,9 +24,13 @@ export function ledgerMonth(data,events,month){
 export function smallMoney(amount){
  const sign=amount>0?'+':amount<0?'−':'';
  const absolute=Math.abs(amount);
- if(absolute<10000)return sign+absolute.toLocaleString('ja-JP');
- const unit=absolute/10000;
- return sign+(unit<10?unit.toFixed(1).replace(/\.0$/,''):Math.round(unit).toLocaleString('ja-JP'))+'万';
+ if(absolute<1000)return sign+absolute.toLocaleString('ja-JP');
+ // Compact approximate values: avoid splitting 4-7 digit yen amounts across narrow date cells.
+ // Exact money always stays available in the selected day's detail and aria-label.
+ if(absolute<10000)return sign+(Math.floor(absolute/100)/10).toString()+'千';
+ if(absolute<100000)return sign+(Math.floor(absolute/1000)/10).toString()+'万';
+ if(absolute<10000000)return sign+Math.floor(absolute/10000).toLocaleString('ja-JP')+'万';
+ return sign+(Math.floor(absolute/10000000)/10).toLocaleString('ja-JP')+'億';
 }
 const exactMoney=n=>(n>0?'+':'')+n.toLocaleString('ja-JP')+'円';
 const elem=(tag,className,text)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;};
@@ -46,7 +50,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  grid.setAttribute('aria-label',month+'の収支カレンダー');
  for(const [i,weekday] of ['月','火','水','木','金','土','日'].entries())grid.append(elem('span','ledger-weekday'+(i===5?' saturday':i===6?' sunday':''),weekday));
  for(let i=0;i<model.offset;i++)grid.append(elem('span','ledger-blank'));
- const buttons=[];
+ const buttons=[],listItems=[];
  const today=jstToday();
  const detail=elem('section','ledger-detail');
  detail.id='ledgerDayDetail';
@@ -54,6 +58,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  function openDay(row){
   selectedDate=row.date;options.onState?.({date:selectedDate,view});
   for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.date===row.date));
+  for(const item of listItems)item.classList.toggle('is-selected',item.dataset.date===row.date);
   detail.replaceChildren();
   detail.append(elem('h3',null,row.date+' の記録'));const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);
   const stats=row.summary;
@@ -101,7 +106,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  }
  const dayList=elem('div','ledger-list');dayList.id='ledgerList';
  for(const row of model.days.filter(r=>r.summary||r.events.length)){
-  const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date);button.type='button';button.onclick=()=>openDay(row);item.append(button);
+  const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date);item.dataset.date=row.date;listItems.push(item);button.type='button';button.onclick=()=>{openDay(row);detail.scrollIntoView({block:'nearest',behavior:'auto'});};item.append(button);
   item.append(elem('p',null,row.summary?.settledCount?'確定収支 '+exactMoney(row.summary.profit):'確定収支 —'));
   if(row.summary?.pendingCount)item.append(elem('small',null,'結果待ち '+row.summary.pendingCount+'点'));
   for(const event of row.events)item.append(elem('p','ledger-event-name',event.name+' · '+event.venue+' · '+event.grade));dayList.append(item);
@@ -109,7 +114,8 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  if(!dayList.children.length)dayList.append(elem('p','empty','この月の記録・登録済み重賞はありません。'));
  function setView(next){view=next;grid.hidden=view!=='month';dayList.hidden=view!=='list';monthButton.setAttribute('aria-pressed',String(view==='month'));listButton.setAttribute('aria-pressed',String(view==='list'));options.onState?.({date:selectedDate,view});}
  monthButton.onclick=()=>setView('month');listButton.onclick=()=>setView('list');
- section.append(grid,dayList,detail);host.append(section);setView(view);
+ // Selected day's full details are kept above the long list, so tapping a list row can reveal them immediately.
+ section.append(grid,detail,dayList);host.append(section);setView(view);
  const chosen=model.days.find(r=>r.date===selectedDate)||model.days.find(r=>r.date===today)||model.days.find(r=>r.summary||r.events.length)||model.days[0];
  if(chosen)openDay(chosen);
  return model;
