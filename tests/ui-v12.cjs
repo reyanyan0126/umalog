@@ -111,5 +111,56 @@ await pass('today badge and universal manipulation touch policy keep pinch acces
  }
 });
 
+
+await pass('formation/flow tap purchase, uneven stakes, bulk edit and saved accounting',async()=>{
+ await nav('entry');await page.locator('#type').selectOption('三連単');await page.locator('#mode').selectOption('flow');
+ assert.equal(await page.locator('#flowAxisCount').isVisible(),true);
+ await page.locator('#flowPosition').selectOption('multi');
+ await page.locator('[data-pattern-number="1"]').click();
+ for(const n of [2,3,4])await page.locator('[data-pattern-number="'+n+'"]').click();
+ assert.match(await page.locator('.pattern-status').innerText(),/18点/);
+ await page.locator('#stake').fill('100');await page.locator('#addLine').click();
+ assert.equal(await page.locator('[data-amount]').count(),18);
+ assert.match(await page.locator('.entry-total').innerText(),/1,800円/);
+ await page.locator('[data-amount="0"]').fill('500');await page.locator('[data-amount="0"]').blur();
+ await page.locator('[data-amount="1"]').fill('300');await page.locator('[data-amount="1"]').blur();
+ assert.match(await page.locator('.entry-total').innerText(),/2,400円/);
+ await page.locator('.bet-bulk > summary').click();
+ await page.locator('#bulkAmount').fill('200');await page.locator('#bulkApply').click();
+ assert.match(await page.locator('.entry-total').innerText(),/3,600円/);
+ await page.locator('[data-amount="0"]').fill('500');await page.locator('[data-amount="0"]').blur();
+ assert.match(await page.locator('.entry-total').innerText(),/3,900円/);
+ await page.locator('#raceName').fill('三連単流し・金額別テスト');
+ await page.locator('#entryForm button[type=submit]').click();await page.waitForSelector('#historyList');
+ const stored=await page.evaluate(async()=>{
+  const d=await (await import('./db.js')).load();
+  const r=d.races.find(r=>r.name==='三連単流し・金額別テスト'),t=d.tickets.filter(t=>t.raceId===r.id&&t.type==='三連単').at(-1);
+  const lines=d.lines.filter(l=>l.ticketId===t.id);
+  return {n:lines.length,stake:lines.reduce((n,l)=>n+l.stake,0),different:new Set(lines.map(l=>l.stake)).size};
+ });
+ assert.deepEqual(stored,{n:18,stake:3900,different:2});
+ await nav('entry');await page.locator('#type').selectOption('三連複');
+ await page.locator('#mode').selectOption('formation');
+ for(const n of [1,2])await page.locator('[data-pattern-number="'+n+'"]').click();
+ await page.locator('[data-pattern-tab="1"]').click();
+ for(const n of [2,3])await page.locator('[data-pattern-number="'+n+'"]').click();
+ await page.locator('[data-pattern-tab="2"]').click();
+ for(const n of [3,4])await page.locator('[data-pattern-number="'+n+'"]').click();
+ assert.match(await page.locator('.pattern-status').innerText(),/4点/);
+ await page.locator('#addLine').click();assert.equal(await page.locator('[data-amount]').count(),4);
+ await page.locator('#type').selectOption('枠連');await page.locator('#mode').selectOption('formation');
+ await page.locator('[data-pattern-number="1"]').click();await page.locator('[data-pattern-tab="1"]').click();
+ await page.locator('[data-pattern-number="1"]').click();
+ assert.match(await page.locator('.pattern-status').innerText(),/1点/);
+ await page.locator('#addLine').click();assert.equal(await page.locator('[data-amount]').count(),5);
+ await page.locator('#raceName').fill('フォーメーションと枠連ゾロ目');
+ await page.locator('#entryForm button[type=submit]').click();await page.waitForSelector('#historyList');
+ const saved=await page.evaluate(async()=>{
+  const d=await (await import('./db.js')).load();(await import('./core.js')).validateData(d);
+  const r=d.races.find(r=>r.name==='フォーメーションと枠連ゾロ目'),t=d.tickets.slice(-2).filter(t=>t.raceId===r.id);
+  return {types:t.map(x=>x.type).sort(),all:d.lines.filter(l=>t.some(x=>x.id===l.ticketId)).length,frame:d.lines.find(l=>l.numbers.join(',')==='1,1')?.numbers};
+ });
+ assert.deepEqual(saved,{types:['三連複','枠連'],all:5,frame:[1,1]});
+});
 assert.deepEqual(errors,[]);console.log('ALL '+results.length+' V12 CHECKS PASSED');
 }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exit(1);});

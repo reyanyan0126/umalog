@@ -15,6 +15,7 @@ on:
       - work/v1.2.0-dev4-compact-ledger-grades
       - work/v1.2.0-dev5-home-dock-tips
       - work/v1.2.0-dev6-jra-style-entry
+      - work/v1.2.0-dev7-bet-patterns
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -61,7 +62,7 @@ jobs:
             args: []
           };
           EOF
-      - name: 'Old dev.5 to development: preserve IndexedDB and offline behavior'
+      - name: 'Old dev.6 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
       - name: Fresh session update protects unsaved edits
         run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
