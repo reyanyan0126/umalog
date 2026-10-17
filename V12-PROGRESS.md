@@ -39,3 +39,12 @@ Do not merge or publish without a new user approval.
 2. iPhone Safari/PWA: continuous taps, pinch zoom, native pickers, safe areas, large text and keyboard focus.
 3. Review screenshots and real-device scrolling. History sorting, previous/next-day shortcuts and settings reordering were optional and are not implemented.
 4. User approval is required before merging main or publishing. Public site remains dev.4.
+
+## 通常チャットからの最終仕上げ（2026-10-17）
+- 7列カレンダーの金額を読みやすい省略表示に変更。千・万・億単位の概数表示にし、日付タップ後の正確な円金額およびaria-labelは維持。数値表記境界をNodeテストに追加。
+- リスト表示では選択行の強調と詳細へのスクロール導線を改善。月表示の内容を削除せず、詳細には重賞の正式名称を全件表示。
+- リスト識別用属性を日付マスと分離。Chromiumの既存の厳密な要素選択と衝突しないよう修正。
+- カレンダーから日付だけを引き継いだ新規馬券登録ではレース番号を自動的に1Rへ設定しない。実際のレース番号選択が必須であることをUIテストへ追加。
+- GitHub Actions の最終機能検証: https://github.com/reyanyan0126/umalog/actions/runs/39006287664 （成功）。Node、従来ブラウザ、カレンダーとv1.2のroot/publish、PWA更新、source/publish整合が成功。
+- iPhone Safari/PWAやLG V60の実機・WebKitは未検証。ダブルタップとピンチ操作は実機の確認が必要。
+- 最新の変更はこの開発ブランチのみに保存。mainと公開サイトはユーザーの新たな承認まで変更しない。
