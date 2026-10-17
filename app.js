@@ -173,7 +173,7 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
   recovery.innerHTML=`<h2>${valid?'入力途中の下書きがあります':'保存済みの下書きを復元できません'}</h2><p class="help">${valid?esc(saved.race.date+' · '+saved.race.venue+' '+(saved.race.number||'未選択')+'R · '+saved.lines.length+'点'):'過去の記録が変更されたか、下書きが不正です。確定済み帳簿は変更されていません。'}</p>${valid?'<button class="full" type="button" id="recoverEntryDraft">続きを入力する</button>':''}<button type="button" id="discardEntryDraft" class="quiet full">下書きを破棄して新規入力</button>`;
   statusEl.textContent=valid?'復元か破棄を選択してください':'安全のため下書きの復元を停止しました';
   const discard=recovery.querySelector('#discardEntryDraft');
-  discard.onclick=guard(async()=>{if(!confirm('入力途中の下書きを完全に破棄しますか？'))return;await discardEntryDraft(draftId);recovery.hidden=true;currentDraftSession.start();statusEl.textContent='新しい下書きの自動保存が有効です';if(dirty)currentDraftSession.schedule();});
+  discard.onclick=guard(async()=>{if(!confirm('入力途中の下書きを完全に破棄しますか？'))return;await discardEntryDraft(draftId);await currentDraftSession.stop();entryDraftSession=null;dirty=false;entry(id,eventId);notify('下書きを破棄し、入力画面を初期化しました。');});
   const recover=recovery.querySelector('#recoverEntryDraft');
   if(recover)recover.onclick=guard(async()=>{
    if(dirty&&!confirm('現在画面に入力した内容を、保存されている下書きで置き換えますか？'))return;
