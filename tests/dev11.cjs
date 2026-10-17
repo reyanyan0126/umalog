@@ -44,7 +44,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(s.profit,340);assert.equal(s.pendingCount,0);assert.equal(s.purchase,600);
   });
   await pass('edit confirmed outcome, without damaging other ticket results',async()=>{
-   await page.locator('[data-detail]').first().click();await page.waitForSelector('#edit');
+   await page.locator('.history-item').filter({hasText:'単勝'}).locator('[data-detail]').click();await page.waitForSelector('#edit');
    await page.locator('#edit').click();await page.waitForSelector('#entryResults');
    assert.equal(await page.locator('[data-entry-outcome="0"]').inputValue(),'hit');
    await page.locator('[data-entry-receipt="0"]').fill('920');
