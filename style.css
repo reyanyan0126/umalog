@@ -291,3 +291,23 @@ html,body,body *{touch-action:manipulation}
 /* v1.2.0-dev.10: compact non-persisting pre-add summary and group navigation. */
 .addition-estimate{margin:6px 0 10px;min-height:20px;overflow-wrap:anywhere}
 .pattern-actions{flex-wrap:wrap}.pattern-actions button{flex:1 1 auto}
+
+/* dev.11: post-race outcomes are the primary, compact entry step. */
+.entry-result-tools{margin:4px 0 8px}
+.entry-result-tools button{width:100%;min-height:44px}
+.entry-result-rows{display:grid;gap:6px}
+.entry-result-row{padding:10px;border:1px solid var(--border);border-radius:11px;background:#fbfcf8;min-width:0}
+.entry-result-heading{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:5px;margin-bottom:4px;overflow-wrap:anywhere}
+.entry-result-heading b{font-size:.875rem}
+.entry-result-heading small{color:var(--muted)}
+.entry-result-row label{font-size:.8125rem;margin:4px 0}
+.entry-result-row label input,.entry-result-row label select{margin:3px 0 0}
+.entry-legacy{margin-top:12px;font-size:.8125rem}
+.entry-legacy summary{cursor:pointer;padding:10px 0;color:var(--muted)}
+#entryResultSummary{margin:8px 0 10px;font-weight:650}
+
+.home-day-link{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.home-day-link>div{display:grid;gap:2px}
+.home-day-link small{color:var(--muted)}
+.home-day-link strong{font-size:1rem}
+.home-day-link .button{font-size:.8125rem;min-height:44px;display:inline-flex;align-items:center;padding:8px 12px;text-decoration:none}
