@@ -28,3 +28,9 @@ https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html
 - iPhoneのピンチズーム、Safari日付入力、オフライン更新。
 
 mainへのマージと公開はユーザーの別途承認まで禁止。
+
+## 自動テスト結果
+- 最終コードコミット：cdccbb4b92d57ec54fed16b52a84a5d8051f7751
+- GitHub Actions 実行: https://github.com/reyanyan0126/umalog/actions/runs/39007822544
+- 結果：全22ステップ成功（ソース・公開用ファイル一致、Node、旧来のブラウザ・育成・重賞・カレンダー、v1.2 UI、旧版からのPWA更新、オフライン）。
+- iPhone Safari／LG V60の実機検証は未実施。
