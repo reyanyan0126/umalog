@@ -21,6 +21,7 @@ on:
       - work/v1.2.0-dev10-entry-quick-review
       - work/v1.2.0-dev11-postrace-ledger
       - work/v1.2.0-dev14-daily-analysis-rewards
+      - work/v1.2.0-dev15-fast-entry-sheets
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -107,3 +108,8 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs
       - name: Dev12-14 daily ledger, analysis and rewards browser publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs
+
+      - name: Dev15 genuine entry sheets and fast multi-hit source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
+      - name: Dev15 genuine entry sheets and fast multi-hit publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
