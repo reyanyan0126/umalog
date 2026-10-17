@@ -104,7 +104,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await nav('home');await page.reload();await page.waitForSelector('.hero');await page.locator('.home-extra > summary').click();await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
   await page.evaluate(async()=>{const {saveCatalog}=await import('./db.js');await saveCatalog((await import('./race-info.js')).emptyCatalog());});
  });
- await nav('home');await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});
+ await nav('home');await page.locator('#homeMonthly').click();await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});
  await nav('analysis');await page.locator('#racingStyle .style-group').first().evaluate(e=>e.open=true);await page.screenshot({path:'/tmp/umalog-style.png',fullPage:true});
  assert.deepEqual(errors,[]);results.push('No uncaught browser errors');
  fs.writeFileSync(process.env.RESULT_PATH||'/tmp/umalog-browser-results.json',JSON.stringify({engine:await browser.version(),viewportTests:['430x932','360x800'],results},null,2));
