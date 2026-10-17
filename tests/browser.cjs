@@ -62,14 +62,14 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.evaluate(async original=>{const {save}=await import('./db.js');await save(original);},original);await nav('home');await page.reload();await page.waitForSelector('.hero');
  });
  await pass('v1.0.1: 50 tips, categories, focus trap, offline and reduced motion',async()=>{
-  await nav('home');await page.locator('#tipsOpen').click();assert.equal(await page.locator('#tipsClose').evaluate(e=>e===document.activeElement),true);
+  await nav('growth');await page.locator('#petTips').click();assert.equal(await page.locator('#tipsClose').evaluate(e=>e===document.activeElement),true);
   const titles=new Set();for(let i=0;i<50;i++){titles.add(await page.locator('#tipTitle').innerText());await page.locator('#tipsNext').click();}assert.equal(titles.size,50);
   await page.locator('#tipsPrev').click();assert.match(await page.locator('#tipsCount').innerText(),/50 \/ 50/);
   await page.locator('#tipsCategory').selectOption('レースの言葉');assert.match(await page.locator('#tipsCount').innerText(),/1 \/ 10/);
   await page.locator('#tipsNext').focus();await page.keyboard.press('Tab');assert.equal(await page.locator('#tipsClose').evaluate(e=>e===document.activeElement),true);
   await page.keyboard.press('Shift+Tab');assert.equal(await page.locator('#tipsNext').evaluate(e=>e===document.activeElement),true);
-  await page.keyboard.press('Escape');assert.equal(await page.locator('#tipsModal').count(),0);assert.equal(await page.locator('#tipsOpen').evaluate(e=>e===document.activeElement),true);
-  await context.setOffline(true);await page.reload();await page.locator('#tipsOpen').click();await page.locator('#tipsNext').click();assert.ok(await page.locator('#tipBody').innerText());
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#tipsModal').count(),0);assert.equal(await page.locator('#petTips').evaluate(e=>e===document.activeElement),true);
+  await context.setOffline(true);await page.reload();await page.locator('#petTips').click();await page.locator('#tipsNext').click();assert.ok(await page.locator('#tipBody').innerText());assert.match(await page.locator('#tipsTitle').innerText(),/豆知識/);
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');
   await page.locator('#tipsClose').click();await context.setOffline(false);
  });
@@ -79,7 +79,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.setViewportSize({width:360,height:800});const style=await page.addStyleTag({content:'body{font-size:200%}'});
   for(const route of ['home','entry','history','analysis','growth','settings']){await nav(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' enlarged overflow');}
   await style.evaluate(e=>e.remove());await page.locator('#motion').uncheck();await page.locator('#settingsForm button').click();await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('設定を保存しました'));await page.reload();await page.waitForSelector('#motion');assert.equal(await page.locator('#motion').isChecked(),false);
-  await nav('home');await page.locator('#tipsOpen').click();assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');await page.locator('#tipsClose').click();
+  await nav('growth');await page.locator('#petTips').click();assert.equal(await page.locator('.tips-panel').evaluate(e=>getComputedStyle(e).animationName),'none');await page.locator('#tipsClose').click();
  });
  let backup;
  await pass('09: JSON export + preview + confirmed replacement restores data',async()=>{await nav('settings');await page.evaluate(()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false});});const dp=page.waitForEvent('download');await page.locator('#export').click();const dl=await dp;backup=JSON.parse(fs.readFileSync(await dl.path(),'utf8'));assert.equal(backup.lines.length,1);await nav('history');await page.locator('[data-detail]').first().click();await page.locator('#delete').click();await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('削除しました'));await nav('settings');await page.locator('#import').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});await page.waitForSelector('#restore');await page.locator('#restoreAgree').check();await page.locator('#restore').click();await page.waitForSelector('.hero');const d=await page.evaluate(async()=>{const {load}=await import('./db.js');return load();});assert.deepEqual(d.lines,backup.lines);});
@@ -88,7 +88,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
  await pass('13: offline cold page opens cached subpath app and saved records',async()=>{await context.setOffline(true);const offline=await context.newPage();await offline.goto(base+'#history');await offline.waitForSelector('[data-detail]');assert.equal(await offline.locator('[data-detail]').count(),1);await offline.close();await context.setOffline(false);});
  await pass('14: Android-sized 360px layout and reduced-motion',async()=>{await page.setViewportSize({width:360,height:800});await page.emulateMedia({reducedMotion:'reduce'});for(const r of ['home','entry','history','analysis','growth','settings']){await nav(r);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),r+' overflow');}await nav('growth');assert.equal(await page.locator('.pet').evaluate(e=>getComputedStyle(e).animationName),'none');});
  await pass('v1.1.0: style denominators, missing source, historical join and offline cache',async()=>{
-  await nav('home');await page.locator('.home-extra > summary').click();await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.equal(await page.locator('#refreshRaces').isDisabled(),true);assert.match(await page.locator('#raceInfoStatus').innerText(),/提供元未設定/);assert.match(await page.locator('#raceInfoPanel').innerText(),/最終成功：未実施/);
+  await nav('settings');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.equal(await page.locator('#refreshRaces').isDisabled(),true);assert.match(await page.locator('#raceInfoStatus').innerText(),/提供元未設定/);assert.match(await page.locator('#raceInfoPanel').innerText(),/最終成功：未実施/);
   await nav('entry');assert.match(await page.locator('#raceMatch').innerText(),/情報未取得/);
   await nav('analysis');assert.match(await page.locator('#racingStyle').innerText(),/購入総額/);assert.equal(await page.locator('#racingStyle .style-group').count(),8);
   await page.locator('#racingStyle .style-group').evaluateAll(els=>els.forEach(e=>e.open=true));
@@ -101,7 +101,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await context.setOffline(false);
   // Corrupt only disposable metadata; startup must still load accounting.
   await page.evaluate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('umalog',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put({version:999},'raceCatalog');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};}));
-  await nav('home');await page.reload();await page.waitForSelector('.hero');await page.locator('.home-extra > summary').click();await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
+  await nav('settings');await page.reload();await page.waitForSelector('#raceInfoPanel');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
   await page.evaluate(async()=>{const {saveCatalog}=await import('./db.js');await saveCatalog((await import('./race-info.js')).emptyCatalog());});
  });
  await nav('home');await page.locator('#homeMonthly').click();await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});
