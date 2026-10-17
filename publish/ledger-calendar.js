@@ -25,7 +25,7 @@ export function smallMoney(amount){
  const sign=amount>0?'+':amount<0?'−':'';
  const absolute=Math.abs(amount);
  if(absolute<1000)return sign+absolute.toLocaleString('ja-JP');
- // Compact approximate values: avoid splitting 4-7 digit yen amounts across narrow date cells.
+ // Compact, approximate yen amounts to keep seven-column date cells readable. 1000万円 = 0.1億.
  // Exact money always stays available in the selected day's detail and aria-label.
  if(absolute<10000)return sign+(Math.floor(absolute/100)/10).toString()+'千';
  if(absolute<100000)return sign+(Math.floor(absolute/1000)/10).toString()+'万';
