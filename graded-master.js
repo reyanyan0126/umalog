@@ -1,6 +1,6 @@
 // Small independently arranged factual selection, manually checked against the URLs below.
 // Not a copy of the JRA calendar download, database, article or table layout.
-// Partial coverage only. See DEV3-DATA.md for sources, scope and limitations.
+// 2026-10-17 onwards: extended through 2026 year end; only selected 2027 plans.
 import {emptyCalendar,validateCalendar,meetingKey} from './calendar.js';
 import {raceKey} from './core.js';
 const checked='2026-10-16T23:13:51Z';
@@ -17,6 +17,49 @@ add({id:'jra-2027-kyoto-jump',date:'2027-05-15',venue:'京都',name:'京都ジ�
 add({id:'jra-2027-fukushima-jump',date:'2027-07-03',venue:'福島',name:'福島ジャンプステークス',grade:'J・GⅢ',distance:3350,surface:'障害',meetingNumber:2,dayNumber:3});
 add({id:'jra-2027-tokyo-high-jump',date:'2027-10-09',venue:'東京',name:'東京ハイジャンプ',grade:'J・GⅡ',distance:3110,surface:'障害',meetingNumber:4,dayNumber:3});
 add({id:'jra-2027-hopeful',date:'2027-12-28',venue:'中山',name:'ホープフルステークス',grade:'GⅠ',distance:2000,surface:'芝',meetingNumber:5,dayNumber:9});
+
+// Additional officially listed 2026 graded events, October 31 to year end.
+// Date / venue / grade / course are from JRA's 2026 graded-race list.
+// No programme number, start time or meeting sequence is inferred.
+const NEXT_2026=[
+  ['2026-10-31','京都','ファンタジーステークス','GⅢ',1400,'芝'],
+  ['2026-11-01','東京','天皇賞（秋）','GⅠ',2000,'芝'],
+  ['2026-11-07','東京','京王杯2歳ステークス','GⅡ',1400,'芝'],
+  ['2026-11-07','京都','京都ジャンプステークス','J・GⅢ',3170,'障害'],
+  ['2026-11-08','東京','アルゼンチン共和国杯','GⅡ',2500,'芝'],
+  ['2026-11-08','京都','みやこステークス','GⅢ',1800,'ダート'],
+  ['2026-11-14','東京','武蔵野ステークス','GⅢ',1600,'ダート'],
+  ['2026-11-14','京都','デイリー杯2歳ステークス','GⅡ',1600,'芝'],
+  ['2026-11-15','京都','エリザベス女王杯','GⅠ',2200,'芝'],
+  ['2026-11-21','福島','福島記念','GⅢ',2000,'芝'],
+  ['2026-11-22','京都','マイルチャンピオンシップ','GⅠ',1600,'芝'],
+  ['2026-11-23','東京','東京スポーツ杯2歳ステークス','GⅡ',1800,'芝'],
+  ['2026-11-28','京都','京都2歳ステークス','GⅢ',2000,'芝'],
+  ['2026-11-29','東京','ジャパンカップ','GⅠ',2400,'芝'],
+  ['2026-11-29','京都','京阪杯','GⅢ',1200,'芝'],
+  ['2026-12-05','中山','ステイヤーズステークス','GⅡ',3600,'芝'],
+  ['2026-12-05','阪神','鳴尾記念','GⅢ',1800,'芝'],
+  ['2026-12-06','中京','チャンピオンズカップ','GⅠ',1800,'ダート'],
+  ['2026-12-12','中京','中日新聞杯','GⅢ',2000,'芝'],
+  ['2026-12-13','中山','カペラステークス','GⅢ',1200,'ダート'],
+  ['2026-12-13','阪神','阪神ジュベナイルフィリーズ','GⅠ',1600,'芝'],
+  ['2026-12-19','中山','ターコイズステークス','GⅢ',1600,'芝'],
+  ['2026-12-20','阪神','朝日杯フューチュリティステークス','GⅠ',1600,'芝'],
+  ['2026-12-26','中山','中山大障害','J・GⅠ',4100,'障害'],
+  ['2026-12-26','中山','ホープフルステークス','GⅠ',2000,'芝'],
+  ['2026-12-26','阪神','阪神カップ','GⅡ',1400,'芝'],
+  ['2026-12-27','中山','有馬記念','GⅠ',2500,'芝']
+];
+const official2026='https://www.jra.go.jp/datafile/seiseki/replay/2026/jyusyo.html';
+for(const [date,venue,name,grade,distance,surface] of NEXT_2026){
+ const eventId='jra-2026-scheduled-'+date.slice(5)+'-'+venue+'-'+name;
+ const base={date,venue,status:'planned',approval:'approved',sourceURL:official2026,sourceUpdatedAt:null,retrievedAt:checked};
+ if(!c.meetings.some(m=>m.date===date&&m.venue===venue)){
+  c.meetings.push({...base,meetingNumber:null,dayNumber:null});
+ }
+ c.featuredEvents.push({...base,eventId,name,grade,gradeStatus:'confirmed',proposedGrade:null,condition:null,number:null,distance,surface,startTime:null});
+}
+
 export const GRADED_MASTER=validateCalendar(c);
 // User imports have explicit priority, including cancellations and loss of a known number.
 // Stable eventId is required for simultaneous date/venue/name corrections.
