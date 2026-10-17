@@ -41,7 +41,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  const section=elem('section','card ledger-calendar');
  section.id='ledgerCalendar';
  const title=elem('h2',null,'収支カレンダー');
- const help=elem('p','help ledger-hint','円・万は概数 / 待＝結果待ち / ◆＝重賞。日付で正確な金額');
+ const help=elem('p','help ledger-hint','金額は短縮表示 / 待＝結果待ち / ◆＝重賞。日付で正確な金額');
  let view=options.view||'month',selectedDate=options.selectedDate;
  const toggle=elem('div','view-toggle');toggle.setAttribute('aria-label','カレンダー表示');
  const monthButton=elem('button','quiet','月表示'),listButton=elem('button','quiet','詳細リスト');monthButton.type=listButton.type='button';toggle.append(monthButton,listButton);
