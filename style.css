@@ -305,3 +305,9 @@ html,body,body *{touch-action:manipulation}
 .entry-legacy{margin-top:12px;font-size:.8125rem}
 .entry-legacy summary{cursor:pointer;padding:10px 0;color:var(--muted)}
 #entryResultSummary{margin:8px 0 10px;font-weight:650}
+
+.home-day-link{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.home-day-link>div{display:grid;gap:2px}
+.home-day-link small{color:var(--muted)}
+.home-day-link strong{font-size:1rem}
+.home-day-link .button{font-size:.8125rem;min-height:44px;display:inline-flex;align-items:center;padding:8px 12px;text-decoration:none}
