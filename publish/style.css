@@ -431,3 +431,21 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 #exportCsv{margin:10px 0 4px}
 @media(max-width:359px){.day-edit-row{grid-template-columns:minmax(0,1fr) auto}.day-edit-row small{grid-column:1/-1;grid-row:2}.day-edit-row button{grid-column:2;grid-row:1}.history-race{padding:9px}.correction-dialog{padding:12px}}
 @media(prefers-reduced-motion:reduce){.correction-dialog{scroll-behavior:auto}}
+
+
+/* v1.3.0 RC: recovery-first mobile entry, explicit race numbers and clear data safety. */
+.entry-draft-alert{border-color:#96b8a4;background:#f1f8f2;padding:14px}
+.entry-draft-alert h2{font-size:1rem;margin:0 0 6px}
+.entry-draft-alert .help{margin:6px 0 12px}
+.entry-draft-alert button{min-height:48px;margin-top:6px}
+.entry-draft-alert[hidden]{display:none}
+.entry-save-status{margin:2px 0 10px;font-size:.73rem;line-height:1.45;color:#547463}
+.race-fast-picks{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:-3px 0 12px}
+.race-fast-picks button{border-radius:9px;min-width:0;min-height:42px;padding:6px 2px;font-size:.79rem}
+.race-fast-picks button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}
+.backup-summary{background:#f2f5ef;padding:12px;border-radius:12px;margin:8px 0 16px}
+.backup-summary .day-metrics{margin:0 0 7px}
+.backup-summary .help{font-size:.72rem;margin:0}
+#homeBudget .budget-widget{margin-bottom:14px}
+@media(max-width:359px){.race-fast-picks{gap:3px}.race-fast-picks button{font-size:.74rem}.backup-summary{padding:8px}}
+@media(prefers-reduced-motion:reduce){.entry-draft-alert{animation:none}}
