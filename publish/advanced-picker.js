@@ -11,7 +11,7 @@ const make=(tag,text,className='')=>{const e=document.createElement(tag);e.textC
 export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,normalPad){
  let axes=[],partners=[],groups=[[],[],[]],axisCount=1,position='first',active=0;
  const reset=()=>{axes=[];partners=[];groups=[[],[],[]];axisCount=1;position='first';active=0;};
- const selection=()=>modeSelect.value==='flow'?{axes:[...axes],partners:[...partners],axisCount,position}:{groups:groups.map(g=>[...g])};
+ const selection=()=>modeSelect.value==='flow'?{axes:[...axes],partners:[...partners],axisCount,position}:{groups:groups.slice(0,triple(typeSelect.value)?3:2).map(g=>[...g])};
  const render=()=>{
   const type=typeSelect.value,mode=modeSelect.value,advanced=mode==='flow'||mode==='formation';
   host.hidden=!advanced;manualInput.closest('label').hidden=advanced;
