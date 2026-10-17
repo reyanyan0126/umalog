@@ -74,6 +74,8 @@ await pass('JRA-style number tap: BOX expands 5 horses, ordered trifecta saves a
  assert.equal(await page.locator('#numbers').inputValue(),'3 4 5');
  await page.locator('#stake').fill('500');
  await page.locator('#addLine').click();
+ await page.locator('#date').fill('2026-10-20');
+ await page.locator('#number').selectOption('8');
  await page.locator('#raceName').fill('着順登録テスト');
  await page.locator('#entryForm button[type=submit]').click();
  await page.waitForSelector('[data-detail]');
