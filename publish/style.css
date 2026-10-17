@@ -153,3 +153,41 @@ main li p{margin-block:3px}
 .analysis-filter-panel h2{margin-bottom:8px}
 .analysis-filter-panel .help{margin:6px 0 0}
 @media(min-width:640px){.analysis-controls{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+
+/* dev.4: compact ledger UX. Keep 44px interactive controls and natural text scaling. */
+main h1{margin:6px 0 11px}
+main h2{margin:0 0 8px}
+main h3{margin:5px 0}
+main p{line-height:1.45;margin:6px 0}
+main .help{line-height:1.4;margin:4px 0}
+main small{line-height:1.35}
+main .card{padding:12px;margin-bottom:9px;border-radius:14px}
+main label{margin-bottom:8px;line-height:1.4}
+main input,main select,main textarea{margin-top:4px;padding:8px 10px;min-height:44px}
+main .grid{gap:8px}
+main .metrics{gap:9px}
+main .line{padding:8px;margin:6px 0}
+main .history-item{padding:8px 0}
+main .graded-list li{padding:4px 0}
+main .graded-link{min-height:44px}
+main .ledger-calendar{padding:8px 4px}
+main .ledger-day,main .ledger-day[aria-pressed="true"]{min-height:49px;gap:0;padding:2px 2px}
+main .ledger-day .ledger-number{line-height:1.15}
+main .ledger-day .ledger-money{line-height:1.15;min-height:0}
+main .ledger-day .ledger-event{font-size:.625rem;line-height:1.1;white-space:nowrap}
+main .ledger-detail{padding:10px;margin-top:9px}
+main .ledger-list-item{padding:6px 0}
+main .ledger-list-item p{margin:3px 0}
+main .month-actions,main .view-toggle{margin-bottom:8px;gap:6px}
+main .page-heading{margin-bottom:5px}
+.graded-quick{margin-bottom:7px}
+.graded-quick-options{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.graded-quick-item{display:inline-flex;gap:5px;flex-wrap:wrap;min-height:44px;padding:7px 9px;text-align:left;font-size:.8125rem;align-items:center}
+.graded-quick-item .graded-quick-date{color:#fff;background:var(--green);border-radius:4px;padding:1px 4px;font-size:.6875rem}
+.graded-quick-item small{font-size:.6875rem}
+@media(max-width:360px){
+ main .card{padding:9px}
+ main .ledger-calendar{padding:7px 0}
+ main .ledger-day,main .ledger-day[aria-pressed="true"]{min-height:47px;padding:2px 1px}
+}
