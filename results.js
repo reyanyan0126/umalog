@@ -1,4 +1,4 @@
-import {check,money,summarize} from './core.js';
+import {check,money,summarize,summaryWager} from './core.js';
 
 // UI choices never change the persisted schema.
 export function resultChoice(line){
@@ -22,6 +22,20 @@ export function resultValue(line,choice,payout=0,refund=0,status=line.status){
 }
 
 export function mountResults(form,lines,{save,onDirty,notify,guard}){
+ if(lines.length===1&&lines[0].summary===true){
+  const line=lines[0],paid=line.status==='pending'?'':String(line.payout);
+  form.innerHTML=`<section class="card"><h2>収支の入力・訂正</h2>
+  <label>購入合計額<input id="summaryStake" type="number" min="100" step="100" inputmode="numeric" required value="${line.stake}"></label>
+  <label>払戻額<input id="summaryPayout" type="number" min="0" step="1" inputmode="numeric" placeholder="結果未入力なら空欄" value="${paid}"></label>
+  <details ${line.refund?'open':''}><summary>返還がある場合</summary><label>返還額<input id="summaryRefund" type="number" min="0" step="1" inputmode="numeric" value="${line.refund}"></label></details>
+  <p id="resultPreview" role="status"></p><button type="submit" class="full accent">収支を保存</button></section>`;
+  const q=key=>form.querySelector(key);
+  const compute=()=>summaryWager(q('#summaryStake').value,q('#summaryPayout').value,q('#summaryRefund').value);
+  const preview=()=>{try{const v=compute();q('#resultPreview').textContent=v.status==='pending'?'払戻は未入力':'収支 '+(v.payout+v.refund-v.stake>0?'+':'')+(v.payout+v.refund-v.stake).toLocaleString('ja-JP')+'円';}catch(e){q('#resultPreview').textContent=e.message;}};
+  form.oninput=()=>{onDirty();preview();};
+  form.onsubmit=guard(async e=>{e.preventDefault();await save([{...line,...compute()}]);});
+  preview();return;
+ }
   const yen=n=>n.toLocaleString('ja-JP')+'円';
   const rows=lines.map(l=>({...l,choice:resultChoice(l)}));
   form.innerHTML='<section class="card"><h2>購入した馬券の結果を記録</h2><p class="help">レース後に手入力します。払戻は実際に受け取った合計額（100円あたりの配当ではありません）。返還は取消などで購入額が戻ることで、的中には含めません。</p><button type="button" id="zero" class="quiet full">未入力をまとめて不的中にする</button><p class="help">未入力の買い目だけを変更します。的中・返還はそのまま保持します。</p><div id="resultRows"></div><p id="resultPreview" role="status"></p><button type="submit" class="full accent">結果を保存・集計に反映</button></section>';
