@@ -15,6 +15,8 @@ import {mountResults} from './results.js';
 import {mountEntryResults} from './entry-results.js';
 import {mountFastResults} from './fast-results.js';
 import {mountEntrySheets} from './entry-sheets.js';
+import {openLineCorrection} from './line-correction.js';
+import {raceHistory,ledgerCSV,budgetStatus,setMonthlyBudget,monthReview} from './ledger-tools.js';
 import {dayLedger,existingPurchaseDuplicates,periodInsights} from './day-ledger.js';
 import {growthRewards} from './growth-rewards.js';
 import {mountRaceBatch} from './batch-ui.js';
@@ -37,6 +39,28 @@ async function commit(next){check(!busy,'保存中です。');busy=true;const bu
 function metric(label,value){return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;}
 function pet(){const c=data.character;return `<img class="pet stage${c.stage}" src="./assets/stage-${c.stage}.svg" alt="${STAGE_NAMES[c.stage]}">`;}
 function totals(s){return `<div class="metrics">${metric('確定済み購入',yen(s.purchase))}${metric('払戻・返還',yen(s.payout+s.refund))}${metric('回収率',rate(s.returnRate))}${metric('買い目単位的中率',rate(s.lineRate))}</div>`;}
+function budgetWidget(source,selectedMonth){
+ const b=budgetStatus(source,selectedMonth);
+ return `<section class="card budget-widget"><div class="row"><div><small>${esc(selectedMonth)} · 購入額の予算</small><h2>${b.budget===null?'未設定':yen(b.budget)}</h2></div><a class="quiet button" href="#settings">予算を設定</a></div><p class="help">記録した購入額 ${yen(b.purchase)}${b.budget===null?'':` ／ 残り ${signed(b.remaining)}`}${b.pending?'（結果未入力の購入も含む）':''}</p>${b.budget!==null?`<progress aria-label="月間予算の使用割合" max="100" value="${Math.min(100,b.ratio)}"></progress>${b.over?'<p class="help negative">設定した予算を超えています。</p>':''}`:''}</section>`;
+}
+function monthlyReviewPanel(source,selectedMonth){
+ const m=monthReview(source,selectedMonth),s=m.totals;
+ return `<section class="card month-review"><h2>${esc(selectedMonth)} の振り返り</h2><p class="help">記録 ${m.days}日 · 確定購入 ${yen(s.purchase)} · 払戻 ${yen(s.payout)} · 返還 ${yen(s.refund)}</p><p>${m.result}</p><p class="help">${m.notes}${m.warning?'<br>'+m.warning:''}</p><p class="help">表示内容は記録された数字の整理であり、次の購入を推奨するものではありません。</p></section>`;
+}
+function startLineCorrection(id,onDone){
+ if(dirty&&!confirm('ほかに未保存の入力があります。保存せずにこの買い目を訂正しますか？'))return;
+ const l=data.lines.find(x=>x.id===id);check(l,'買い目が見つかりません。');
+ const t=data.tickets.find(x=>x.id===l.ticketId);check(t,'券種情報がありません。');
+ openLineCorrection({line:l,ticket:t,onSave:async changes=>{
+  const latest=clone(data),target=latest.lines.find(x=>x.id===id);
+  check(target&&target.ticketId===t.id,'訂正対象が更新されています。再表示してください。');
+  Object.assign(target,changes);await commit(latest);
+  onDone();notify('この買い目の訂正を保存しました。');
+ }});
+}
+function bindQuickEdits(onDone){
+ app.querySelectorAll('[data-quick-edit]').forEach(button=>button.onclick=guard(()=>startLineCorrection(button.dataset.quickEdit,onDone)));
+}
 function ticketInfo(t){const r=data.races.find(r=>r.id===t.raceId),ls=data.lines.filter(l=>l.ticketId===t.id),s=summarize(ls);return {r,ls,s};}
 function ticketCard(t){const {r,ls,s}=ticketInfo(t);const status=s.pendingCount?(s.settledCount?'一部確定':'未入力'):s.lineCount===0?'返還':s.lineHits?'的中':'不的中';return `<div class="history-item"><div class="row"><div><small>${r.date} · ${r.venue} ${r.number}R</small><h3>${esc(r.name||r.venue+' '+r.number+'R')} <span class="tag">${t.type}</span></h3></div><strong class="${s.profit<0?'negative':'positive'}">${s.settledCount?signed(s.profit):'未入力'}</strong></div><small><span class="tag">${status}</span> ${ls.length}点 · 購入 ${yen(ls.reduce((a,l)=>a+l.stake,0))} </small><br><button class="quiet" data-detail="${t.id}">詳細・結果入力</button></div>`;}
 function bindDetails(){document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{location.hash='detail/'+b.dataset.detail;});}
