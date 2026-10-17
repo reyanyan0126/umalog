@@ -21,6 +21,7 @@ on:
       - work/v1.2.0-dev10-entry-quick-review
       - work/v1.2.0-dev11-postrace-ledger
       - work/v1.2.0-dev14-daily-analysis-rewards
+      - work/v1.2.0-dev15-fast-entry-sheets
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -49,6 +50,9 @@ jobs:
           node-version: '22'
       - name: Check source and publish consistency
         run: python tools/check_publish.py
+      - name: Check ESM syntax in source and publish
+        run: |
+          for name in app.js entry-results.js fast-results.js entry-sheets.js; do node --check "$name"; node --check "publish/$name"; done
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
@@ -67,6 +71,12 @@ jobs:
             args: []
           };
           EOF
+
+      - name: Dev15 genuine entry sheets and fast multi-hit source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
+      - name: Dev15 genuine entry sheets and fast multi-hit publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs
+
       - name: 'Old dev.8 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
       - name: Fresh session update protects unsaved edits

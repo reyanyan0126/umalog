@@ -11,7 +11,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000);
   const pass=async(label,fn)=>{await fn();passes.push(label);console.log('PASS '+label);};
   const nav=async hash=>{await page.evaluate(h=>location.hash=h,hash);await page.waitForTimeout(100);};
-  await page.goto('http://127.0.0.1:8014'+prefix);await page.waitForSelector('.hero');
+  await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto('http://127.0.0.1:8014'+prefix);await page.waitForSelector('.hero');
   await pass('dev12 home and empty-day link',async()=>{
    assert.equal(await page.locator('a[href^="#day/"]').count(),1);
    await nav('day/2026-10-17');assert.match(await page.locator('#app').innerText(),/この日の記録はありません/);

@@ -10,7 +10,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000);
   const pass=async(name,fn)=>{await fn();passed.push(name);console.log('PASS '+name);};
-  await page.goto('http://127.0.0.1:8011'+prefix);await page.waitForSelector('.hero');
+  await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto('http://127.0.0.1:8011'+prefix);await page.waitForSelector('.hero');
   await page.evaluate(()=>location.hash='entry');await page.waitForSelector('#entryForm');
   await pass('new entries cannot become silent unconfirmed ledger data',async()=>{
    await page.locator('#date').fill('2026-10-17');
