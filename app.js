@@ -146,9 +146,51 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
  $('#entryForm').oninput=e=>{dirty=true;scheduleEntryDraft();if(['date','venue','number','raceName'].includes(e.target.id))updateDraftTotals();if(['numbers','stake','advancedPicker','type','mode'].includes(e.target.id))showEstimate();};
  $('#entryForm').addEventListener('change',e=>{scheduleEntryDraft();if(['date','venue','number','raceName'].includes(e.target.id))updateDraftTotals();if(['type','mode','stake'].includes(e.target.id)){dirty=true;showEstimate();}});
  $('#addLine').onclick=guard(()=>{check(!/^[\s]*[-−]/.test($('#numbers').value),'負の番号は入力できません。');const type=$('#type').value,ns=$('#numbers').value.trim().split(/[\s,、・\-→]+/).filter(Boolean).map(Number),amount=money(Number($('#stake').value),true),mode=$('#mode').value,cs=generateBets(type,mode,mode==='normal'||mode==='box'?{numbers:ns}:advancedPicker.selection());check(draft.length+cs.length<=10000,'1回の登録は10,000点までです。');for(const numbers of cs){const found=$('#duplicate').value==='merge'&&draft.find(l=>l.type===type&&l.status==='pending'&&l.purchaseMode===mode&&JSON.stringify(l.numbers)===JSON.stringify(numbers));if(found){found.stake=money(found.stake+amount,true);}else draft.push({id:uid(),type,numbers,stake:amount,purchaseMode:mode,status:'pending',payout:0,refund:0});}dirty=true;renderDraft();showEstimate();entrySheetController?.close();notify(`${cs.length}点を追加しました（合計 ${yen(draft.reduce((n,l)=>n+l.stake,0))}）。`);});
+ const draftId=id||'new',draftBaseSignature=id?JSON.stringify(data.lines.filter(l=>l.ticketId===id)):'';
+ const captureEntryDraft=()=>({
+  version:1,key:draftId,updatedAt:new Date().toISOString(),baseSignature:draftBaseSignature,
+  race:{date:$('#date').value,venue:$('#venue').value,number:$('#number').value,name:$('#raceName').value},
+  lines:draft.map(l=>({...l})),advanced:advancedPicker.selection(),
+  fields:Object.fromEntries(['type','mode','numbers','stake','duplicate','memo','saveNextRace','allowUnfinished'].map(field=>{
+   const el=$('#'+field);return [field,el.type==='checkbox'?(el.checked?'1':'0'):el.value];
+  }))
+ });
+ const statusEl=$('#entryDraftStatus');
+ const currentDraftSession=createEntryDraftAutosaver({
+  key:draftId,capture:captureEntryDraft,
+  onSaved:record=>{if(entryDraftSession===currentDraftSession&&statusEl?.isConnected)statusEl.textContent='下書きを端末内に保存済み · '+new Date(record.updatedAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});},
+  onError:error=>{if(entryDraftSession===currentDraftSession&&statusEl?.isConnected)statusEl.textContent='下書き保存に失敗：'+error.message;}
+ });
+ entryDraftSession=currentDraftSession;
+ const recovery=$('#entryDraftRecovery');
+ loadEntryDraft(draftId).then(saved=>{
+  if(entryDraftSession!==currentDraftSession||!recovery.isConnected)return;
+  if(!saved){currentDraftSession.start();statusEl.textContent='入力すると下書きを自動保存します';if(dirty)currentDraftSession.schedule();return;}
+  let valid=true;
+  try{validateEntryDraft(saved);check(saved.key===draftId&&saved.baseSignature===draftBaseSignature,'下書きの元になった記録が変更されています。');}catch{valid=false;}
+  recovery.hidden=false;
+  recovery.innerHTML=`<h2>${valid?'入力途中の下書きがあります':'保存済みの下書きを復元できません'}</h2><p class="help">${valid?esc(saved.race.date+' · '+saved.race.venue+' '+(saved.race.number||'未選択')+'R · '+saved.lines.length+'点'):'過去の記録が変更されたか、下書きが不正です。確定済み帳簿は変更されていません。'}</p>${valid?'<button class="full" type="button" id="recoverEntryDraft">続きを入力する</button>':''}<button type="button" id="discardEntryDraft" class="quiet full">下書きを破棄して新規入力</button>`;
+  statusEl.textContent=valid?'復元か破棄を選択してください':'安全のため下書きの復元を停止しました';
+  const discard=recovery.querySelector('#discardEntryDraft');
+  discard.onclick=guard(async()=>{if(!confirm('入力途中の下書きを完全に破棄しますか？'))return;await discardEntryDraft(draftId);recovery.hidden=true;currentDraftSession.start();statusEl.textContent='新しい下書きの自動保存が有効です';if(dirty)currentDraftSession.schedule();});
+  const recover=recovery.querySelector('#recoverEntryDraft');
+  if(recover)recover.onclick=guard(async()=>{
+   if(dirty&&!confirm('現在画面に入力した内容を、保存されている下書きで置き換えますか？'))return;
+   draft=saved.lines.map(l=>({...l}));
+   for(const id of ['date','venue','number','raceName'])$('#'+id).value=({date:saved.race.date,venue:saved.race.venue,number:saved.race.number,raceName:saved.race.name})[id];
+   for(const [field,value]of Object.entries(saved.fields)){const el=$('#'+field);if(!el)continue;if(el.type==='checkbox')el.checked=value==='1';else el.value=value;}
+   $('#type').dispatchEvent(new Event('change'));$('#mode').dispatchEvent(new Event('change'));
+   advancedPicker.restore(saved.advanced);
+   numberPad.refresh();match();updateRaceButtons();
+   entryResultsEditor.reset(draft);fastResultsEditor?.render(draft);
+   dirty=true;renderDraft();showEstimate();recovery.hidden=true;
+   currentDraftSession.start();currentDraftSession.schedule();
+   notify('保存していた下書きを復元しました。確定済み収支にはまだ反映していません。');
+  });
+ }).catch(error=>{if(entryDraftSession!==currentDraftSession)return;statusEl.textContent='下書きを読み込めません：'+error.message;currentDraftSession.start();});
  $('#entryForm').onsubmit=guard(async e=>{e.preventDefault();if(busy||entrySaved)return;const review=reviewBets(draft);check(!review.duplicates.length||$('#entryDuplicatesConfirmed')?.checked,'同じ組番の追加購入を確認してください。');check(!draft.some(l=>l.status==='settled'&&!Number.isFinite(l.payout)),'的中馬券の払戻金を正しく入力してください。');const completed=entryResultsEditor.values();check(completed.every(l=>l.status!=='pending')||$('#allowUnfinished').checked,'すべての買い目の結果を入力してください。結果未入力の行は保存できません。');check(Number($('#number').value)>=1&&Number($('#number').value)<=12,'レース番号を確認して選択してください。');check(draft.length,'買い目を追加してください。');const next=clone(data),r={date:$('#date').value,venue:$('#venue').value,number:Number($('#number').value),name:$('#raceName').value.trim()},kind=t?.kind||'reported',memo=$('#memo').value.trim();const overlaps=existingPurchaseDuplicates(data,r,draft,editing);check(!overlaps.length||$('#existingDuplicatesConfirmed')?.checked,'登録済みの同じ買い目があります。重複を確認してください。');const continueNext=!editing&&$('#saveNextRace').checked;let race=next.races.find(x=>raceKey(x)===raceKey(r));if(!race){race={...r,id:uid()};next.races.push(race);}else race.name=r.name;
  if(editing){const old=next.tickets.find(t=>t.id===editing);old.raceId=race.id;old.kind=kind;old.memo=memo;next.lines=next.lines.filter(l=>l.ticketId!==editing);next.lines.push(...completed.map(({type,...l})=>({...l,ticketId:editing})));}else{for(const type of new Set(draft.map(l=>l.type))){const ticket={id:uid(),raceId:race.id,type,kind,memo,createdAt:new Date().toISOString()};next.tickets.push(ticket);next.lines.push(...completed.filter(l=>l.type===type).map(({type,...l})=>({...l,ticketId:ticket.id})));}}
- next.races=next.races.filter(r=>next.tickets.some(t=>t.raceId===r.id));entrySaved=true;try{await commit(next);}catch(error){entrySaved=false;throw error;}notify('保存しました。');location.hash=continueNext?'entry-next/'+r.date+'/'+encodeURIComponent(r.venue):'history';});
+ next.races=next.races.filter(r=>next.tickets.some(t=>t.raceId===r.id));entrySaved=true;try{await entryDraftSession?.pauseForCommit();await commit(next,{clearDraftKey:entryDraftKey});await entryDraftSession?.stop();entryDraftSession=null;}catch(error){entrySaved=false;entryDraftSession?.resume();entryDraftSession?.schedule();throw error;}notify('保存しました。');location.hash=continueNext?'entry-next/'+r.date+'/'+encodeURIComponent(r.venue):'history';});
 }
 function updateDraftTotals(){
  if(!$('#draft .entry-total'))return;
