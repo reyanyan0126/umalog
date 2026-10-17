@@ -191,3 +191,28 @@ main .page-heading{margin-bottom:5px}
  main .ledger-calendar{padding:7px 0}
  main .ledger-day,main .ledger-day[aria-pressed="true"]{min-height:47px;padding:2px 1px}
 }
+
+
+/* v1.2 dev.5: clear, uniform dock icons with visible text labels. */
+nav a .dock-icon{display:block;box-sizing:content-box;width:23px;height:23px;margin:0 auto;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;fill:none;overflow:visible;flex-shrink:0}
+nav a[aria-current="page"] .dock-icon{stroke-width:2.25}
+nav a span{white-space:nowrap;overflow-wrap:normal;letter-spacing:-.02em}
+nav a{min-width:44px}
+
+/* Two essentials only: P/L hero and a compact, one-line graded-race preview. */
+.graded-home-compact{padding:10px 12px!important}
+.graded-home-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px}
+.graded-home-heading h2{margin:0;font-size:1rem}
+.graded-home-heading small{font-size:.6875rem}
+.graded-soon-compact{list-style:none;padding:0!important;margin:0 0 3px!important}
+.graded-soon-compact li{border-bottom:1px solid var(--border);padding:0;margin:0}
+.graded-soon-compact li:last-child{border-bottom:0}
+.graded-soon-link{display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;align-items:center;gap:6px;text-decoration:none;color:var(--green);min-height:44px;padding:4px 0}
+.graded-soon-date{font-variant-numeric:tabular-nums;font-size:.75rem;color:var(--muted)}
+.graded-soon-name{font-size:.825rem;line-height:1.3;font-weight:650;min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.graded-soon-grade{font-size:.69rem;white-space:nowrap;border:1px solid var(--border);border-radius:4px;padding:2px 4px}
+.graded-soon-disabled{color:var(--muted)}
+.graded-home-compact #gradedAll{margin:3px 0 0}
+.graded-home-compact #gradedAll > summary{padding:8px 0;min-height:44px;display:flex;align-items:center;font-size:.8125rem}
+.pet-tips{margin-top:6px;width:100%;min-height:44px}
+@media(max-width:360px){.graded-home-compact{padding:8px 9px!important}.graded-soon-link{gap:4px;grid-template-columns:2.5rem minmax(0,1fr) auto}}
