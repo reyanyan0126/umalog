@@ -311,3 +311,36 @@ html,body,body *{touch-action:manipulation}
 .home-day-link small{color:var(--muted)}
 .home-day-link strong{font-size:1rem}
 .home-day-link .button{font-size:.8125rem;min-height:44px;display:inline-flex;align-items:center;padding:8px 12px;text-decoration:none}
+
+/* dev12-14: daily ledger and compact period/growth panels. */
+.day-summary .balance{font-size:1.75rem;margin:4px 0}
+.day-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0}
+.day-metrics .metric{background:#f2f5ef;border-radius:9px;padding:7px 5px;min-width:0}
+.day-metrics .metric span{font-size:.675rem}
+.day-metrics .metric strong{font-size:.89rem}
+.day-race h3{margin:2px 0;font-size:.95rem}
+.day-ticket{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;border-top:1px solid var(--border);padding:9px 0;font-size:.825rem}
+.day-ticket>*{min-width:0;overflow-wrap:anywhere}
+.day-ticket a{min-height:44px;display:inline-flex;align-items:center}
+.day-next{min-height:44px;display:inline-flex;align-items:center;margin-top:4px}
+#existingDuplicateReview{margin:8px 0}
+#existingDuplicateReview .help{color:#765225}
+.analysis-insights .analysis-extremes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+.analysis-insights .analysis-extremes p{min-width:0;background:#f5f7f2;padding:8px;border-radius:9px;overflow-wrap:anywhere;font-size:.78rem}
+.analysis-insights .analysis-extremes b{display:block;margin-top:3px}
+.daily-trend{display:grid;gap:2px}
+.daily-trend>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.1fr);gap:5px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+.daily-trend strong{text-align:right}
+.reward-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid var(--border);font-size:.8125rem}
+.reward-item:last-child{border-bottom:0}
+.reward-icon{font-size:1.45rem;text-align:center}
+.reward-item>div{min-width:0}
+.reward-item small{display:block;font-size:.72rem;color:var(--muted);line-height:1.35}
+.reward-progress{font-size:.72rem;white-space:nowrap;color:var(--muted)}
+.reward-item.is-locked{opacity:.65}
+.reward-item.is-unlocked b{color:#256347}
+@keyframes reward-pop{0%{box-shadow:0 0 0 0 #e2b95a99}50%{box-shadow:0 0 0 7px #e2b95a55}100%{box-shadow:0 0 0 0 transparent}}
+.reward-panel.reward-celebrate{animation:reward-pop .6s ease-out}
+body.no-motion .reward-panel.reward-celebrate{animation:none}
+@media(prefers-reduced-motion:reduce){.reward-panel.reward-celebrate{animation:none}}
+@media(max-width:360px){.day-metrics .metric strong{font-size:.8rem}.day-ticket{gap:5px;font-size:.75rem}.analysis-insights .analysis-extremes{grid-template-columns:1fr}.daily-trend>div{font-size:.72rem}}
