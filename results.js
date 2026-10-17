@@ -24,7 +24,7 @@ export function resultValue(line,choice,payout=0,refund=0,status=line.status){
 export function mountResults(form,lines,{save,onDirty,notify,guard}){
   const yen=n=>n.toLocaleString('ja-JP')+'円';
   const rows=lines.map(l=>({...l,choice:resultChoice(l)}));
-  form.innerHTML='<section class="card"><h2>買い目ごとの結果入力</h2><p class="help">払戻は的中で受け取った合計額（100円あたりの配当ではありません）。返還は取消などで購入額が戻ることで、的中には含めません。</p><button type="button" id="zero" class="quiet full">残りの買い目をまとめて不的中にする</button><p class="help">結果待ちだけを変更します。入力済みの的中・返還は保持します。</p><div id="resultRows"></div><p id="resultPreview" role="status"></p><button type="submit" class="full accent">結果を保存・集計に反映</button></section>';
+  form.innerHTML='<section class="card"><h2>購入した馬券の結果を記録</h2><p class="help">レース後に手入力します。払戻は実際に受け取った合計額（100円あたりの配当ではありません）。返還は取消などで購入額が戻ることで、的中には含めません。</p><button type="button" id="zero" class="quiet full">残りの買い目をまとめて不的中にする</button><p class="help">結果待ちだけを変更します。入力済みの的中・返還は保持します。</p><div id="resultRows"></div><p id="resultPreview" role="status"></p><button type="submit" class="full accent">結果を保存・集計に反映</button></section>';
   const container=form.querySelector('#resultRows');
   const choices=[['pending','結果待ち'],['hit','的中'],['miss','不的中'],['refund','出走取消などで返金'],['advanced','詳細入力（一部返還など）']];
   const select=(values,current)=>values.map(([v,label])=>`<option value="${v}" ${v===current?'selected':''}>${label}</option>`).join('');
