@@ -46,7 +46,7 @@ test('invalid pools and unsupported patterns fail without partial output',()=>{
  ['単勝','flow',{axes:[1],partners:[2]}],
  ['複勝','formation',{groups:[[1],[2]]}],
  ['三連複','flow',{axisCount:2,axes:[1],partners:[2,3]}],
- ['三連単','formation',{groups:[[1],[2],[]}],
+ ['三連単','formation',{groups:[[1],[2],[]]}],
  ['馬連','flow',{axes:[1],partners:[]}],
  ['三連単','formation',{groups:[[1,1],[2],[3]]}],
  ['馬連','formation',{groups:[[0],[2]]}],
