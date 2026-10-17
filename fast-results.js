@@ -4,7 +4,7 @@ const fmt=l=>l.numbers.join(['馬単','三連単'].includes(l.type)?'→':'－')
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function mountFastResults(host,{onChange,onAdvanced}){
  let lines=[],visible=50,confirming=false;
- const status=l=>l.status==='pending'?'未入力':l.status==='void'?'返還':l.refund>0?'一部返還':l.payout>0?'的中':'不的中';
+ const status=l=>l.status==='pending'?'未入力':l.status==='void'?'返還':l.refund>0?'一部返還':Number.isNaN(l.payout)?'払戻金を入力':l.payout>0?'的中':'不的中';
  const pending=()=>lines.filter(l=>l.status==='pending').length;
  const hitCount=()=>lines.filter(l=>l.status==='settled'&&l.payout>0).length;
  function render(next=lines){
@@ -13,7 +13,7 @@ export function mountFastResults(host,{onChange,onAdvanced}){
   <p class="help">複数選択できます。払戻は実際の受取額を買い目ごとに入力。返還は別に指定します。</p>
   <div class="fast-bet-list">${lines.slice(0,visible).map((l,i)=>`<div class="fast-bet-row" data-fast-row="${i}">
    <div class="fast-bet-name"><b>${esc(l.type)} ${fmt(l)}</b><small>購入 ${yen(l.stake)} · ${status(l)}</small></div>
-   <div class="fast-bet-actions"><button type="button" data-fast-hit="${i}" class="${l.status==='settled'&&l.payout>0?'selected':''}" aria-pressed="${l.status==='settled'&&l.payout>0}">的中</button><button type="button" data-fast-refund="${i}" class="${l.status==='void'?'selected':''}" aria-pressed="${l.status==='void'}">返還</button></div>
+   <div class="fast-bet-actions"><button type="button" data-fast-hit="${i}" class="${l.status==='settled'&&(l.payout>0||Number.isNaN(l.payout))?'selected':''}" aria-pressed="${l.status==='settled'&&(l.payout>0||Number.isNaN(l.payout))}">的中</button><button type="button" data-fast-refund="${i}" class="${l.status==='void'?'selected':''}" aria-pressed="${l.status==='void'}">返還</button></div>
    ${l.status==='settled'&&l.payout!==0?`<label class="fast-payout">払戻金（実際の受取額・円）<input data-fast-payout="${i}" type="number" min="1" step="1" inputmode="numeric" value="${Number.isFinite(l.payout)?l.payout:''}" placeholder="金額を入力"></label>`:''}
    ${l.status==='settled'&&l.refund>0?`<small>一部返還 ${yen(l.refund)}</small>`:''}
    <button type="button" class="fast-detail-link" data-fast-advanced="${i}">一部返還・詳細</button>
@@ -32,7 +32,7 @@ export function mountFastResults(host,{onChange,onAdvanced}){
   const index=Number(b.dataset.fastHit??b.dataset.fastRefund??b.dataset.fastAdvanced),l=lines[index];if(!l)return;
   if(b.dataset.fastAdvanced!==undefined){onAdvanced(index);return;}
   if(b.dataset.fastHit!==undefined){
-   if(l.status==='settled'&&l.payout>0){Object.assign(l,{status:'pending',payout:0,refund:0});}
+   if(l.status==='settled'&&(l.payout>0||Number.isNaN(l.payout))){Object.assign(l,{status:'pending',payout:0,refund:0});}
    else Object.assign(l,{status:'settled',payout:Number.NaN,refund:0});
   }else{
    if(l.status==='void')Object.assign(l,{status:'pending',payout:0,refund:0});
