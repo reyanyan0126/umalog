@@ -10,7 +10,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000);
   const pass=async(name,fn)=>{await fn();results.push(name);console.log('PASS '+name);};
-  await page.goto('http://127.0.0.1:8010'+prefix);await page.waitForSelector('.hero');
+  await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto('http://127.0.0.1:8010'+prefix);await page.waitForSelector('.hero');
   await page.evaluate(()=>location.hash='entry');await page.waitForSelector('#entryForm');
   await pass('BOX stake preview and no persistence',async()=>{
    assert.match(await page.locator('#additionEstimate').innerText(),/番号と金額/);
