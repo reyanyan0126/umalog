@@ -144,3 +144,12 @@ main li p{margin-block:3px}
   .ledger-day,.ledger-day[aria-pressed="true"]{min-height:56px;padding:2px 1px;gap:1px}
   .ledger-meta{gap:2px}
 }
+
+/* Ledger analytics: controls use a compact responsive grid; hidden period inputs stay hidden. */
+.analysis-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 8px}
+.analysis-controls label{min-width:0;margin:0;font-size:.8125rem}
+.analysis-controls select,.analysis-controls input{width:100%;min-width:0;margin:4px 0 0}
+.analysis-controls [hidden]{display:none!important}
+.analysis-filter-panel h2{margin-bottom:8px}
+.analysis-filter-panel .help{margin:6px 0 0}
+@media(min-width:640px){.analysis-controls{grid-template-columns:repeat(4,minmax(0,1fr))}}
