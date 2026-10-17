@@ -11,7 +11,7 @@ export function validateEntryDraft(value){
  const ids=new Set();
  for(const l of value.lines){
   check(l&&typeof l.id==='string'&&l.id.length>0&&l.id.length<=100&&!ids.has(l.id),'下書きの買い目IDが不正です。');ids.add(l.id);
-  check(TYPES.includes(l.type)&&modes.includes(l.purchaseMode)&&statuses.includes(l.status),'下書きの券種・結果が不正です。');
+  check(TYPES.includes(l.type)&&(l.purchaseMode===undefined||modes.includes(l.purchaseMode))&&statuses.includes(l.status),'下書きの券種・結果が不正です。');
   check(JSON.stringify(combination(l.type,l.numbers))===JSON.stringify(l.numbers),'下書きの組番が不正です。');
   money(l.stake,true);
   check((Number.isNaN(l.payout)||Number.isSafeInteger(l.payout)&&l.payout>=0)&&Number.isSafeInteger(l.refund)&&l.refund>=0&&l.refund<=l.stake,'下書きの払戻・返還が不正です。');
