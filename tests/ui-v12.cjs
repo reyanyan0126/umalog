@@ -134,7 +134,7 @@ await pass('formation/flow tap purchase, uneven stakes, bulk edit and saved acco
  await page.locator('#entryForm button[type=submit]').click();await page.waitForSelector('#historyList');
  const stored=await page.evaluate(async()=>{
   const d=await (await import('./db.js')).load();
-  const r=d.races.find(r=>r.name==='三連単流し・金額別テスト'),t=d.tickets.find(t=>t.raceId===r.id);
+  const r=d.races.find(r=>r.name==='三連単流し・金額別テスト'),t=d.tickets.filter(t=>t.raceId===r.id&&t.type==='三連単').at(-1);
   const lines=d.lines.filter(l=>l.ticketId===t.id);
   return {n:lines.length,stake:lines.reduce((n,l)=>n+l.stake,0),different:new Set(lines.map(l=>l.stake)).size};
  });
