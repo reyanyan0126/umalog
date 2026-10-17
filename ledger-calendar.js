@@ -42,7 +42,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  const section=elem('section','card ledger-calendar');
  section.id='ledgerCalendar';
  const title=elem('h2',null,'収支カレンダー');
- const help=elem('p','help ledger-hint','金額は短縮表示 / 待＝結果待ち / ⚐＝重賞。祝日は2026・2027年対応');
+ const help=elem('p','help ledger-hint','金額は短縮表示 / ⚐＝重賞。祝日は2026・2027年対応');
  let view=options.view||'month',selectedDate=options.selectedDate;
  const toggle=elem('div','view-toggle');toggle.setAttribute('aria-label','カレンダー表示');
  const monthButton=elem('button','quiet','月表示'),listButton=elem('button','quiet','詳細リスト');monthButton.type=listButton.type='button';toggle.append(monthButton,listButton);
@@ -66,7 +66,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   if(stats){
    detail.append(elem('p','ledger-detail-profit',stats.settledCount?'確定収支 '+exactMoney(stats.profit):'確定収支 —'));
    detail.append(elem('p','help','確定購入 '+stats.purchase.toLocaleString('ja-JP')+'円 / 払戻 '+stats.payout.toLocaleString('ja-JP')+'円 / 返還 '+stats.refund.toLocaleString('ja-JP')+'円'));
-   if(stats.pendingCount)detail.append(elem('p','help','結果待ち '+stats.pendingCount+'点・'+stats.pendingStake.toLocaleString('ja-JP')+'円（収支に含めない）'));
+
   }else detail.append(elem('p','help','この日の購入記録はありません。'));
   if(row.tickets.length){
    const header=elem('h4',null,'購入履歴');
@@ -99,13 +99,8 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday)button.append(elem('span','ledger-holiday-mark','祝'));
   if(s?.settledCount)button.append(elem('span','ledger-money',smallMoney(s.profit)));
-  if(s?.pendingCount||row.events.length){
-   const meta=elem('span','ledger-meta');
-   if(row.events.length)meta.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
-   if(s?.pendingCount)meta.append(elem('span','ledger-pending','待'+s.pendingCount));
-   button.append(meta);
-  }
-  button.setAttribute('aria-label',row.date+(row.holiday?' '+row.holiday:'')+(s?.settledCount?' 確定収支 '+exactMoney(s.profit):'')+(s?.pendingCount?' 結果待ち'+s.pendingCount+'点':'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
+  if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
+  button.setAttribute('aria-label',row.date+(row.holiday?' '+row.holiday:'')+(s?.settledCount?' 確定収支 '+exactMoney(s.profit):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
   button.onclick=()=>openDay(row);
   grid.append(button);buttons.push(button);
  }
@@ -113,7 +108,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  for(const row of model.days.filter(r=>r.summary||r.events.length||r.holiday)){
   const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date+(row.holiday?' · '+row.holiday:''));item.dataset.listDate=row.date;listItems.push(item);button.type='button';button.onclick=()=>{openDay(row);detail.scrollIntoView({block:'nearest',behavior:'auto'});};item.append(button);
   item.append(elem('p',null,row.summary?.settledCount?'確定収支 '+exactMoney(row.summary.profit):'確定収支 —'));
-  if(row.summary?.pendingCount)item.append(elem('small',null,'結果待ち '+row.summary.pendingCount+'点'));
+
   for(const event of row.events)item.append(elem('p','ledger-event-name',event.name+' · '+event.venue+' · '+event.grade));dayList.append(item);
  }
  if(!dayList.children.length)dayList.append(elem('p','empty','この月の記録・登録済み重賞はありません。'));
