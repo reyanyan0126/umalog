@@ -52,7 +52,7 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
    button.onclick=()=>{active=i;render();};tabs.append(button);
   }
   host.append(tabs);
-  const label=mode==='flow'?(active===0?'軸の番号（'+(isTriple?axisCount:1)+'頭）':'相手の番号'):
+  const label=mode==='flow'?(active===0?'軸の番号（'+(isTriple?axisCount:1)+'頭'+(isOrdered&&axisCount===2?'・タップ順に着順指定':'')+'）':'相手の番号'):
     labels[active]+'で選ぶ番号';
   host.append(make('div',label,'number-pad-title'));
   const grid=make('div','','number-pad-grid pattern-grid');
@@ -69,7 +69,7 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
     else if(mode==='flow'&&active===0&&axes.length>=axisCount){
      host.querySelector('.pattern-status').textContent='軸を変更するときは選択済みを外してください';return;
     }else bucket.push(n);
-    bucket.sort((a,b)=>a-b);
+    if(!(mode==='flow'&&active===0&&isOrdered&&axisCount===2))bucket.sort((a,b)=>a-b);
     if(mode==='flow'&&active===0&&axes.length===axisCount)active=1;
     dirtyChange();render();
    };
@@ -86,9 +86,9 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
   }catch{status.textContent='各組の番号を選ぶと点数が表示されます';}
  };
  const dirtyChange=()=>host.dispatchEvent(new Event('input',{bubbles:true}));
- const change=()=>{reset();if(singular(typeSelect.value)&&['flow','formation'].includes(modeSelect.value))modeSelect.value='normal';normalPad?.refresh();render();};
+ const change=()=>{reset();for(const option of modeSelect.options)if(option.value==='flow'||option.value==='formation')option.disabled=singular(typeSelect.value);if(singular(typeSelect.value)&&['flow','formation'].includes(modeSelect.value))modeSelect.value='normal';normalPad?.refresh();render();};
  typeSelect.addEventListener('change',change);
  modeSelect.addEventListener('change',change);
- render();
+ change();
  return {selection,refresh:render};
 }
