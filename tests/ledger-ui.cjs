@@ -11,7 +11,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage();
   page.setDefaultTimeout(12000);page.on('pageerror',e=>errors.push(e.message));await page.clock.install({time:new Date('2026-10-17T00:00:00Z')});
   const pass=async(name,fn)=>{await fn();results.push(name);console.log('PASS '+name);};
-  await page.goto('http://127.0.0.1:8005'+prefix);await page.waitForSelector('.hero');assert.equal(await page.locator('#ledgerCalendar').count(),0);await page.locator('nav a[href="#calendar"]').click();await page.waitForSelector('#ledgerCalendar');
+  await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto('http://127.0.0.1:8005'+prefix);await page.waitForSelector('.hero');assert.equal(await page.locator('#ledgerCalendar').count(),0);await page.locator('nav a[href="#calendar"]').click();await page.waitForSelector('#ledgerCalendar');
   await pass('Sunday-first October month, flags and verified racing dates',async()=>{
    assert.equal(await page.locator('.ledger-grid > .ledger-day').count(),31);
    assert.equal(await page.locator('.ledger-grid > .ledger-blank').count(),4);
