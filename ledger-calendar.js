@@ -99,8 +99,12 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday)button.append(elem('span','ledger-holiday-mark','祝'));
   if(s?.settledCount)button.append(elem('span','ledger-money',smallMoney(s.profit)));
-  if(s?.pendingCount)button.append(elem('span','ledger-pending','待'+s.pendingCount));
-  if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
+  if(s?.pendingCount||row.events.length){
+   const meta=elem('span','ledger-meta');
+   if(row.events.length)meta.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
+   if(s?.pendingCount)meta.append(elem('span','ledger-pending','待'+s.pendingCount));
+   button.append(meta);
+  }
   button.setAttribute('aria-label',row.date+(row.holiday?' '+row.holiday:'')+(s?.settledCount?' 確定収支 '+exactMoney(s.profit):'')+(s?.pendingCount?' 結果待ち'+s.pendingCount+'点':'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
   button.onclick=()=>openDay(row);
   grid.append(button);buttons.push(button);
