@@ -23,7 +23,7 @@ User authorizes publication only after all required checks pass.
 - Baseline Node: 85/85. Added Node tests: 6; current 91/91.
 - Existing browser root: 18/18; v1.2 UI root: 11/11; dev.8 PWA update passed.
 - New dev.9 browser root: 4/4, including explicit duplicates, 7-starter place, protected settled payout, injected abort, retry, partial refund, double submit, 320-row paging and offline.
-- Local final runs: Node 91/91; root + publish browser checks 116/116 (18+11+8+6+11+4 per build); PWA 2/2. Source/publish 35 files agree. GitHub CI for code commit 76dacf19426a9493c4d54080e20ee8879278ccbf is running: https://github.com/reyanyan0126/umalog/actions/runs/39030953515 . Do not merge until it succeeds.
+- Final runs: Node 91/91; root + publish browser checks 116/116 (18+11+8+6+11+4 per build); PWA 2/2. Source/publish 35 files agree. GitHub CI for code commit 76dacf19426a9493c4d54080e20ee8879278ccbf completed successfully: https://github.com/reyanyan0126/umalog/actions/runs/39030953515 . Subsequent commits change documentation only. Release PR: https://github.com/reyanyan0126/umalog/pull/10 . All automated release gates passed; Pages deployment is checked after merge.
 - iPhone Safari/PWA and LG V60 physical devices unverified. CSS manipulation retains pinch policy, but real touch behavior is not proven by Chromium.
 
 ## iPhone acceptance
