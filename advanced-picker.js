@@ -26,7 +26,7 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
     for(const [value,name] of [[1,'1頭軸'],[2,'2頭軸']]){
      const option=make('option',name);option.value=String(value);option.selected=axisCount===value;select.append(option);
     }
-    select.onchange=()=>{axisCount=Number(select.value);axes=[];active=0;render();};label.append(select);config.append(label);
+    select.onchange=()=>{axisCount=Number(select.value);axes=[];active=0;dirtyChange();render();};label.append(select);config.append(label);
    }
    if(isOrdered){
     const label=make('label',isTriple&&axisCount===2?'軸の固定位置':'着順の買い方');
@@ -38,7 +38,7 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
       :[['first','1着固定'],['second','2着固定'],['multi','表裏（マルチ）']];
     if(!placements.some(x=>x[0]===position))position='first';
     for(const [value,name] of placements){const option=make('option',name);option.value=value;option.selected=position===value;select.append(option);}
-    select.onchange=()=>{position=select.value;render();};label.append(select);config.append(label);
+    select.onchange=()=>{position=select.value;dirtyChange();render();};label.append(select);config.append(label);
    }
    if(config.childElementCount)host.append(config);
   }
@@ -67,7 +67,8 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
     const index=bucket.indexOf(n);
     if(index>=0)bucket.splice(index,1);
     else if(mode==='flow'&&active===0&&axes.length>=axisCount){
-     host.querySelector('.pattern-status').textContent='軸を変更するときは選択済みを外してください';return;
+     if(axisCount===1)axes[0]=n;
+     else{host.querySelector('.pattern-status').textContent='2頭軸を変更するときは選択済みを外してください';return;}
     }else bucket.push(n);
     if(!(mode==='flow'&&active===0&&isOrdered&&axisCount===2))bucket.sort((a,b)=>a-b);
     if(mode==='flow'&&active===0&&axes.length===axisCount)active=1;
@@ -77,6 +78,7 @@ export function mountAdvancedPattern(host,manualInput,typeSelect,modeSelect,norm
   }
   host.append(grid);
   const tools=make('div','','pattern-actions');
+  const next=make('button',active<labels.length-1?'次の組へ →':'最初の組へ ↺','quiet');next.type='button';next.dataset.patternNext='';next.onclick=()=>{active=(active+1)%labels.length;render();};tools.append(next);
   const clear=make('button','この組をクリア','quiet');clear.type='button';
   clear.onclick=()=>{bucket.length=0;dirtyChange();render();};tools.append(clear);host.append(tools);
   const status=make('p','', 'pattern-status');status.setAttribute('role','status');host.append(status);
