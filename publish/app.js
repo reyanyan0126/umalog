@@ -53,21 +53,21 @@ function entrySimple(id=null,eventId=null){
  check(!id||t,'記録が見つかりません。');
  const previous=t?data.lines.find(l=>l.ticketId===id):null;
  const r=t?data.races.find(x=>x.id===t.raceId):{date:jstToday(),venue:'東京',number:null,name:''};
- app.innerHTML=\`<h1>\${t?'記録を編集':'馬券を登録'}</h1><form id="entryForm">
+ app.innerHTML=`<h1>${t?'記録を編集':'馬券を登録'}</h1><form id="entryForm">
  <section class="card"><h2>レース</h2><div id="gradedPicker"></div>
- <label>開催日<input required id="date" type="date" min="2000-01-01" max="2199-12-31" value="\${r.date}"></label>
- <div class="grid"><label>競馬場<select id="venue">\${opts(VENUES,r.venue)}</select></label>
- <label>レース番号<select id="number" required><option value="">選択する</option>\${Array.from({length:12},(_,i)=>\`<option value="\${i+1}" \${r.number===i+1?'selected':''}>\${i+1}R</option>\`).join('')}</select></label></div>
+ <label>開催日<input required id="date" type="date" min="2000-01-01" max="2199-12-31" value="${r.date}"></label>
+ <div class="grid"><label>競馬場<select id="venue">${opts(VENUES,r.venue)}</select></label>
+ <label>レース番号<select id="number" required><option value="">選択する</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${r.number===i+1?'selected':''}>${i+1}R</option>`).join('')}</select></label></div>
  <div id="calendarCandidates"></div><p id="raceMatch" class="help" role="status"></p>
- <label>レース名（任意）<input id="raceName" maxlength="100" value="\${esc(r.name)}"></label></section>
+ <label>レース名（任意）<input id="raceName" maxlength="100" value="${esc(r.name)}"></label></section>
  <section class="card"><h2>購入・払戻</h2>
- <label>券種<select id="type">\${opts(TYPES,t?.type||'ワイド')}</select></label>
- <label>購入合計額<input id="stake" type="number" min="100" step="100" required inputmode="numeric" value="\${previous?.stake??100}"></label>
- <label>払戻額<input id="payout" type="number" min="0" step="1" inputmode="numeric" placeholder="未入力なら空欄" value="\${previous?.status==='pending'?'':previous?.payout??''}"></label>
- <details id="refundDetails" \${previous?.refund?'open':''}><summary>返還がある場合</summary><label>返還額<input id="refund" type="number" min="0" step="1" inputmode="numeric" value="\${previous?.refund??0}"></label></details>
+ <label>券種<select id="type">${opts(TYPES,t?.type||'ワイド')}</select></label>
+ <label>購入合計額<input id="stake" type="number" min="100" step="100" required inputmode="numeric" value="${previous?.stake??100}"></label>
+ <label>払戻額<input id="payout" type="number" min="0" step="1" inputmode="numeric" placeholder="未入力なら空欄" value="${previous?.status==='pending'?'':previous?.payout??''}"></label>
+ <details id="refundDetails" ${previous?.refund?'open':''}><summary>返還がある場合</summary><label>返還額<input id="refund" type="number" min="0" step="1" inputmode="numeric" value="${previous?.refund??0}"></label></details>
  <p class="entry-review" id="entryReview" role="status"></p></section>
- <section class="card"><details><summary>メモ（任意）</summary><label>購入メモ<textarea id="memo" maxlength="4000">\${esc(t?.memo||'')}</textarea></label></details>
- <button class="full accent" type="submit">\${t?'変更を保存':'購入記録を保存'}</button></section></form>\`;
+ <section class="card"><details><summary>メモ（任意）</summary><label>購入メモ<textarea id="memo" maxlength="4000">${esc(t?.memo||'')}</textarea></label></details>
+ <button class="full accent" type="submit">${t?'変更を保存':'購入記録を保存'}</button></section></form>`;
  const match=()=>{$('#raceMatch').textContent=raceDescription({date:$('#date').value,venue:$('#venue').value,number:Number($('#number').value)},effectiveCatalog());updateCandidates($('#date').value,$('#venue').value);};
  const updateCandidates=mountCandidates($('#calendarCandidates'),withMaster(calendarState.calendar),v=>{if(v.venue)$('#venue').value=v.venue;if(v.number)$('#number').value=v.number;dirty=true;match();});
  for(const key of ['date','venue','number'])$('#'+key).addEventListener('change',match);
