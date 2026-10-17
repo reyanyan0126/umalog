@@ -101,7 +101,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await context.setOffline(false);
   // Corrupt only disposable metadata; startup must still load accounting.
   await page.evaluate(()=>new Promise((resolve,reject)=>{const r=indexedDB.open('umalog',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('state','readwrite');tx.objectStore('state').put({version:999},'raceCatalog');tx.oncomplete=()=>{db.close();resolve();};tx.onerror=()=>reject(tx.error);};}));
-  await nav('home');await page.reload();await page.waitForSelector('.hero');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
+  await nav('home');await page.reload();await page.waitForSelector('.hero');await page.locator('.home-extra > summary').click();await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.match(await page.locator('#raceInfoPanel').innerText(),/キャッシュを読み込めません/);assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
   await page.evaluate(async()=>{const {saveCatalog}=await import('./db.js');await saveCatalog((await import('./race-info.js')).emptyCatalog());});
  });
  await nav('home');await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:process.env.SCREENSHOT_PATH||'/tmp/umalog-home.png',fullPage:true});

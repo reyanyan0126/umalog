@@ -18,10 +18,24 @@ Do not merge or publish without a new user approval.
 - New checks cover 320/390/440px, 200% text, navigation target size, page overflow, calendar route/list and date-to-entry.
 - Source/publish: all 29 files match.
 
-## Resume next
-1. Finish existing browser suites and publish ledger regression.
-2. Entry focus retention, history/analysis/growth/settings refinements.
-3. All-screen touch-action manipulation and interaction checks.
-4. Update PWA test from dev.4 to current; run upgrade/offline regression.
-5. Screenshot comparison and WebKit attempt; actual iPhone/LG V60 unverified.
-6. Final branch save and report; main/public remain unchanged.
+## Phase C/D implemented
+- Entry: visible total at final confirmation; editing draft amounts keeps the same input and focus. Submit buttons disabled while saving.
+- History: date/name/venue text search and explicit pending/partial/hit/miss/refund status, preserving existing filters and detail actions.
+- Analysis: signed, diverging profit bars with a zero baseline. Eight style classifications and detailed statistics retained.
+- Growth: compact EXP and bond meter; existing character art and rewards unchanged. Settings receives shared spacing/control styling; existing management actions stay available.
+- All main screens, header and navigation use touch-action: manipulation. No zoom-disabled viewport, blanket preventDefault or text-selection restriction added.
+- PWA upgrade tests now start from dev.4. Source/publish generator includes ledger-calendar.js. CI includes the v1.2 branch and new UI scenarios.
+
+## Additional checks
+- New UI: 4/4 root and 4/4 publish, including stable amount input/focus, history search and touch policy.
+- Calendar/growth features: 11/11 root and 11/11 publish.
+- Dev.4 upgrade and fresh-session update: both passed, including accounting/review/growth retention and offline reload.
+- Existing browser suite rerun after adapting disclosure navigation (in progress at this checkpoint).
+- Optional tests/visual.cjs produces before/after screenshots from isolated empty profiles, not user data.
+- WebKit download completed but host libraries are missing; WebKit and actual iPhone/LG V60 remain unverified.
+
+## Resume / release gates
+1. Collect all final regression results and GitHub Actions outcome.
+2. iPhone Safari/PWA: continuous taps, pinch zoom, native pickers, safe areas, large text and keyboard focus.
+3. Review screenshots and real-device scrolling. History sorting, previous/next-day shortcuts and settings reordering were optional and are not implemented.
+4. User approval is required before merging main or publishing. Public site remains dev.4.

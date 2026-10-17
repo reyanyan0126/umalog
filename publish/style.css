@@ -36,6 +36,18 @@ nav a[aria-current=page] .dock-icon{transform:translateY(-2px) scale(1.08)}
 
 /* Keep pinch zoom available; suppress double-tap zoom only on care controls. */
 .pet-touch, #care { touch-action: manipulation; }
+/* Disable double-tap delay/zoom without blocking pan, pinch or text selection. */
+header, main, nav { touch-action: manipulation; }
+.bar-track.diverging { position:relative; background:linear-gradient(to right,transparent calc(50% - 1px),var(--muted,#789086) calc(50% - 1px),var(--muted,#789086) calc(50% + 1px),transparent calc(50% + 1px)); }
+.bar-track.diverging .bar { position:relative; }
+.nursery { padding-block:24px; }
+.nursery .wide-number { display:block; font-size:1rem; color:var(--muted); margin-top:8px; }
+#bondMeter { display:block; width:min(100%,240px); height:12px; margin:0 auto 16px; }
+#petBond { margin:16px 0 4px; }
+#entryForm h2 { margin-bottom:16px; }
+#entryReview { font-size:1.125rem; font-weight:750; padding:16px; background:#f0f3e8; border-radius:12px; }
+button:disabled { cursor:not-allowed; opacity:.65; }
+[aria-busy="true"] button[type="submit"]:disabled { cursor:wait; }
 
 .graded-list{list-style:none;padding:0;margin:0}.graded-list li{padding:12px 0;border-bottom:1px solid #dce4df}.graded-link{display:flex;flex-direction:column;gap:6px;min-height:44px;text-decoration:none;color:inherit;overflow-wrap:anywhere}.graded-link[aria-disabled]{opacity:.65}.grade-one{border:1px solid currentColor;font-weight:700}#gradedFull{max-height:65vh;overflow:auto}#gradedPicker select{max-width:100%;width:100%}
 

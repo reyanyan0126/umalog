@@ -9,6 +9,7 @@ on:
       - work/v1.1-calendar-2026-2027
       - work/v1.1.0-dev3-ui-graded-races
       - work/v1.1.0-dev4-ledger-calendar
+      - work/v1.2-ui-redesign
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -55,7 +56,7 @@ jobs:
             args: []
           };
           EOF
-      - name: 'Old dev.3 to development: preserve IndexedDB and offline behavior'
+      - name: 'Old dev.4 to development: preserve IndexedDB and offline behavior'
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
       - name: Fresh session update protects unsaved edits
         run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs
@@ -71,3 +72,7 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs
       - name: Ledger calendar publish browser checks
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs
+      - name: V12 navigation and responsive UI source checks
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs
+      - name: V12 navigation and responsive UI publish checks
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs
