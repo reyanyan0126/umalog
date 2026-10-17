@@ -84,11 +84,13 @@ function dayScreen(date){
  const section=day.entries.map(({race,tickets,lines,summary})=>{
   const items=tickets.map(t=>{
    const bs=lines.filter(l=>l.ticketId===t.id),v=summarize(bs);
-   return `<div class="day-ticket"><span>${esc(t.type)} · ${bs.length}点</span><strong class="${v.profit<0?'negative':'positive'}">${v.settledCount?signed(v.profit):'結果未入力'}</strong><a href="#detail/${encodeURIComponent(t.id)}">詳細</a></div>`;
+   const short=bs.slice(0,24).map(l=>`<div class="day-edit-row"><span>${esc(t.type)} ${l.numbers.join(['馬単','三連単'].includes(t.type)?'→':'－')}</span><small>購入 ${yen(l.stake)} / 払戻 ${yen(l.payout)} / 返還 ${yen(l.refund)}</small><button type="button" class="quiet" data-quick-edit="${esc(l.id)}">訂正</button></div>`).join('');
+   return `<div class="day-ticket"><span>${esc(t.type)} · ${bs.length}点</span><strong class="${v.profit<0?'negative':'positive'}">${v.settledCount?signed(v.profit):'結果未入力'}</strong><a href="#detail/${encodeURIComponent(t.id)}">詳細</a></div><details class="day-ticket-edit"><summary>この券種の買い目を訂正する</summary>${short}${bs.length>24?'<p class="help">残りの買い目は詳細画面から訂正できます。</p>':''}</details>`;
   }).join('');
   return `<section class="card day-race"><div class="row"><div><small>${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${summary.profit<0?'negative':'positive'}">${summary.settledCount?signed(summary.profit):'—'}</strong></div>${items}<a class="quiet button day-next" href="#entry-next/${date}/${encodeURIComponent(race.venue)}">同じ競馬場で次を記録 →</a></section>`;
  }).join('');
  app.innerHTML=`<a href="#calendar">← カレンダーへ</a><h1>${date} のうまログ</h1><section class="card day-summary"><div class="day-metrics">${metric('購入',yen(stat.purchase))}${metric('払戻',yen(stat.payout))}${metric('返還',yen(stat.refund))}</div><small>確定収支</small><div class="balance ${stat.profit<0?'negative':'positive'}">${stat.settledCount?signed(stat.profit):'—'}</div><p class="help">${day.raceCount}レース · 結果未入力 ${stat.pendingCount}点（未確定は収支に含みません）</p></section>${section||'<section class="card empty">この日の記録はありません。</section>'}<a class="button quiet full" href="#entry-date/${date}">＋ この日のレースを記録</a>`;
+ bindQuickEdits(()=>dayScreen(date));
 }
 function analysisInsightPanel(a){
  const dateMoney=d=>d?`${d.date} · ${signed(d.summary.profit)}`:'—';
