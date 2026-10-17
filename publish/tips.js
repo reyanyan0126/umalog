@@ -251,11 +251,11 @@ export const TIPS=[
   }
 ];
 // Static original explanations; no network or personal record access.
-export function openTips(trigger){
+export function openTips(trigger,characterName='お馬さん'){
  if(document.querySelector('#tipsModal'))return;
  const backdrop=document.createElement('div');backdrop.id='tipsModal';backdrop.className='tips-backdrop';
  backdrop.innerHTML='<section class="tips-panel" role="dialog" aria-modal="true" aria-labelledby="tipsTitle"><div class="row"><h2 id="tipsTitle">競馬の豆知識</h2><button id="tipsClose" class="quiet" aria-label="豆知識を閉じる">閉じる</button></div><label>分類<select id="tipsCategory"><option value="">すべて</option></select></label><div id="tipsContent" aria-live="polite"><small id="tipsCount"></small><h3 id="tipTitle"></h3><p id="tipBody"></p></div><div class="row"><button id="tipsPrev" class="quiet">戻る</button><button id="tipsNext">次へ</button></div><small>独自の短い解説・2026年10月確認。購入を勧めるものではありません。</small></section>';
- document.body.append(backdrop);const $=s=>backdrop.querySelector(s);let index=0,list=TIPS;
+ document.body.append(backdrop);const $=s=>backdrop.querySelector(s);$('#tipsTitle').textContent=characterName+'の豆知識';let index=0,list=TIPS;
  for(const c of new Set(TIPS.map(t=>t.category))){const o=document.createElement('option');o.value=c;o.textContent=c;$('#tipsCategory').append(o);}
  const draw=()=>{const t=list[index];$('#tipsCount').textContent=t.category+' · '+(index+1)+' / '+list.length;$('#tipTitle').textContent=t.title;$('#tipBody').textContent=t.body;};
  $('#tipsCategory').onchange=e=>{list=TIPS.filter(t=>!e.target.value||t.category===e.target.value);index=0;draw();};
