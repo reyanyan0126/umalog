@@ -325,7 +325,7 @@ function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section cla
  }).catch(()=>{const el=$('#lastBackupConfirmed');if(el)el.textContent='バックアップ確認日時を取得できませんでした。';});
  updateBackupCheck();
  $('#backupConfirmed').onclick=guard(async()=>{
-  check(confirm('JSONファイルが「ファイル」アプリなどの保存先に存在し、開けることを確認しましたか？'),'保存確認はキャンセルされました。');
+  if(!confirm('JSONファイルが「ファイル」アプリなどの保存先に存在し、開けることを確認しましたか？'))return;
   await confirmBackupStored();await updateBackupCheck();notify('ファイルの保存先を確認した日時を記録しました。');
  });
  const mountManager=()=>mountCalendarManager($('#calendarManager'),calendarState,{warning:calendarWarning,onDirty:v=>calendarDirty=v,onSave:s=>{calendarState=s;mountManager();}});mountManager();bindCatalog();
