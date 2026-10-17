@@ -8,9 +8,10 @@ const fixture=()=>{const d=emptyData();d.races=[{id:'race1',date:'2026-10-17',ve
  d.lines=[{ticketId:'ticket1',status:'settled',stake:100,payout:500,refund:0},{ticketId:'ticket1',status:'pending',stake:500,payout:0,refund:0},{ticketId:'ticket1',status:'void',stake:100,payout:0,refund:100},{ticketId:'ticket2',status:'settled',stake:100,payout:0,refund:0}];return d;};
 const event=(date,name,key)=>({date,name,key,grade:'GⅠ',status:'planned',approval:'pending'});
 
-test('calendar month has Monday-first offset and true number of days',()=>{
+test('calendar month has Sunday-first offset and true number of days',()=>{
  const m=ledgerMonth(emptyData(),[],'2026-10');
- assert.equal(m.offset,3);assert.equal(m.days.length,31);
+ assert.equal(m.offset,4);assert.equal(m.days.length,31);
+ assert.equal(ledgerMonth(emptyData(),[],'2026-02').offset,0);
  assert.equal(ledgerMonth(emptyData(),[],'2026-02').days.length,28);
  assert.equal(ledgerMonth(emptyData(),[],'2028-02').days.length,29);
  assert.throws(()=>ledgerMonth(emptyData(),[],'2026-13'));
@@ -52,4 +53,18 @@ test('compact number is only a display value; exact result stays in summary',()=
  assert.equal(smallMoney(100000000),'+1億');
  assert.equal(smallMoney(12345),'+1.2万');
  assert.equal(smallMoney(-1500000),'−150万');
+});
+
+test('confirmed Japanese holidays: substitute and bridge dates; unsupported years are not fabricated',async()=>{
+ const {japaneseHolidayName,HOLIDAY_YEARS}=await import('../jp-holidays.js');
+ assert.deepEqual(HOLIDAY_YEARS,[2026,2027]);
+ assert.equal(japaneseHolidayName('2026-05-06'),'振替休日');
+ assert.equal(japaneseHolidayName('2026-09-22'),'国民の休日');
+ assert.equal(japaneseHolidayName('2026-10-12'),'スポーツの日');
+ assert.equal(japaneseHolidayName('2027-03-21'),'春分の日');
+ assert.equal(japaneseHolidayName('2027-03-22'),'振替休日');
+ assert.equal(japaneseHolidayName('2027-01-11'),'成人の日');
+ assert.equal(japaneseHolidayName('2026-10-17'),null);
+ assert.equal(japaneseHolidayName('2028-03-20'),null);
+ assert.equal(ledgerMonth(emptyData(),[],'2027-03').days[21].holiday,'振替休日');
 });
