@@ -270,7 +270,7 @@ function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section cla
  $('#settingsForm').oninput=()=>dirty=true;
  const refreshBudget=()=>{
   const month=$('#budgetMonth').value;
-  if(!/^(20\\d\\d|21\\d\\d)-(0[1-9]|1[0-2])$/.test(month))return;
+  if(!/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/.test(month))return;
   const b=budgetStatus(data,month);
   $('#budgetAmount').value=b.budget||0;
   $('#budgetCurrent').textContent=`現在の購入記録 ${yen(b.purchase)}${b.pending?'（未入力分を含む）':''}`;
@@ -279,7 +279,7 @@ function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section cla
  $('#budgetForm').oninput=()=>dirty=true;
  $('#budgetForm').onsubmit=guard(async e=>{
   e.preventDefault();check($('#budgetMonth').validity.valid,'予算の対象月を確認してください。');
-  const raw=$('#budgetAmount').value.trim();check(/^\\d+$/.test(raw),'購入予算は整数で入力してください。');
+  const raw=$('#budgetAmount').value.trim();check(/^\d+$/.test(raw),'購入予算は整数で入力してください。');
   const month=$('#budgetMonth').value,amount=Number(raw);
   const next=setMonthlyBudget(data,month,amount);await commit(next);settings();$('#budgetMonth').value=month;refreshBudget();notify(amount?'月間購入予算を保存しました。':'月間購入予算を解除しました。');
  });
