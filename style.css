@@ -196,7 +196,7 @@ main .page-heading{margin-bottom:5px}
 /* v1.2 dev.5: clear, uniform dock icons with visible text labels. */
 nav a .dock-icon{display:block;box-sizing:content-box;width:23px;height:23px;margin:0 auto;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;fill:none;overflow:visible;flex-shrink:0}
 nav a[aria-current="page"] .dock-icon{stroke-width:2.25}
-nav a span{white-space:nowrap;overflow-wrap:normal;letter-spacing:-.02em}
+nav a span{white-space:normal;overflow-wrap:anywhere;letter-spacing:-.02em}
 nav a{min-width:44px}
 
 /* Two essentials only: P/L hero and a compact, one-line graded-race preview. */
