@@ -90,7 +90,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
  await pass('v1.1.0: style denominators, missing source, historical join and offline cache',async()=>{
   await nav('settings');await page.locator('#raceInfoPanel details').evaluate(e=>e.open=true);assert.equal(await page.locator('#refreshRaces').isDisabled(),true);assert.match(await page.locator('#raceInfoStatus').innerText(),/提供元未設定/);assert.match(await page.locator('#raceInfoPanel').innerText(),/最終成功：未実施/);
   await nav('entry');assert.match(await page.locator('#raceMatch').innerText(),/情報未取得/);
-  await nav('analysis');assert.match(await page.locator('#racingStyle').innerText(),/購入総額/);assert.equal(await page.locator('#racingStyle .style-group').count(),8);
+  await nav('analysis');assert.match(await page.locator('#racingStyle').innerText(),/購入総額/);assert.equal(await page.locator('#racingStyle .style-group').count(),9);
   await page.locator('#racingStyle .style-group').evaluateAll(els=>els.forEach(e=>e.open=true));
   assert.match(await page.locator('#racingStyle').innerText(),/情報未取得/);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const before=await page.evaluate(async()=>{const db=await import('./db.js');const d=await db.load();const {emptyCatalog}=await import('./race-info.js');await db.saveCatalog({...emptyCatalog(),records:[{date:d.races[0].date,venue:d.races[0].venue,number:d.races[0].number,name:'TEST ONLY',condition:'テスト条件',grade:null,surface:'芝',distance:1600,source:'fixture',updatedAt:'2026-10-16T00:00:00Z'}]});return d;});

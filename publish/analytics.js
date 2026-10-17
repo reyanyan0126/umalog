@@ -12,9 +12,25 @@ export function styleAnalysis(data,records=[]){
   return [...groups].map(([label,rs])=>{const ls=rs.flatMap(r=>r.lines),stake=rs.reduce((s,r)=>s+r.stake,0),uniqueRaces=[...new Map(rs.map(r=>[r.race.id,r.race])).values()];
    return {label,records:rs.length,races:uniqueRaces.length,points:ls.length,stake,share:totalStake?stake/totalStake*100:null,averagePoints:ls.length/rs.length,averageStake:stake/rs.length,...summarize(ls,uniqueRaces,rs.map(r=>r.t))};
   }).sort((a,b)=>b.stake-a.stake||a.label.localeCompare(b.label,'ja'));}
+ const modeNames={normal:'通常',box:'BOX',flow:'流し',formation:'フォーメーション'};
+ // Mode is stored per purchase line because one ticket may combine several buying methods.
+ // Entries from older versions remain explicitly unknown; never infer from the numbers.
+ const modeGroups=new Map();
+ for(const r of rows)for(const line of r.lines){
+  const name=modeNames[line.purchaseMode]||'旧記録（不明）';
+  if(!modeGroups.has(name))modeGroups.set(name,{entries:[],tickets:new Set(),races:new Map()});
+  const g=modeGroups.get(name);
+  g.entries.push(line);g.tickets.add(r.t);g.races.set(r.race.id,r.race);
+ }
+ const byMode=[...modeGroups].map(([label,g])=>{
+  const stake=g.entries.reduce((n,l)=>n+l.stake,0),rs=[...g.races.values()],ts=[...g.tickets];
+  return {label,records:ts.length,races:rs.length,points:g.entries.length,stake,
+   share:totalStake?stake/totalStake*100:null,averagePoints:g.entries.length/ts.length,
+   averageStake:stake/ts.length,...summarize(g.entries,rs,ts)};
+ }).sort((a,b)=>b.stake-a.stake||a.label.localeCompare(b.label,'ja'));
  return {totalStake,records:rows.length,points:data.lines.length,races:new Set(rows.map(r=>r.race.id)).size,
   matchedRaces:new Set(rows.filter(r=>r.meta).map(r=>r.race.id)).size,
-  groups:{type:group(r=>r.t.type),venue:group(r=>r.race.venue),condition:group(r=>r.meta?.condition||UNKNOWN),grade:group(r=>r.meta?.grade||UNKNOWN),surface:group(r=>r.meta?.surface||UNKNOWN),distance:group(r=>distanceBand(r.meta?.distance)),points:group(r=>r.lines.length<=5?'1〜5点':r.lines.length<=10?'6〜10点':'11点以上'),amount:group(r=>r.stake<=1000?'1,000円以下':r.stake<=3000?'1,001〜3,000円':r.stake<=10000?'3,001〜10,000円':'10,001円以上')}};
+  groups:{mode:byMode,type:group(r=>r.t.type),venue:group(r=>r.race.venue),condition:group(r=>r.meta?.condition||UNKNOWN),grade:group(r=>r.meta?.grade||UNKNOWN),surface:group(r=>r.meta?.surface||UNKNOWN),distance:group(r=>distanceBand(r.meta?.distance)),points:group(r=>r.lines.length<=5?'1〜5点':r.lines.length<=10?'6〜10点':'11点以上'),amount:group(r=>r.stake<=1000?'1,000円以下':r.stake<=3000?'1,001〜3,000円':r.stake<=10000?'3,001〜10,000円':'10,001円以上')}};
 }
 export function sampleComment(row){
  if(!row.lineCount)return '有効な確定買い目がなく、成績はまだ判断できません。';

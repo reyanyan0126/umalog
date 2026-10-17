@@ -162,5 +162,58 @@ await pass('formation/flow tap purchase, uneven stakes, bulk edit and saved acco
  });
  assert.deepEqual(saved,{types:['三連複','枠連'],all:5,frame:[1,1]});
 });
+
+await pass('batch payout previews race-wide candidate statuses without touching settled or unknown wagers',async()=>{
+ await page.evaluate(async()=>{
+  const {load,save}=await import('./db.js');const d=await load();
+  d.races.push({id:'batch-r-qa',date:'2026-12-20',venue:'阪神',number:7,name:'一括精算テスト2026'});
+  const types=[['batch-t-a','馬連'],['batch-t-b','ワイド'],['batch-t-c','枠連'],['batch-t-d','複勝']];
+  for(const [id,type] of types)d.tickets.push({id,raceId:'batch-r-qa',type,kind:'reported',memo:'',createdAt:'2026-10-17T10:00:00Z'});
+  const rows=[
+   ['batch-l1','batch-t-a',[3,4],'pending',0,'flow'],
+   ['batch-l2','batch-t-a',[3,5],'pending',0,'flow'],
+   ['batch-l3','batch-t-a',[2,3],'settled',777,'normal'],
+   ['batch-l4','batch-t-b',[3,5],'pending',0,'box'],
+   ['batch-l5','batch-t-b',[6,8],'pending',0,'box'],
+   ['batch-l6','batch-t-c',[1,2],'pending',0,undefined],
+   ['batch-l7','batch-t-d',[5],'pending',0,'normal']
+  ];
+  for(const [id,ticketId,numbers,status,payout,purchaseMode] of rows){
+   const row={id,ticketId,numbers,status,payout,refund:0,stake:100};
+   if(purchaseMode)row.purchaseMode=purchaseMode;d.lines.push(row);
+  }
+  await save(d);
+ });
+ await page.reload();await page.waitForSelector('[data-detail]');
+ await nav('history');await page.locator('#historySearch').fill('一括精算テスト2026');
+ assert.equal(await page.locator('[data-detail]').count(),4);
+ await page.locator('[data-detail]').first().click();await page.waitForSelector('#batchPreview');
+ for(const [id,value] of [['#podium1','3'],['#podium2','4'],['#podium3','5']])await page.locator(id).selectOption(value);
+ await page.locator('#batchPreview').click();
+ assert.match(await page.locator('#batchSummary').innerText(),/未入力 6点/);
+ assert.match(await page.locator('#batchSummary').innerText(),/的中候補 3点/);
+ assert.equal(await page.locator('[data-batch-row]').count(),6);
+ assert.equal(await page.locator('[data-batch-choice="4"]').inputValue(),'skip'); // 枠連：枠番は推定できない
+ const before=await page.evaluate(async()=>{const d=await (await import('./db.js')).load();return d.lines.filter(x=>x.id.startsWith('batch-l')).map(x=>[x.id,x.status,x.payout]);});
+ assert.equal(before.filter(x=>x[1]==='pending').length,6,'a preview must not change data');
+ for(const [index,amount] of [[0,'500'],[2,'800'],[5,'1500']])await page.locator('[data-batch-payout="'+index+'"]').fill(amount);
+ await page.locator('#batchConfirm').check();
+ await page.locator('#batchForm button[type=submit]').click();
+ await page.waitForFunction(async()=>{const d=await (await import('./db.js')).load();return d.lines.find(x=>x.id==='batch-l1')?.payout===500;});
+ const after=await page.evaluate(async()=>{
+  const d=await (await import('./db.js')).load();const rows=d.lines.filter(x=>x.id.startsWith('batch-l'));
+  return {podium:d.races.find(r=>r.id==='batch-r-qa').podium,rows:rows.map(x=>[x.id,x.status,x.payout]),methods:rows.map(x=>x.purchaseMode||null)};
+ });
+ assert.deepEqual(after.podium,[3,4,5]);
+ assert.deepEqual(after.rows,[
+  ['batch-l1','settled',500],['batch-l2','settled',0],['batch-l3','settled',777],
+  ['batch-l4','settled',800],['batch-l5','settled',0],['batch-l6','pending',0],
+  ['batch-l7','settled',1500]
+ ]);
+ assert.equal(after.methods[0],'flow');assert.equal(after.methods[5],null);
+ await nav('analysis');
+ assert.match(await page.locator('#racingStyle').innerText(),/買い方別の購入傾向と成績/);
+ assert.match(await page.locator('#racingStyle').innerText(),/旧記録（不明）/);
+});
 assert.deepEqual(errors,[]);console.log('ALL '+results.length+' V12 CHECKS PASSED');
 }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exit(1);});
