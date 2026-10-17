@@ -29,7 +29,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.match(await page.locator('[data-pattern-tab="0"]').innerText(),/軸 5/);
    await page.locator('#flowPosition').selectOption('multi');assert.match(await page.locator('#additionEstimate').innerText(),/追加予定 6点 \/ 1,800円/);
    await page.locator('#flowAxisCount').selectOption('2');assert.match(await page.locator('#additionEstimate').innerText(),/番号と金額/);
-   for(const n of [1,2,3])await page.locator('[data-pattern-number="'+n+'"]').click();
+   // The previously selected partners remain; only the axis group needs re-selection.
+   for(const n of [1,2])await page.locator('[data-pattern-number="'+n+'"]').click();
    assert.match(await page.locator('#additionEstimate').innerText(),/追加予定 6点 \/ 1,800円/);
   });
   await pass('formation next button, four-line estimate, mobile widths',async()=>{
