@@ -12,6 +12,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
  async function pass(name,fn){await fn();results.push(name);console.log('PASS '+name);}
  const context=await browser.newContext({viewport:{width:430,height:932},isMobile:true,hasTouch:true,acceptDownloads:true});
  if(process.env.QA_FONT_DIR){const path=require('node:path'),dir=process.env.QA_FONT_DIR;let css=fs.readFileSync(path.join(dir,'400.css'),'utf8').replace(/url\(\.\/(.*?)\)/g,(_,f)=>'url(data:font/'+(f.endsWith('woff2')?'woff2':'woff')+';base64,'+fs.readFileSync(path.join(dir,f)).toString('base64')+')');css+='body{font-family:"Noto Sans JP",sans-serif!important}';await context.addInitScript(css=>{document.addEventListener('DOMContentLoaded',()=>{const s=document.createElement('style');s.textContent=css;document.head.append(s);});},css);}
+ await context.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
  const nav=async(hash)=>{await page.evaluate(h=>location.hash=h,hash);await page.waitForTimeout(120);};
  await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto(base);await page.waitForSelector('.hero');await page.waitForFunction(()=>navigator.serviceWorker.controller);
