@@ -6,7 +6,7 @@ import {emptyCalendar,validateCalendar,calendarRecords} from './calendar.js';
 import {calendarHome,mountCandidates,mountCalendarManager} from './calendar-view.js';
 let calendarState={revision:0,importedAt:null,calendar:emptyCalendar()},calendarWarning='',calendarDirty=false;
 const effectiveCatalog=()=>({...catalog,records:calendarRecords(withMaster(calendarState.calendar),catalog.records)});
-import {VENUES,TYPES,STAGE_NAMES,STAGES,uid,check,money,combination,box,validatePodium,aggregate,summarize,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey} from './core.js';
+import {VENUES,TYPES,STAGE_NAMES,STAGES,uid,check,validDate,money,combination,box,validatePodium,aggregate,summarize,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey} from './core.js';
 import {load,save,loadCatalog,saveCatalog,loadCalendar} from './db.js';
 import {styleView} from './style-view.js';
 import {RACE_PROVIDER,emptyCatalog,validateCatalog,refreshCatalog,raceDescription} from './race-info.js';
