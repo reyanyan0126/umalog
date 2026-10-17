@@ -17,7 +17,7 @@ test('candidate identification for each ticket type, with bracket/unknown absten
   ['三連単',[3,4,5],'hit'],['三連単',[5,4,3],'miss'],
   ['枠連',[1,2],'unknown']
  ];
- for(const [type,numbers,want] of tests)assert.equal(candidateOutcome(type,numbers,podium),want,type);
+ for(const [type,numbers,want] of tests)assert.equal(candidateOutcome(type,numbers,podium,{normalConfirmed:true,startersAtSale:18}),want,type);
  assert.equal(candidateOutcome('三連単',[3,4,5],[3,4,null]),'unknown');
  assert.throws(()=>candidateOutcome('単勝',[3],[3,3,5]),/同じ馬番/);
 });
@@ -54,12 +54,12 @@ test('validates mixed legacy/new purchase modes; read-only method totals and rat
 });
 test('candidate preview includes pending rows, but never mutates settled line',()=>{
  const d=fixture(),before=JSON.stringify(d);
- const rows=raceCandidates(d,'race',podium);
+ const rows=raceCandidates(d,'race',podium,{normalConfirmed:true});
  assert.deepEqual(rows.map(x=>x.candidate),['settled','miss','miss','miss']);
  assert.equal(rows[0].payout,3500);
  assert.equal(rows[0].status,'settled');
  assert.equal(JSON.stringify(d),before);
- assert.throws(()=>raceCandidates(d,'race',[3,4,null]),/1〜3着/);
+ assert.equal(raceCandidates(d,'race',[3,4,null])[1].candidate,'unknown');
 });
 test('manual settlement amounts are required for hit and remain accounting source of truth',()=>{
  const d=fixture();

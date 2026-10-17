@@ -1,5 +1,16 @@
 // Pure generators for purchased JRA ticket combinations. They never mutate ledger data.
-import {TYPES,box,combination,check} from './core.js';
+import {TYPES,box,combination,check,money} from './core.js';
+// Read-only review. Same combinations across modes remain separate purchases.
+export function reviewBets(lines){
+ let total=0;const groups=new Map();
+ for(const line of lines){
+  const key=line.type+':'+combination(line.type,line.numbers).join(',');
+  total=money(total+money(line.stake,true));
+  const group=groups.get(key)||{key,type:line.type,numbers:combination(line.type,line.numbers),count:0,total:0};
+  group.count++;group.total+=line.stake;groups.set(key,group);
+ }
+ return {count:lines.length,total,duplicates:[...groups.values()].filter(g=>g.count>1)};
+}
 const ordered=t=>t==='馬単'||t==='三連単';
 const triple=t=>t==='三連複'||t==='三連単';
 const single=t=>t==='単勝'||t==='複勝';

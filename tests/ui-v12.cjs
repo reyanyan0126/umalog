@@ -189,6 +189,7 @@ await pass('batch payout previews race-wide candidate statuses without touching 
  assert.equal(await page.locator('[data-detail]').count(),4);
  await page.locator('[data-detail]').first().click();await page.waitForSelector('#batchPreview');
  for(const [id,value] of [['#podium1','3'],['#podium2','4'],['#podium3','5']])await page.locator(id).selectOption(value);
+ await page.locator('#batchRaceState').selectOption('normal');await page.locator('#batchStarters').selectOption('8');
  await page.locator('#batchPreview').click();
  assert.match(await page.locator('#batchSummary').innerText(),/未入力 6点/);
  assert.match(await page.locator('#batchSummary').innerText(),/的中候補 3点/);
@@ -197,6 +198,7 @@ await pass('batch payout previews race-wide candidate statuses without touching 
  const before=await page.evaluate(async()=>{const d=await (await import('./db.js')).load();return d.lines.filter(x=>x.id.startsWith('batch-l')).map(x=>[x.id,x.status,x.payout]);});
  assert.equal(before.filter(x=>x[1]==='pending').length,6,'a preview must not change data');
  for(const [index,amount] of [[0,'500'],[2,'800'],[5,'1500']])await page.locator('[data-batch-payout="'+index+'"]').fill(amount);
+ await page.locator('[data-batch-group="miss"] > summary').click();await page.locator('#batchSelectMisses').click();
  await page.locator('#batchConfirm').check();
  await page.locator('#batchForm button[type=submit]').click();
  await page.waitForFunction(async()=>{const d=await (await import('./db.js')).load();return d.lines.find(x=>x.id==='batch-l1')?.payout===500;});
