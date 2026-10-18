@@ -280,9 +280,10 @@ function history(){
  app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>レースを探す<input id="historySearch" type="search" placeholder="日付・競馬場・レース名・メモ"></label><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="pending">未入力</option><option value="void">全額返還</option></select></label></div><p id="historyCount" class="help"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
  let shown=50;
  const indexedHistory=ticketIndex(data).linesByTicket;
+ const historyRows=raceHistoryRows(data);
  const update=()=>{
   const q=$('#historySearch').value.trim(),venue=$('#vf').value,type=$('#tf').value,status=$('#sf').value;
-  const list=raceHistoryRows(data).map(item=>{
+  const list=historyRows.map(item=>{
    const filtered=item.tickets.filter(t=>{
     const lines=indexedHistory.get(t.id)||[],s=summarize(lines);
     return (!type||t.type===type)&&(!status||(status==='hit'&&lines.some(l=>l.payout>0))||(status==='pending'&&s.pendingCount>0)||(status==='miss'&&!s.pendingCount&&s.lineCount>0&&!s.lineHits)||(status==='void'&&lines.length>0&&lines.every(l=>l.status==='void')));
