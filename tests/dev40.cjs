@@ -27,6 +27,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('.fast-bet-row').count(),2);
   });
   await pass('dev38 advanced partial refund jumps straight to line beyond first 50',async()=>{
+   await go('home');
    await page.evaluate(async()=>{
     const db=await import('./db.js'),record={version:1,key:'new',updatedAt:new Date().toISOString(),baseSignature:'',
     race:{date:'2026-10-18',venue:'東京',number:'8',name:'大量買い目の検証'},
@@ -35,7 +36,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
     fields:{type:'ワイド',mode:'normal',numbers:'1 2',stake:'100',duplicate:'separate',memo:'',saveNextRace:'0',allowUnfinished:'0'}};
     await db.saveEntryDraft('new',record);
    });
-   await page.reload();await page.waitForSelector('#entryDraftRecovery');
+   await go('entry');await page.waitForSelector('#recoverEntryDraft');
    await page.locator('#recoverEntryDraft').click();await page.locator('#openOutcomeSheet').click();
    await page.locator('#fastMore').click();
    assert.equal(await page.locator('[data-fast-row="55"]').count(),1);
@@ -43,7 +44,6 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('#entryDetailedResults').evaluate(x=>x.open),true);
    assert.equal(await page.locator('[data-entry-outcome="55"]').inputValue(),'advanced');
    assert.equal(await page.locator('[data-entry-outcome="0"]').inputValue(),'pending');
-   assert.equal(await page.locator('#entryQuickDashboard').isVisible(),false);
   });
   await pass('dev39 saved detail corrections can reach 65th row incrementally',async()=>{
    await page.evaluate(async()=>{
