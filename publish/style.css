@@ -638,3 +638,24 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .race-audit-info a{font-size:.79rem;overflow-wrap:anywhere}
 .race-audit-row>button{min-width:62px;min-height:46px;flex-shrink:0}
 @media(max-width:359px){.race-audit-filters,.race-audit-counts{grid-template-columns:1fr}.race-audit-filters .race-audit-search{grid-column:auto}}
+
+/* v1.8.1 JRA-inspired draft stake allocation: bulk set, per-selection overrides. */
+.allocation-editor{display:grid;gap:8px;scroll-margin-top:14px;min-width:0}
+.allocation-editor h3{font-size:.98rem;margin:12px 0 0}
+.allocation-editor .help{font-size:.76rem;line-height:1.5;margin:3px 0}
+.allocation-editor .entry-total{font-size:1.1rem;font-weight:750;margin:6px 0;position:sticky;top:0;z-index:2;background:#fff;padding:9px 6px;border-bottom:1px solid var(--border)}
+.bet-bulk{display:grid;gap:8px;background:#f3f8f2;border:1px solid var(--border);border-radius:12px;padding:10px}
+.bet-bulk>strong{font-size:.85rem}
+.stake-preset-row{display:flex;flex-wrap:wrap;gap:6px}
+.stake-preset-row button{flex:1 1 auto;min-width:65px;min-height:44px;padding:7px 8px;font-size:.81rem;white-space:nowrap}
+.stake-preset-row.per-line{grid-column:1/-1;justify-content:flex-start;gap:5px}
+.stake-preset-row.per-line button{flex:0 1 auto;min-width:65px;min-height:38px;padding:6px 9px}
+.stake-preset-row button.is-selected{border-color:var(--green);background:#e8f4ea;font-weight:750}
+.allocation-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:8px 0 3px}
+.allocation-heading strong{font-size:.84rem}.allocation-heading small{color:var(--muted);font-size:.7rem}
+.allocation-editor .bet-slip-row{grid-template-columns:minmax(0,1fr) minmax(96px,32%) 44px;border-bottom:1px solid var(--border);padding:10px 6px!important;gap:7px}
+.allocation-editor .bet-slip-amount input{font-weight:750;font-size:1rem}
+#openAmountEditor{min-height:48px;margin:8px 0;font-weight:750}
+#editStakes{margin-top:12px;min-height:48px}
+@media(max-width:359px){.allocation-editor .bet-slip-row{grid-template-columns:minmax(0,1fr) minmax(90px,33%) 44px;gap:4px}.stake-preset-row.per-line button{min-width:55px;font-size:.76rem;padding:5px 6px}}
+@media(prefers-reduced-motion:reduce){.allocation-editor{scroll-behavior:auto}}
