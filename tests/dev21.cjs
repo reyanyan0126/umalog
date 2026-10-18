@@ -77,10 +77,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#budgetMonth').fill('2026-09');await page.locator('#budgetMonth').dispatchEvent('change');
    await page.locator('#budgetAmount').fill('4500');await page.locator('#budgetForm button[type=submit]').click();
    await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('月間購入予算を保存しました'));
-   await go('home');await page.locator('#homeMonthly').click();await page.locator('#month').fill('2026-09');await page.locator('#month').dispatchEvent('change');
-   assert.match(await page.locator('#homeBudget').innerText(),/2026-09/);assert.match(await page.locator('#homeBudget').innerText(),/4,500円/);
-   await page.locator('#month').fill('2026-10');await page.locator('#month').dispatchEvent('change');
-   assert.match(await page.locator('#homeBudget').innerText(),/2026-10/);
+   await go('home');assert.equal(await page.locator('#homeBudget').count(),0);assert.equal(await page.locator('#homeMonthly').count(),0);
+   await go('analysis');await page.locator('#analysisRange').selectOption('month');await page.locator('#analysisMonth').fill('2026-09');await page.locator('#analysisMonth').dispatchEvent('change');
+   assert.match(await page.locator('.budget-widget').innerText(),/2026-09/);assert.match(await page.locator('.budget-widget').innerText(),/4,500円/);
+   await page.locator('#analysisMonth').fill('2026-10');await page.locator('#analysisMonth').dispatchEvent('change');
+   assert.match(await page.locator('.budget-widget').innerText(),/2026-10/);
   });
   await pass('dev21 responsive screen stays within 320,390,440px',async()=>{
    for(const width of [320,390,440]){await page.setViewportSize({width,height:844});for(const route of ['entry','history','settings']){await go(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' '+width);}}
