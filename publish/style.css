@@ -509,3 +509,9 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .pet{object-fit:contain}
 @media(max-width:380px){.trend-row{grid-template-columns:64px 1fr auto;gap:5px}.trend-row span:nth-child(3){grid-column:2}.trend-row strong{grid-column:3;grid-row:1/3}.fast-result-filters button{font-size:.73rem;flex:1;padding:8px 5px}}
 @media(prefers-reduced-motion:reduce){.pet,.companion-speech{animation:none!important;transition:none!important}}
+
+/* v1.3.1: keep result-type filtering compact on iPhone. */
+.fast-type-filter{display:block;max-width:300px;margin:8px 0}
+.fast-type-filter select{min-height:44px;margin-top:4px}
+#fastMatchingCount{font-size:.75rem;margin:3px 0 8px}
+#detailCorrectionsRows .day-edit-row{min-height:48px}
