@@ -492,3 +492,20 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 /* dev29: put common safety controls ahead of rarely used race-data administration. */
 .settings-group-title{font-size:1.05rem;margin:20px 2px 10px;color:var(--green)}
 .settings-group-title:first-of-type{margin-top:6px}
+
+
+/* v1.3.0 stable: mobile results filters, transparent saved-line correction and richer mascot. */
+.fast-result-filters{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.fast-result-filters button{font-size:.8rem;min-height:44px;padding:8px 12px}
+.fast-result-filters button[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+.correction-preview p{margin:0 0 6px}
+#correctionBefore{color:var(--muted)}
+#correctionDifference{padding-top:8px;border-top:1px solid #d4dfd5}
+.trend-row{display:grid;grid-template-columns:80px minmax(0,1fr) minmax(0,1fr) auto;gap:7px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:.78rem;font-variant-numeric:tabular-nums}
+.trend-row:last-of-type{border-bottom:0}
+.trend-row b{font-weight:700}
+.trend-row strong{text-align:right}
+.companion-speech{max-width:340px;margin:5px auto 10px;padding:10px 14px;border:1px solid #e6e4d6;background:#fbf9ed;border-radius:15px;font-size:.85rem;line-height:1.4;color:var(--green)}
+.pet{object-fit:contain}
+@media(max-width:380px){.trend-row{grid-template-columns:64px 1fr auto;gap:5px}.trend-row span:nth-child(3){grid-column:2}.trend-row strong{grid-column:3;grid-row:1/3}.fast-result-filters button{font-size:.73rem;flex:1;padding:8px 5px}}
+@media(prefers-reduced-motion:reduce){.pet,.companion-speech{animation:none!important;transition:none!important}}
