@@ -15,8 +15,9 @@ test('v1.8.1 all 100 -> only middle 200, all totals and identifiers preserved',(
  assert.equal(stakeBreakdown(mixed).total,400);
  assert.equal(stakeBreakdown(mixed).nonUniform,true);
  assert.deepEqual(mixed.map(l=>l.numbers),original.map(l=>l.numbers));
- assert.equal(mixed[0],original[0]);
- assert.equal(mixed[2],original[2]);
+ assert.deepEqual(mixed[0],original[0]);
+ assert.deepEqual(mixed[2],original[2]);
+ assert.notEqual(mixed[0],original[0]);
  assert.equal(JSON.stringify(original),before);
  const allAgain=setUniformStakes(mixed,500);
  assert.deepEqual(allAgain.map(l=>l.stake),[500,500,500]);
