@@ -24,6 +24,7 @@ on:
       - work/v1.2.0-dev15-fast-entry-sheets
       - work/v1.2.0-dev18-corrections-budget-polish
       - work/v1.3.0-rc1-draft-recovery-data-safety
+      - work/v1.3.0-dev30-screen-roles-simplify-home
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -54,7 +55,7 @@ jobs:
         run: python tools/check_publish.py
       - name: Check ESM syntax in source and publish
         run: |
-          for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js; do node --check "$name"; node --check "publish/$name"; done
+          for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js screen-roles.js ledger-calendar.js; do node --check "$name"; node --check "publish/$name"; done
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
@@ -73,6 +74,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: Dev22-30 screen-role UX source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs
+      - name: Dev22-30 screen-role UX publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs
 
       - name: Dev19-21 recover drafts, protect backups and improve iPhone source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs
