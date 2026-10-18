@@ -30,6 +30,7 @@ import {createDock} from './dock.js';
 import {mountNumberPad} from './number-pad.js';
 import {mountAdvancedPattern} from './advanced-picker.js';
 import {stakeBreakdown,setIndividualStake,setUniformStakes,STAKE_PRESETS} from './stake-allocation.js';
+import {selectedStakeUpdate,stakeChanges,stakeSnapshot,restoreStakeSnapshot,purchaseHistoryOverview} from './stake-workflow.js';
 import {generateBets,reviewBets,recentPurchaseTemplates,copyPurchaseTemplate} from './bet-patterns.js';
 const updateDock=createDock(document.querySelector('nav'));
 const $=s=>document.querySelector(s),app=$('#app');
@@ -37,7 +38,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const yen=n=>`${n.toLocaleString('ja-JP')}円`,signed=n=>(n>0?'+':'')+yen(n),rate=n=>n===null?'—':n.toFixed(1)+'％';
 const opts=(list,current)=>list.map(v=>`<option value="${esc(v)}" ${String(v)===String(current)?'selected':''}>${esc(v)}</option>`).join('');
 const clone=d=>JSON.parse(JSON.stringify(d));
-let draftVisible=150,reviewVisible=50,reviewSignature='',entryResultsEditor=null,fastResultsEditor=null,entrySheetController=null,entryDraftSession=null,entryDraftKey=null,existingApprovalSignature='';
+let stakeSelectedIds=new Set(),stakeUndoHistory=[],draftVisible=150,reviewVisible=50,reviewSignature='',entryResultsEditor=null,fastResultsEditor=null,entrySheetController=null,entryDraftSession=null,entryDraftKey=null,existingApprovalSignature='';
 const scheduleEntryDraft=()=>entryDraftSession?.schedule();
 let ledgerRevision=0;
 let data,editing=null,draft=[],month=jstToday().slice(0,7),homeRange='year',homeYear=jstToday().slice(0,4),analysisRange='all',analysisYear=jstToday().slice(0,4),analysisMonth=jstToday().slice(0,7),analysisVenue='',analysisType='',busy=false,restoreCandidate=null,dirty=false;
@@ -137,7 +138,7 @@ function rewardItems(source){
 }
 function rewardPanel(source){return `<section class="card reward-panel"><h2>成長のご褒美</h2><p class="help">記録とお世話で見た目の称号を集めよう。払戻や育成EXPに追加の効果はありません。</p><div id="growthRewards">${rewardItems(source)}</div></section>`;}
 function sortedTickets(){return [...data.tickets].sort((a,b)=>data.races.find(r=>r.id===b.raceId).date.localeCompare(data.races.find(r=>r.id===a.raceId).date)||b.createdAt.localeCompare(a.createdAt));}
-function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null;fastResultsEditor=null;entrySheetController=null;existingApprovalSignature='';entryDraftKey=id||'new';draftVisible=150;reviewVisible=50;reviewSignature='';let entrySaved=false;const t=id?data.tickets.find(t=>t.id===id):null;check(!id||t,'記録が見つかりません。');const r=t?data.races.find(r=>r.id===t.raceId):{date:jstToday(),venue:'東京',number:(window.__UMALOG_ENTRY_CLASSIC__===true||new URLSearchParams(location.search).get('entry-layout')==='classic')?1:'',name:''};if(t)draft=data.lines.filter(l=>l.ticketId===id).map(l=>({...clone(l),type:t.type}));
+function entry(id=null,eventId=null){editing=id;draft=[];stakeSelectedIds.clear();stakeUndoHistory=[];entryResultsEditor=null;fastResultsEditor=null;entrySheetController=null;existingApprovalSignature='';entryDraftKey=id||'new';draftVisible=150;reviewVisible=50;reviewSignature='';let entrySaved=false;const t=id?data.tickets.find(t=>t.id===id):null;check(!id||t,'記録が見つかりません。');const r=t?data.races.find(r=>r.id===t.raceId):{date:jstToday(),venue:'東京',number:(window.__UMALOG_ENTRY_CLASSIC__===true||new URLSearchParams(location.search).get('entry-layout')==='classic')?1:'',name:''};if(t)draft=data.lines.filter(l=>l.ticketId===id).map(l=>({...clone(l),type:t.type}));
  app.innerHTML=`<h1>${t?'記録を編集':'馬券を登録'}</h1><section class="card entry-draft-alert" id="entryDraftRecovery" hidden></section><section class="card entry-dash" id="entryQuickDashboard" hidden><div class="row"><div><small>レースの収支帳簿</small><h2>購入と結果</h2></div><span id="quickStatus" class="tag">未入力</span></div><div id="quickSnapshot" class="day-metrics"></div><p class="entry-save-status" id="entryDraftStatus" role="status">下書き：準備中</p><div class="entry-quick-actions"><button id="openPurchaseSheet" class="quiet" type="button">＋ 買い目を追加</button><button id="openOutcomeSheet" class="quiet" type="button">✓ 結果を入力</button></div><button id="openAmountEditor" class="quiet full" type="button" hidden>￥ 買い目ごとの金額を編集</button><details class="quick-lines"><summary id="quickLineTitle">購入した買い目を確認</summary><div id="quickLines"></div></details></section><div id="entrySheetBackdrop" class="entry-sheet-backdrop" hidden></div><form id="entryForm"><section class="card"><h2>① レースを選ぶ</h2><div id="gradedPicker"></div><label>開催日<input required type="date" id="date" value="${r.date}" min="2000-01-01" max="2199-12-31"></label><div class="grid"><label>競馬場<select id="venue">${opts(VENUES,r.venue)}</select></label><label>レース番号<select id="number" required><option value="">番号を確認して選択</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${r.number===i+1?'selected':''}>${i+1}R</option>`).join('')}</select></label></div><div class="race-fast-picks" id="raceFastPicks" role="group" aria-label="レース番号のクイック選択"></div><div id="calendarCandidates"></div><p id="raceMatch" class="help" role="status"></p><label>レース名（任意）<input id="raceName" maxlength="100" value="${esc(r.name)}"></label>${t?.kind==='advance'?'<p class="help">この記録は以前の「事前登録」として保存されています。既存の区分は維持します。</p>':''}</section><section class="card" id="entryPurchasePanel"><h2 id="entryPurchaseTitle">② 買い目を入力</h2><div class="grid"><label>券種<select id="type" ${t?'disabled':''}>${opts(TYPES,t?.type||'ワイド')}</select></label><label>入力方式<select id="mode"><option value="normal">通常</option><option value="box">BOX</option><option value="flow">流し</option><option value="formation">フォーメーション</option></select></label></div><div id="betTypeFast" role="group" aria-label="券種を素早く選ぶ"></div><div id="numberPad"></div><div id="advancedPicker"></div><label class="number-manual">番号を直接入力・修正<input id="numbers" inputmode="text" placeholder="例：1 4 9" autocomplete="off"></label><div class="grid"><label>1点あたり購入額<input id="stake" type="number" min="100" step="100" value="100" inputmode="numeric"></label><label>同じ買い目の追加<select id="duplicate"><option value="separate">別の行として記録</option><option value="merge">未入力の行へ金額合算</option></select></label></div><div class="stake-shortcuts" id="stakeShortcuts" role="group" aria-label="購入金額のクイック選択"><span>1点あたりの金額</span>${[100,200,500,1000].map(n=>`<button type="button" class="quiet" data-stake-shortcut="${n}">${n.toLocaleString("ja-JP")}円</button>`).join("")}</div><div id="recentPurchaseTemplates" class="recent-purchases"></div><button type="button" id="addLine" class="quiet full">買い目を確認・追加</button><p id="additionEstimate" class="addition-estimate help" role="status" aria-live="polite"></p><div id="draft"></div></section><section class="card" id="entryOutcomePanel"><h2 id="entryOutcomeTitle">③ レース結果を入力</h2><p class="help">結果が出てから記録する画面です。的中は実際に受け取った払戻金（100円あたりのオッズではありません）を入力してください。返還は購入金額が戻った場合に選びます。</p><div id="fastResults"></div><div id="entryResults"></div><button type="button" class="quiet full" id="finishOutcomeSheet" hidden>結果画面を閉じる</button></section><section class="card"><h2>④ 収支を確認して保存</h2><div id="entryReview" class="entry-review"></div><div id="existingDuplicateReview"></div><label>購入メモ（任意）<textarea id="memo" maxlength="4000">${esc(t?.memo||'')}</textarea></label><label class="checklabel" ${t?'hidden':''}><input id="saveNextRace" type="checkbox">保存後、同じ日付・競馬場で次のレースを記録</label><button class="full accent" type="submit">${t?'結果と記録を保存':'この日の結果を記録'}</button><details class="entry-legacy"><summary>例外：結果が未入力のまま保存する</summary><label class="checklabel"><input id="allowUnfinished" type="checkbox">結果未入力の買い目が残っていても保存する（通常は使用しません）</label><p class="help">過去の未確定記録を訂正する場合などに限ります。未入力分は確定収支に含みません。</p></details>${t?'<p class="help">開催日等の変更は、この券種の記録に適用します。同一レース名は共有されます。訂正しても獲得済み育成EXPは保持します。</p>':''}</section></form>`;
  entryResultsEditor=mountEntryResults($('#entryResults'),{onDirty:()=>{dirty=true;updateDraftTotals();fastResultsEditor?.render(draft);}});
  const classic=window.__UMALOG_ENTRY_CLASSIC__===true||new URLSearchParams(location.search).get('entry-layout')==='classic';
@@ -203,7 +204,7 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
  renderDraft();showEstimate();
  $('#entryForm').oninput=e=>{dirty=true;scheduleEntryDraft();if(['date','venue','number','raceName'].includes(e.target.id))updateDraftTotals();if(['numbers','stake','advancedPicker','type','mode'].includes(e.target.id))showEstimate();};
  $('#entryForm').addEventListener('change',e=>{scheduleEntryDraft();if(['date','venue','number','raceName'].includes(e.target.id))updateDraftTotals();if(['type','mode','stake'].includes(e.target.id)){dirty=true;showEstimate();}});
- $('#addLine').onclick=guard(()=>{check(!/^[\s]*[-−]/.test($('#numbers').value),'負の番号は入力できません。');const type=$('#type').value,ns=$('#numbers').value.trim().split(/[\s,、・\-→]+/).filter(Boolean).map(Number),amount=money(Number($('#stake').value),true),mode=$('#mode').value,cs=generateBets(type,mode,mode==='normal'||mode==='box'?{numbers:ns}:advancedPicker.selection());check(draft.length+cs.length<=10000,'1回の登録は10,000点までです。');for(const numbers of cs){const found=$('#duplicate').value==='merge'&&draft.find(l=>l.type===type&&l.status==='pending'&&l.purchaseMode===mode&&JSON.stringify(l.numbers)===JSON.stringify(numbers));if(found){found.stake=money(found.stake+amount,true);}else draft.push({id:uid(),type,numbers,stake:amount,purchaseMode:mode,status:'pending',payout:0,refund:0});}dirty=true;renderDraft();showEstimate();if(mode==='formation'&&!classic){$('#draft').scrollIntoView({block:'start',behavior:'auto'});}else entrySheetController?.close();notify(`${cs.length}点を追加しました（合計 ${yen(draft.reduce((n,l)=>n+l.stake,0))}）。${mode==='formation'?' 下の一覧で買い目ごとに金額を変更できます。':''}`);});
+ $('#addLine').onclick=guard(()=>{check(!/^[\s]*[-−]/.test($('#numbers').value),'負の番号は入力できません。');const type=$('#type').value,ns=$('#numbers').value.trim().split(/[\s,、・\-→]+/).filter(Boolean).map(Number),amount=money(Number($('#stake').value),true),mode=$('#mode').value,cs=generateBets(type,mode,mode==='normal'||mode==='box'?{numbers:ns}:advancedPicker.selection());check(draft.length+cs.length<=10000,'1回の登録は10,000点までです。');for(const numbers of cs){const found=$('#duplicate').value==='merge'&&draft.find(l=>l.type===type&&l.status==='pending'&&l.purchaseMode===mode&&JSON.stringify(l.numbers)===JSON.stringify(numbers));if(found){found.stake=money(found.stake+amount,true);}else draft.push({id:uid(),type,numbers,stake:amount,purchaseMode:mode,status:'pending',payout:0,refund:0});}dirty=true;stakeUndoHistory=[];stakeSelectedIds.clear();renderDraft();showEstimate();if(mode==='formation'&&!classic){$('#draft').scrollIntoView({block:'start',behavior:'auto'});}else entrySheetController?.close();notify(`${cs.length}点を追加しました（合計 ${yen(draft.reduce((n,l)=>n+l.stake,0))}）。${mode==='formation'?' 下の一覧で買い目ごとに金額を変更できます。':''}`);});
  if(!classic){
  const draftId=id||'new',draftBaseSignature=id?JSON.stringify(data.lines.filter(l=>l.ticketId===id)):'';
  const captureEntryDraft=()=>({
@@ -235,7 +236,7 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
   const recover=recovery.querySelector('#recoverEntryDraft');
   if(recover)recover.onclick=guard(async()=>{
    if(dirty&&!confirm('現在画面に入力した内容を、保存されている下書きで置き換えますか？'))return;
-   draft=saved.lines.map(l=>({...l}));
+   draft=saved.lines.map(l=>({...l}));stakeSelectedIds.clear();stakeUndoHistory=[];
    for(const id of ['date','venue','number','raceName'])$('#'+id).value=({date:saved.race.date,venue:saved.race.venue,number:saved.race.number,raceName:saved.race.name})[id];
    for(const [field,value]of Object.entries(saved.fields)){const el=$('#'+field);if(!el)continue;if(el.type==='checkbox')el.checked=value==='1';else el.value=value;}
    $('#type').dispatchEvent(new Event('change'));$('#mode').dispatchEvent(new Event('change'));
@@ -250,7 +251,12 @@ function entry(id=null,eventId=null){editing=id;draft=[];entryResultsEditor=null
  }
  $('#entryForm').onsubmit=guard(async e=>{e.preventDefault();if(busy||entrySaved)return;const review=reviewBets(draft);check(!review.duplicates.length||$('#entryDuplicatesConfirmed')?.checked,'同じ組番の追加購入を確認してください。');check(!draft.some(l=>l.status==='settled'&&!Number.isFinite(l.payout)),'的中馬券の払戻金を正しく入力してください。');const completed=entryResultsEditor.values();check(completed.every(l=>l.status!=='pending')||$('#allowUnfinished').checked,'すべての買い目の結果を入力してください。結果未入力の行は保存できません。');check(Number($('#number').value)>=1&&Number($('#number').value)<=12,'レース番号を確認して選択してください。');check(draft.length,'買い目を追加してください。');const next=clone(data),r={date:$('#date').value,venue:$('#venue').value,number:Number($('#number').value),name:$('#raceName').value.trim()},kind=t?.kind||'reported',memo=$('#memo').value.trim();const overlaps=existingPurchaseDuplicates(data,r,draft,editing);check(!overlaps.length||$('#existingDuplicatesConfirmed')?.checked,'登録済みの同じ買い目があります。重複を確認してください。');const continueNext=!editing&&$('#saveNextRace').checked;let race=next.races.find(x=>raceKey(x)===raceKey(r));if(!race){race={...r,id:uid()};next.races.push(race);}else race.name=r.name;
  if(editing){const old=next.tickets.find(t=>t.id===editing);old.raceId=race.id;old.kind=kind;old.memo=memo;next.lines=next.lines.filter(l=>l.ticketId!==editing);next.lines.push(...completed.map(({type,...l})=>({...l,ticketId:editing})));}else{for(const type of new Set(draft.map(l=>l.type))){const ticket={id:uid(),raceId:race.id,type,kind,memo,createdAt:new Date().toISOString()};next.tickets.push(ticket);next.lines.push(...completed.filter(l=>l.type===type).map(({type,...l})=>({...l,ticketId:ticket.id})));}}
- next.races=next.races.filter(r=>next.tickets.some(t=>t.raceId===r.id));entrySaved=true;try{await entryDraftSession?.pauseForCommit();await commit(next,{clearDraftKey:entryDraftKey});await entryDraftSession?.stop();entryDraftSession=null;}catch(error){entrySaved=false;entryDraftSession?.resume();entryDraftSession?.schedule();throw error;}notify('保存しました。');location.hash=continueNext?'entry-next/'+r.date+'/'+encodeURIComponent(r.venue):'history';});
+ next.races=next.races.filter(r=>next.tickets.some(t=>t.raceId===r.id));
+ if(editing){
+  const change=stakeChanges(data.lines.filter(l=>l.ticketId===editing),completed);
+  if((change.changed||change.added||change.removed)&&!confirm('保存済みの購入記録を訂正します。\n変更前 '+yen(change.oldTotal)+' → 変更後 '+yen(change.newTotal)+'（差額 '+signed(change.difference)+'）\nうまログの記録に反映しますか？'))return;
+ }
+ entrySaved=true;try{await entryDraftSession?.pauseForCommit();await commit(next,{clearDraftKey:entryDraftKey});await entryDraftSession?.stop();entryDraftSession=null;}catch(error){entrySaved=false;entryDraftSession?.resume();entryDraftSession?.schedule();throw error;}notify('保存しました。');location.hash=continueNext?'entry-next/'+r.date+'/'+encodeURIComponent(r.venue):'history';});
 }
 function updateDraftTotals(){
  if(!$('#draft .entry-total'))return;
@@ -259,6 +265,10 @@ function updateDraftTotals(){
  const signature=JSON.stringify([raceText,name,draft]),same=signature===reviewSignature,confirmed=same&&$('#entryDuplicatesConfirmed')?.checked,opened=$('#reviewLines')?.open;reviewSignature=signature;
  const modes={normal:'通常',box:'BOX',flow:'流し',formation:'フォーメーション'},rows=draft.slice(0,reviewVisible);
  $('#entryReview').innerHTML=`<small>${esc(raceText)}</small><h3>${esc(name)}</h3><strong class="review-total">${text}</strong><details id="reviewLines" ${opened?'open':''}><summary>券種・買い方・買い目を確認（${draft.length}点）</summary><ul class="review-lines">${rows.map(l=>`<li><span>${esc(l.type)} · ${modes[l.purchaseMode]||'旧記録（不明）'}<br><b>${l.numbers.join(['馬単','三連単'].includes(l.type)?'→':'－')}</b></span><strong>${yen(l.stake)}</strong></li>`).join('')}</ul>${draft.length>rows.length?'<button type="button" id="reviewMore" class="quiet full">さらに50点を表示</button>':''}</details>${review.duplicates.length?`<p class="help">同じ券種・組番が ${review.duplicates.length}組あります。買い方が異なるものも含みます。削除・合算はしていません。</p><label class="checklabel"><input type="checkbox" id="entryDuplicatesConfirmed" ${confirmed?'checked':''}>意図した追加購入として残す</label>`:''}`;
+ const savedDiff=editing?stakeChanges(data.lines.filter(l=>l.ticketId===editing),draft):null;
+ if(savedDiff&&(savedDiff.changed||savedDiff.added||savedDiff.removed)){
+  $('#entryReview').insertAdjacentHTML('beforeend',`<div class="stake-diff-preview" id="stakeDiffReview"><strong>保存済み記録との差分</strong><p>変更前 ${yen(savedDiff.oldTotal)} → 変更後 ${yen(savedDiff.newTotal)} ／ 差額 <b>${signed(savedDiff.difference)}</b></p><p class="help">金額変更 ${savedDiff.changed}点／追加 ${savedDiff.added}点／削除 ${savedDiff.removed}点。内容を確認して保存してください。</p>${savedDiff.items.slice(0,16).map(item=>`<div class="stake-diff-row"><span>${esc(item.type)} ${item.numbers?.join('→')||''}</span><strong>${yen(item.before)} → ${yen(item.after)}</strong></div>`).join('')}${savedDiff.items.length>16?'<small>残りの変更も合計に反映されています。</small>':''}</div>`);
+ }
  const race={date:$('#date').value,venue:$('#venue').value,number:Number($('#number').value)};
  const overlaps=draft.length&&Number.isInteger(race.number)&&race.number>=1&&race.number<=12?existingPurchaseDuplicates(data,race,draft,editing):[];
  const fingerprint=JSON.stringify([race,draft.map(l=>[l.type,l.numbers,l.stake])]);
@@ -283,17 +293,26 @@ function renderDraft(){
  const format=l=>l.numbers.join(['馬単','三連単'].includes(l.type)?'→':'－');
  $('#draft').innerHTML=`<section class="allocation-editor" id="allocationEditor"><h3>買い目別の購入金額</h3><p class="help">全点に同じ金額を設定してから、一部の組み合わせだけ変更できます。実際のJRA投票内容は変更されません。</p><p class="entry-total" role="status" aria-live="polite">${n}点 / 合計 ${yen(total)}</p>
  ${n>1?`<details class="bet-bulk" ${draft.some(l=>l.purchaseMode==='formation')?'open':''}><summary>一括で同じ金額にする（全${n}点）</summary><div class="stake-preset-row" role="group" aria-label="すべての買い目の購入額を設定">${STAKE_PRESETS.map(amount=>`<button type="button" class="quiet" data-bulk-preset="${amount}">全点${amount.toLocaleString('ja-JP')}円</button>`).join('')}</div><div class="bet-bulk-form"><label>一括の金額を直接入力<input id="bulkAmount" type="number" min="100" step="100" inputmode="numeric" value="${summary.nonUniform?100:summary.first||100}"></label><button type="button" class="quiet" id="bulkApply">全点に適用</button></div><p class="help">一括操作は個別変更済みの行も上書きします。個別変更はこの下の各行から行えます。</p></details>`:''}
+<div class="stake-multi-editor" id="stakeMultiEditor"><div class="row"><strong>複数の買い目をまとめて変更</strong><small id="stakeSelectedCount" role="status">${stakeSelectedIds.size}点選択中</small></div><p class="help">チェックした組み合わせだけ金額を変更。まとめて選択して「選択分に適用」を押してね。</p><div class="stake-multi-actions"><button type="button" class="quiet" id="stakeSelectVisible">表示中を選択</button><button type="button" class="quiet" id="stakeClearSelection">選択を解除</button><button type="button" class="quiet" id="stakeUndo" ${stakeUndoHistory.length?'':'disabled'}>↶ 直前の変更を取り消す</button></div><div class="stake-preset-row selected-quick" role="group" aria-label="選択した買い目の金額">${[100,200,500].map(amount=>`<button type="button" class="quiet" data-selected-preset="${amount}" ${stakeSelectedIds.size?'':'disabled'}>選択分${amount}円</button>`).join('')}</div><div class="stake-multi-apply"><label>選択分に適用する金額<input id="selectedStakeAmount" type="number" min="100" step="100" inputmode="numeric" value="200"></label><button type="button" id="stakeSelectedApply" class="quiet" ${stakeSelectedIds.size?'':'disabled'}>選択分に適用</button></div></div>
  <div class="allocation-heading"><strong>組み合わせ別の金額${n? `（${n}点）`:''}</strong><small>金額は100円単位</small></div>
  <div class="bet-slip-rows">${visible.map((l,i)=>`<div class="bet-slip-row line">
- <span class="bet-slip-name"><small>${l.type} · ${l.purchaseMode?({normal:'通常',box:'BOX',flow:'流し',formation:'フォーメーション'}[l.purchaseMode]||'不明'):'旧記録（不明）'}</small><b>${format(l)}</b>${l.status!=='pending'?'<small>確定済みの記録</small>':''}</span>
+ <span class="bet-slip-name"><label class="stake-row-select"><input type="checkbox" data-stake-select="${i}" aria-label="買い目${i+1}を選択" ${stakeSelectedIds.has(l.id)?'checked':''}><span>まとめて変更</span></label><small>${l.type} · ${l.purchaseMode?({normal:'通常',box:'BOX',flow:'流し',formation:'フォーメーション'}[l.purchaseMode]||'不明'):'旧記録（不明）'}</small><b>${format(l)}</b>${l.status!=='pending'?'<small>確定済みの記録</small>':''}</span>
  <label class="bet-slip-amount"><span class="sr-only">買い目${i+1}の購入金額</span><input data-amount="${i}" aria-label="買い目${i+1}の購入金額" required type="number" step="100" min="100" value="${l.stake}" inputmode="numeric"></label>
  <button type="button" class="danger bet-slip-remove" data-remove="${i}" aria-label="買い目${i+1}を削除">×</button>
  <div class="stake-preset-row per-line" role="group" aria-label="買い目${i+1}をすばやく変更">${STAKE_PRESETS.slice(0,3).map(amount=>`<button type="button" class="quiet ${l.stake===amount?'is-selected':''}" data-line-stake="${i}" data-value="${amount}" aria-pressed="${l.stake===amount}">${amount}円</button>`).join('')}</div>
  </div>`).join('')}</div>
  ${n>visible.length?`<button type="button" class="quiet full" id="draftMore">さらに表示（残り ${n-visible.length}点）</button>`:''}</section>`;
+ const trackStakeChange=next=>{
+  if(!next.some((l,i)=>l.stake!==draft[i]?.stake))return;
+  stakeUndoHistory.push(stakeSnapshot(draft));if(stakeUndoHistory.length>10)stakeUndoHistory.shift();
+  draft=next;dirty=true;
+ };
+ const updateSelected=amount=>{
+  const ids=draft.filter(l=>stakeSelectedIds.has(l.id)).map(l=>l.id);
+  trackStakeChange(selectedStakeUpdate(draft,ids,amount));renderDraft();
+ };
  const updateOne=(index,amount,redraw=true)=>{
-  draft=setIndividualStake(draft,index,amount);
-  dirty=true;
+  trackStakeChange(setIndividualStake(draft,index,amount));
   if(redraw){renderDraft();return;}
   // Preserve the focused numeric input while typing, especially on iOS.
   const row=$('#draft [data-amount="'+index+'"]')?.closest('.bet-slip-row');
@@ -302,16 +321,30 @@ function renderDraft(){
    button.setAttribute('aria-pressed',String(selected));
    button.classList.toggle('is-selected',selected);
   });
+  const undo=$('#stakeUndo');if(undo)undo.disabled=!stakeUndoHistory.length;
   entryResultsEditor?.render(draft);
   fastResultsEditor?.render(draft);
   updateDraftTotals();
  };
- document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{draft.splice(Number(b.dataset.remove),1);dirty=true;renderDraft();});
+ document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{stakeSelectedIds.delete(draft[Number(b.dataset.remove)]?.id);draft.splice(Number(b.dataset.remove),1);stakeUndoHistory=[];dirty=true;renderDraft();});
  document.querySelectorAll('[data-amount]').forEach(el=>el.onchange=guard(()=>updateOne(Number(el.dataset.amount),el.value,false)));
  document.querySelectorAll('[data-line-stake]').forEach(b=>b.onclick=guard(()=>updateOne(Number(b.dataset.lineStake),Number(b.dataset.value))));
+ document.querySelectorAll('[data-stake-select]').forEach(el=>el.onchange=()=>{
+  const id=draft[Number(el.dataset.stakeSelect)]?.id;if(!id)return;
+  if(el.checked)stakeSelectedIds.add(id);else stakeSelectedIds.delete(id);renderDraft();
+ });
+ $('#stakeSelectVisible').onclick=()=>{visible.forEach(l=>stakeSelectedIds.add(l.id));renderDraft();};
+ $('#stakeClearSelection').onclick=()=>{stakeSelectedIds.clear();renderDraft();};
+ $('#stakeUndo').onclick=guard(()=>{
+  if(!stakeUndoHistory.length)return;
+  draft=restoreStakeSnapshot(draft,stakeUndoHistory[stakeUndoHistory.length-1]);
+  stakeUndoHistory.pop();dirty=true;renderDraft();notify('直前の金額変更を元に戻しました。');
+ });
+ document.querySelectorAll('[data-selected-preset]').forEach(b=>b.onclick=guard(()=>updateSelected(Number(b.dataset.selectedPreset))));
+ $('#stakeSelectedApply').onclick=guard(()=>updateSelected($('#selectedStakeAmount').value));
  const updateAll=amount=>{
   if(stakeBreakdown(draft).nonUniform&&!confirm('個別に設定した購入金額も含め、すべて'+Number(amount).toLocaleString('ja-JP')+'円に変更しますか？'))return;
-  draft=setUniformStakes(draft,amount);dirty=true;renderDraft();
+  trackStakeChange(setUniformStakes(draft,amount));renderDraft();
  };
  document.querySelectorAll('[data-bulk-preset]').forEach(b=>b.onclick=guard(()=>updateAll(Number(b.dataset.bulkPreset))));
  if($('#bulkApply'))$('#bulkApply').onclick=guard(()=>updateAll($('#bulkAmount').value));
