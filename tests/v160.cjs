@@ -32,6 +32,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(rested.growthV2.companion.memories.length,2);
   assert.equal(rested.growthV2.bond,played.growthV2.bond);
   await page.locator('#companionRoom').selectOption('stars');
+  await page.waitForFunction(()=>document.querySelector('.nursery')?.dataset.room==='stars');
   assert.equal(await page.locator('.nursery').getAttribute('data-room'),'stars');
   await page.locator('#companionAlbum summary').click();
   assert.equal(await page.locator('#companionMemories li').count(),2);
