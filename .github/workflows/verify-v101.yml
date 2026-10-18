@@ -34,6 +34,7 @@ on:
       - work/v1.6.1-companion-animation-outfits
       - work/v1.7.0-manual-race-info
       - work/v1.7.1-race-corrections
+      - work/v1.8.0-race-audit
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -65,7 +66,7 @@ jobs:
       - name: Check ESM syntax in source and publish
         run: |
           for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js screen-roles.js ledger-calendar.js ledger-trends.js growth-companion.js; do node --check "$name"; node --check "publish/$name"; done
-          node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js; node --check manual-race.js; node --check publish/manual-race.js; node --check manual-race-correction.js; node --check publish/manual-race-correction.js;
+          node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js; node --check manual-race.js; node --check publish/manual-race.js; node --check manual-race-correction.js; node --check publish/manual-race-correction.js; node --check race-audit.js; node --check publish/race-audit.js;
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
@@ -84,6 +85,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.8.0 race information dashboard source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs
+      - name: v1.8.0 race information dashboard publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs
 
       - name: v1.7.1 race correction source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs
