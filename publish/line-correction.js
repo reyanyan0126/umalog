@@ -25,7 +25,7 @@ export function openLineCorrection({line,ticket,onSave,onClose=()=>{}}){
  <label>結果<select id="correctMode"><option value="miss">不的中</option><option value="hit">的中</option><option value="refund">全額返還</option><option value="advanced">一部返還・詳細</option>${line.status==='pending'?'<option value="pending">旧記録：未入力</option>':''}</select></label>
  <label id="correctPayoutWrap">実際の払戻金（円）<input id="correctPayout" type="number" min="0" step="1" inputmode="numeric" value="${line.payout}"></label>
  <label id="correctRefundWrap">返還金（円）<input id="correctRefund" type="number" min="0" step="1" inputmode="numeric" value="${line.refund}"></label>
- <div class="correction-preview" id="correctionPreview" role="status"></div>
+ <div class="correction-preview"><p class="help" id="correctionBefore">変更前：購入 ${yen(line.stake)} ／ 払戻 ${yen(line.payout)} ／ 返還 ${yen(line.refund)}</p><div id="correctionPreview" role="status"></div><p id="correctionDifference" class="help"></p></div>
  <button id="correctionReview" class="full" type="button">変更内容を確認</button>
  <div id="correctionConfirm" hidden><p class="help">この1点の金額・結果を変更し、日別・月別集計を更新します。ほかの買い目は変更しません。</p><button id="correctionSave" type="submit" class="full accent">この内容で訂正を保存</button></div>
  </form>`;
@@ -43,6 +43,8 @@ export function openLineCorrection({line,ticket,onSave,onClose=()=>{}}){
    const refund=mode==='advanced'?read('correctRefund'):0;
    result=lineCorrectionValues(line,mode,stake,payout,refund);
    el('correctionPreview').textContent=`変更後：購入 ${yen(stake)} ／ 払戻 ${yen(result.payout)} ／ 返還 ${yen(result.refund)} ／ ${result.status==='pending'?'収支未計算':'収支 '+(result.payout+result.refund-stake>=0?'+':'')+yen(result.payout+result.refund-stake)}`;
+   const diff=result.payout+result.refund-stake-(line.payout+line.refund-line.stake);
+   el('correctionDifference').textContent=line.status==='pending'||result.status==='pending'?'未入力が含まれるため確定収支の差額は保存後に再計算します。':'確定収支の差額 '+(diff>0?'+':'')+yen(diff)+'（該当する1点のみ）';
   }catch(error){el('correctionPreview').textContent=error.message;}
   return result;
  }
