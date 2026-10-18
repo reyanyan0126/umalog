@@ -88,7 +88,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#editStakes').click();await page.waitForSelector('#allocationEditor');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow '+width);
    await page.locator('#entryPurchasePanel .sheet-close').click();
-   await page.evaluate(()=>location.hash='history');await page.waitForSelector('[data-detail]');
+   await page.evaluate(()=>location.hash='history');await page.waitForSelector('.history-bet-details > summary');
   }
   assert.deepEqual(errors,[]);
   console.log('PASS v1.8.1: formation 4 tickets, bulk 100 then one 200, manual amount, aggregate, saved ticket re-edit and mobile');
