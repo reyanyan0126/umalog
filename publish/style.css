@@ -585,3 +585,17 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 @media(prefers-reduced-motion:reduce){.nursery .pet-touch[data-reaction] .pet{animation:none!important;transform:none!important}}
 body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off"] .pet-touch[data-reaction] .pet{animation:none!important;transform:none!important}
 @media(max-width:359px){.nursery .companion-outfit{font-size:30px}}
+
+/* v1.7.0 local/manual race metadata, reviewed before use */
+.manual-race-panel{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:12px 0;background:#f6faf7}
+.manual-race-panel>summary{font-weight:700;min-height:46px;padding:10px 2px}
+.manual-race-panel .help{font-size:.76rem;line-height:1.6}
+.manual-race-panel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:12px 0}
+.manual-race-panel form label{font-size:.8rem}
+.manual-race-panel form input,.manual-race-panel form select{width:100%;min-width:0;min-height:46px;margin-top:6px}
+.manual-race-panel form label:nth-last-of-type(1){grid-column:1/-1}
+.manual-race-panel form button{grid-column:1/-1;min-height:48px}
+#manualRacePreview{overflow-wrap:anywhere}
+#manualRacePreview h3{font-size:.9rem}
+#manualRacePreview button{min-height:48px}
+@media(max-width:375px){.manual-race-panel form{grid-template-columns:1fr;gap:8px}.manual-race-panel form label:nth-last-of-type(1){grid-column:auto}}
