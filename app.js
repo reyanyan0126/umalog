@@ -18,6 +18,7 @@ import {mountFastResults} from './fast-results.js';
 import {mountEntrySheets} from './entry-sheets.js';
 import {openLineCorrection} from './line-correction.js';
 import {raceHistory,ledgerCSV,budgetStatus,setMonthlyBudget,monthReview} from './ledger-tools.js';
+import {homeSummary,raceHistoryRows,matchesRaceQuery,typeVenueMatrix} from './screen-roles.js';
 import {dayLedger,existingPurchaseDuplicates,periodInsights} from './day-ledger.js';
 import {growthRewards} from './growth-rewards.js';
 import {mountRaceBatch} from './batch-ui.js';
@@ -69,6 +70,24 @@ function bindDetails(){document.querySelectorAll('[data-detail]').forEach(b=>b.o
 function catalogPanel(){const stamp=v=>v?new Date(v).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}):'未実施';return `<section class="card" id="raceInfoPanel"><details><summary>自動取得の状況</summary><h2>レース情報</h2><p id="raceInfoStatus" role="status">${catalogUpdating?'取得中…':!RACE_PROVIDER?'提供元未設定・自動取得は未提供':catalog.error?'更新失敗（取得済み情報は保持）':'取得済み情報を利用できます'}</p><p class="help">最終成功：${esc(stamp(catalog.lastSuccess))}（日本時間）<br>最終試行：${esc(stamp(catalog.lastAttempt))}<br>保存済み ${catalog.records.length}件 / 前回成功時の取得 ${catalog.lastCount}件</p>${catalogWarning||catalog.error?`<p role="alert" class="help negative">${esc(catalogWarning||catalog.error)}</p>`:''}<button id="refreshRaces" class="quiet full" ${!RACE_PROVIDER||catalogUpdating?'disabled':''} aria-describedby="raceInfoHelp">直近レース情報を更新する</button><p id="raceInfoHelp" class="help">${!RACE_PROVIDER?'正規のデータ提供元・利用条件が未確定のため更新できません。条件は「情報未取得」と表示し、収支登録は通常どおり利用できます。':'通信で取得します。失敗時も保存済み情報と収支は保持します。取得済み情報はオフラインでも利用できます。'}</p><p class="help muted">レース情報は収支と別のキャッシュです。JSONバックアップには含まれません。</p></details></section>`;}
 function bindCatalog(){const button=$('#refreshRaces');if(!button)return;button.onclick=guard(async()=>{if(catalogUpdating||!RACE_PROVIDER)return;catalogUpdating=true;button.disabled=true;$('#raceInfoStatus').textContent='取得中…';try{const result=await refreshCatalog(catalog);if(result.status!=='unconfigured'){await saveCatalog(result.catalog);catalog=result.catalog;catalogWarning='';}}finally{catalogUpdating=false;if($('#raceInfoPanel')){const panel=$('#raceInfoPanel');panel.outerHTML=catalogPanel();bindCatalog();}}});}
 function home(){
+ if(window.__UMALOG_ENTRY_CLASSIC__===true)return homeClassic();
+ const currentMonth=jstToday().slice(0,7),s=homeSummary(data,currentMonth),receive=s.payout+s.refund;
+ app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1><section class="card home-minimal" id="homeSummary">
+   <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
+   <div class="home-profit ${s.profit<0?'negative':'positive'}" aria-label="今月の確定収支">${s.settledCount?signed(s.profit):'—'}</div>
+   <p class="home-minimal-note">${s.settledCount?'結果確定分の収支':'今月はまだ確定した記録がありません'}</p>
+   <div class="home-minimal-totals">${metric('購入（確定分）',yen(s.purchase))}${metric('払戻・返還',yen(receive))}</div>
+   ${s.pendingCount?`<p class="help">結果未入力 ${s.pendingCount}点 · ${yen(s.pendingStake)} は確定収支に含みません。</p>`:''}
+   </section>
+   <a class="button accent full home-entry-cta" id="homeEntry" href="#entry">＋ 結果を記録する</a>
+   <p class="home-minimal-foot">詳しい成績は <a href="#analysis">分析</a> で確認できます。</p>`;
+ loadEntryDraft('new').then(saved=>{
+  if(!$('#homeEntry')||!saved)return;
+  try{validateEntryDraft(saved);if(saved.key!=='new')return;}catch{return;}
+  $('#homeEntry').textContent='入力途中の記録を再開';
+ }).catch(()=>{});
+}
+function homeClassic(){
  const today=jstToday(),daily=aggregate(data,r=>r.date===today);
  const summary=()=>{const prefix=homeRange==='year'?homeYear:month,s=aggregate(data,r=>r.date.startsWith(prefix));return `<small>${homeRange==='year'?'年間':'月間'}の確定収支</small><div class="balance ${s.profit<0?'negative':'positive'}">${s.settledCount?signed(s.profit):'—'}</div><div class="metrics">${metric('回収率',rate(s.returnRate))}${metric('買い目の的中率',rate(s.lineRate))}</div><details><summary>購入・払戻の内訳</summary>${totals(s)}<p class="help">払戻 ${yen(s.payout)} / 返還 ${yen(s.refund)}。未入力の明細は確定集計に含めません。</p></details>`;};
  app.innerHTML=`<div class="page-heading"><h1>ホーム</h1><div class="home-range-controls"><div class="home-range-switch" role="group" aria-label="ホーム収支の集計期間"><button type="button" class="quiet" id="homeYearly" aria-pressed="${homeRange==='year'}">年間</button><button type="button" class="quiet" id="homeMonthly" aria-pressed="${homeRange==='month'}">月間</button></div><label id="homeYearField" ${homeRange==='month'?'hidden':''}>対象年<input id="homeYearInput" type="number" inputmode="numeric" min="2000" max="2199" step="1" value="${homeYear}"></label><label id="homeMonthField" ${homeRange==='year'?'hidden':''}>対象月<input id="month" type="month" min="2000-01" max="2199-12" value="${month}"></label></div></div><section class="card hero" id="homeSummary">${summary()}</section><section class="card home-day-link"><div><small>今日の記録 · ${today}</small><strong>${daily.settledCount?signed(daily.profit):"まだ記録なし"}</strong><a href="#day/${today}">1日分のログを見る</a></div><a class="quiet button" href="#entry-date/${today}">今日の結果を記録 →</a></section><section id="homeBudget">${budgetWidget(data,homeRange==='month'?month:jstToday().slice(0,7))}</section><section class="card graded-home-compact" id="gradedHome"></section>`;
@@ -251,13 +270,13 @@ function history(){
  let shown=50;
  const update=()=>{
   const q=$('#historySearch').value.trim(),venue=$('#vf').value,type=$('#tf').value,status=$('#sf').value;
-  const list=raceHistory(data).map(item=>{
+  const list=raceHistoryRows(data).map(item=>{
    const filtered=item.tickets.filter(t=>{
     const lines=data.lines.filter(l=>l.ticketId===t.id),s=summarize(lines);
     return (!type||t.type===type)&&(!status||(status==='hit'&&lines.some(l=>l.payout>0))||(status==='pending'&&s.pendingCount>0)||(status==='miss'&&!s.pendingCount&&s.lineCount>0&&!s.lineHits)||(status==='void'&&!s.pendingCount&&s.lineCount===0));
    });
    return {...item,tickets:filtered};
-  }).filter(item=>item.tickets.length&&(!venue||item.race.venue===venue)&&(!q||`${item.race.date} ${item.race.venue} ${item.race.number} ${item.race.name}`.includes(q)));
+  }).filter(item=>item.tickets.length&&(!venue||item.race.venue===venue)&&matchesRaceQuery(item,q));
   $('#historyCount').textContent=`${list.length}レースを表示（券種ごとに開いて確認できます）`;
   $('#historyList').innerHTML=list.slice(0,shown).map(item=>{
    const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);
