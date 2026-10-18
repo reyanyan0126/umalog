@@ -29,7 +29,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('[data-reuse-ticket="0"]').click();
   assert.match(await page.locator('#notice').innerText(),/レース番号/);
   assert.match(await page.locator('#draft .entry-total').innerText(),/0点/);
+  // The purchase sheet intentionally blocks background controls. Close it before selecting a race.
+  await page.locator('#entryPurchasePanel .sheet-close').click();
   await page.locator('[data-race-quick="8"]').click();
+  await page.locator('#openPurchaseSheet').click();
   await page.locator('[data-reuse-ticket="0"]').click();
   assert.ok(dialogs.some(s=>s.includes('8R')&&s.includes('払戻結果はコピーしません')));
   assert.match(await page.locator('#quickLineTitle').innerText(),/2点/);
