@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyData,aggregate,box,combination,growth,recalculate,validateData,removeTicket,weekOf,jstToday} from '../core.js';
+import {emptyData,aggregate,box,combination,growth,recalculate,validateData,removeTicket,weekOf,jstToday,backupFreshness,backupFileName} from '../core.js';
 function fixture(){const d=emptyData();d.races=[{id:'r1',date:'2026-10-04',venue:'東京',number:1,name:''}];d.tickets=[{id:'t1',raceId:'r1',type:'単勝',kind:'reported',memo:'',createdAt:'2026-10-04T00:00:00Z'}];d.lines=[{id:'l1',ticketId:'t1',numbers:[1],stake:500,status:'settled',payout:1200,refund:0}];return d;}
 test('01: 500円→1200円 = +700円 / 240%',()=>{const s=aggregate(fixture());assert.equal(s.profit,700);assert.equal(s.returnRate,240);});
 test('02: 三連複5頭BOX 10点・1000円',()=>{assert.equal(box('三連複',[1,2,3,4,5]).length,10);assert.equal(box('三連複',[1,2,3,4,5]).length*100,1000);assert.equal(box('三連単',[1,2,3,4,5]).length,60);});
@@ -18,3 +18,14 @@ test('日本時間の月曜境界 / 未終了週はAのみ',()=>{assert.equal(js
 test('競馬しない週の振り返り20EXP / 未来週は加点なし',()=>{const d=emptyData();d.reviews=[{id:'v1',week:'2026-10-05',text:'今週は休み'}];assert.equal(growth(d,'2026-10-15').character.exp,20);assert.equal(growth(d,'2026-10-05').character.exp,0);});
 test('復元のバージョン・参照・金額・状態・日付・重複を検証',()=>{for(const mutate of [d=>d.schemaVersion=2,d=>d.lines[0].ticketId='bad',d=>d.lines[0].stake=1.5,d=>d.lines[0].refund=600,d=>d.lines[0].status='pending',d=>d.races[0].date='2026-02-30',d=>d.lines.push({...d.lines[0]}),d=>d.settings.name='',d=>d.races.push({...d.races[0],id:'r2'})]){const d=fixture();mutate(d);assert.throws(()=>validateData(d));}});
 test('回収率閾値80/100/120とレース的中率',()=>{for(const [payout,expected] of [[400,15],[500,30],[600,40]]){const d=fixture();d.lines[0].payout=payout;for(let i=2;i<=3;i++){d.races.push({...d.races[0],id:'r'+i,number:i});d.tickets.push({...d.tickets[0],id:'t'+i,raceId:'r'+i});d.lines.push({...d.lines[0],id:'l'+i,ticketId:'t'+i});}assert.equal(growth(d,'2026-10-15').history[0].d,expected);}});
+
+test('v1.3.2 バックアップ確認は新しい帳簿保存で失効し、書き出し名に日本時間を付与',()=>{
+ const saved='2026-10-18T08:05:00.000Z',confirmed='2026-10-18T08:06:00.000Z';
+ assert.equal(backupFreshness(null,saved,Date.parse(confirmed)).kind,'missing');
+ assert.equal(backupFreshness('2026-10-18T08:04:00.000Z',saved,Date.parse(confirmed)).kind,'outdated');
+ assert.equal(backupFreshness(confirmed,saved,Date.parse(confirmed)).kind,'current');
+ assert.equal(backupFreshness(confirmed,null,Date.parse(confirmed)).kind,'unknown');
+ assert.equal(backupFreshness(confirmed,saved,Date.parse(confirmed)+31*86400000).kind,'aged');
+ assert.equal(backupFreshness(confirmed,saved,Date.parse(confirmed)-86400000).days,0);
+ assert.equal(backupFileName(new Date('2026-10-18T08:05:10.123Z')),'umalog-backup-2026-10-18_17-05-10.123.json');
+});

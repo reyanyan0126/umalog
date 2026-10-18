@@ -56,3 +56,19 @@ export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===
  }
  check(d.character&&Number.isSafeInteger(d.character.exp)&&d.character.exp>=0,'育成状態が不正です。');if(d.growthV2)validateGrowthV2(d.growthV2);return recalculate(d);}
 export function removeTicket(data,id){data.lines=data.lines.filter(l=>l.ticketId!==id);data.tickets=data.tickets.filter(t=>t.id!==id);data.races=data.races.filter(r=>data.tickets.some(t=>t.raceId===r.id));return data;}
+
+/* A user-confirmed file is not proof that newer ledger changes are backed up. */
+export function backupFreshness(confirmedAt,lastSavedAt,nowMs=Date.now()){
+ const confirmed=typeof confirmedAt==='string'?Date.parse(confirmedAt):NaN;
+ const saved=typeof lastSavedAt==='string'?Date.parse(lastSavedAt):NaN;
+ if(!Number.isFinite(confirmed))return {kind:'missing',days:null};
+ if(Number.isFinite(saved)&&saved>confirmed)return {kind:'outdated',days:null};
+ if(!Number.isFinite(saved))return {kind:'unknown',days:null};
+ const days=Math.max(0,Math.floor((nowMs-confirmed)/86400000));
+ return {kind:days>=30?'aged':'current',days};
+}
+/* Timestamped Japan-local filename prevents routine same-day backup overwrites. */
+export function backupFileName(now=new Date()){
+ const iso=new Date(now.getTime()+9*3600000).toISOString();
+ return 'umalog-backup-'+iso.slice(0,10)+'_'+iso.slice(11,23).replace(/:/g,'-')+'.json';
+}
