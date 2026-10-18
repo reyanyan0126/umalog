@@ -1,0 +1,67 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),prefix=process.env.PUBLISH==='1'?'/publish/':'/';
+ const server=http.createServer((req,res)=>{let p=decodeURIComponent(req.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';try{res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml'}[path.extname(p)]||'application/octet-stream'));res.end(fs.readFileSync(path.join(root,p)));}catch{res.writeHead(404).end();}}).listen(8068,'127.0.0.1');
+ let browser;
+ try{
+  const c=require(process.env.CHROMIUM_MODULE);
+  browser=await chromium.launch({headless:true,executablePath:await c.executablePath(),args:c.args.filter(x=>x!=='--disable-web-security'&&x!=='--allow-running-insecure-content')});
+  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(16000);
+  await page.goto('http://127.0.0.1:8068'+prefix);await page.waitForSelector('#homeEntry');
+  const go=async route=>{await page.evaluate(v=>location.hash=v,route);await page.waitForTimeout(100);};
+  const before=await page.evaluate(async()=>await(await import('./db.js')).load());
+  await go('settings');await page.waitForSelector('#manualRaceDetails');
+  await page.locator('#manualRaceDetails summary').click();
+  await page.locator('#manualRaceForm [name=date]').fill('2028-05-17');
+  await page.locator('#manualRaceForm [name=venue]').selectOption('京都');
+  await page.locator('#manualRaceForm [name=number]').selectOption('4');
+  await page.locator('#manualRaceForm [name=name]').fill('ユーザー確認レース');
+  await page.locator('#manualRaceForm [name=surface]').selectOption('芝');
+  await page.locator('#manualRaceForm [name=distance]').fill('1600');
+  await page.locator('#manualRaceForm [name=sourceURL]').fill('https://example.org/race/2028/4');
+  await page.locator('#manualRaceForm button[type=submit]').click();
+  await page.waitForSelector('#manualRaceApply');
+  assert.match(await page.locator('#manualRacePreview').innerText(),/ユーザー確認レース/);
+  const unsaved=await page.evaluate(async()=>(await (await import('./db.js')).loadCalendar()).calendar);
+  assert.equal(unsaved.races.length,0);
+  await page.locator('#manualRaceApply').click();
+  assert.match(await page.locator('#calendarMessage').innerText(),/チェック/);
+  await page.locator('#manualRaceAgree').check();
+  await page.locator('#manualRaceApply').click();
+  await page.waitForFunction(()=>document.querySelector('#calendarMessage')?.textContent.includes('レース情報を保存しました'));
+  let loaded=await page.evaluate(async()=>(await (await import('./db.js')).loadCalendar()).calendar);
+  assert.equal(loaded.races.length,1);assert.equal(loaded.races[0].approval,'unknown');
+  const stable=JSON.stringify(loaded);
+  await page.reload();await page.waitForSelector('#manualRaceDetails');
+  await page.locator('#manualRaceDetails summary').click();
+  const form=page.locator('#manualRaceForm');
+  await form.locator('[name=date]').fill('2028-05-17');
+  await form.locator('[name=venue]').selectOption('京都');
+  await form.locator('[name=number]').selectOption('4');
+  await form.locator('[name=sourceURL]').fill('https://example.org/race/2028/4');
+  await form.locator('button[type=submit]').click();
+  assert.match(await page.locator('#calendarMessage').innerText(),/登録済み/);
+  assert.equal(JSON.stringify(await page.evaluate(async()=>(await (await import('./db.js')).loadCalendar()).calendar)),stable);
+  await go('entry');await page.waitForSelector('#date');
+  await page.locator('#date').fill('2028-05-17');
+  await page.locator('#date').dispatchEvent('change');
+  await page.locator('#venue').selectOption('京都');
+  await page.locator('#calendarCandidates summary').click();
+  assert.match(await page.locator('#calendarCandidates').innerText(),/ユーザー確認レース/);
+  assert.match(await page.locator('#calendarCandidates').innerText(),/要確認/);
+  await page.locator('#calendarCandidates [data-n="4"]').click();
+  assert.equal(await page.locator('#number').inputValue(),'4');
+  assert.equal(await page.locator('#raceName').inputValue(),'ユーザー確認レース');
+  assert.match(await page.locator('#raceMatch').innerText(),/1600m/);
+  const after=await page.evaluate(async()=>await(await import('./db.js')).load());
+  assert.deepEqual(after,before);
+  for(const width of [320,390,440]){
+   await page.setViewportSize({width,height:844});await go('settings');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'settings overflow '+width);
+  }
+  assert.deepEqual(errors,[]);
+  console.log('PASS v1.7.0 manual source-linked race, preview+consent+reload, duplicate guard, entry candidate pick, unchanged ledger, mobile widths');
+ }finally{if(browser)await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exit(1);});
