@@ -22,5 +22,5 @@ export function companionAlbum(data,date){
 }
 export function stageArtwork(stage){
  if(!Number.isInteger(stage)||stage<0||stage>4)throw new Error('成長段階が不正です。');
- return './assets/companion-'+stage+'.svg';
+ return './companion-'+stage+'.svg';
 }
