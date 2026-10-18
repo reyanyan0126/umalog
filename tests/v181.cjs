@@ -62,6 +62,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(lines.length,4);
   assert.deepEqual(lines.map(l=>l.stake),[100,200,100,100]);
   assert.ok(lines.every(l=>l.purchaseMode==='formation'&&l.status==='pending'));
+  await page.locator('.history-bet-details summary').first().click();
   await page.locator('[data-detail]').first().click();await page.waitForSelector('#editStakes');
   await page.locator('#editStakes').click();
   await page.waitForFunction(()=>location.hash.startsWith('#edit-stakes/'));
@@ -82,7 +83,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(after.reduce((n,l)=>n+l.stake,0),900);
   for(const width of [320,390,440]){
    await page.setViewportSize({width,height:844});
-   await page.locator('[data-detail]').first().click();await page.waitForSelector('#editStakes');
+   await page.locator('.history-bet-details summary').first().click();
+  await page.locator('[data-detail]').first().click();await page.waitForSelector('#editStakes');
    await page.locator('#editStakes').click();await page.waitForSelector('#allocationEditor');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow '+width);
    await page.locator('#entryPurchasePanel .sheet-close').click();
