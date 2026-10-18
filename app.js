@@ -291,12 +291,23 @@ function renderDraft(){
  <div class="stake-preset-row per-line" role="group" aria-label="買い目${i+1}をすばやく変更">${STAKE_PRESETS.slice(0,3).map(amount=>`<button type="button" class="quiet ${l.stake===amount?'is-selected':''}" data-line-stake="${i}" data-value="${amount}" aria-pressed="${l.stake===amount}">${amount}円</button>`).join('')}</div>
  </div>`).join('')}</div>
  ${n>visible.length?`<button type="button" class="quiet full" id="draftMore">さらに表示（残り ${n-visible.length}点）</button>`:''}</section>`;
- const updateOne=(index,amount)=>{
+ const updateOne=(index,amount,redraw=true)=>{
   draft=setIndividualStake(draft,index,amount);
-  dirty=true;renderDraft();
+  dirty=true;
+  if(redraw){renderDraft();return;}
+  // Preserve the focused numeric input while typing, especially on iOS.
+  const row=$('#draft [data-amount="'+index+'"]')?.closest('.bet-slip-row');
+  row?.querySelectorAll('[data-line-stake]').forEach(button=>{
+   const selected=Number(button.dataset.value)===draft[index].stake;
+   button.setAttribute('aria-pressed',String(selected));
+   button.classList.toggle('is-selected',selected);
+  });
+  entryResultsEditor?.render(draft);
+  fastResultsEditor?.render(draft);
+  updateDraftTotals();
  };
  document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{draft.splice(Number(b.dataset.remove),1);dirty=true;renderDraft();});
- document.querySelectorAll('[data-amount]').forEach(el=>el.onchange=guard(()=>updateOne(Number(el.dataset.amount),el.value)));
+ document.querySelectorAll('[data-amount]').forEach(el=>el.onchange=guard(()=>updateOne(Number(el.dataset.amount),el.value,false)));
  document.querySelectorAll('[data-line-stake]').forEach(b=>b.onclick=guard(()=>updateOne(Number(b.dataset.lineStake),Number(b.dataset.value))));
  const updateAll=amount=>{
   if(stakeBreakdown(draft).nonUniform&&!confirm('個別に設定した購入金額も含め、すべて'+Number(amount).toLocaleString('ja-JP')+'円に変更しますか？'))return;
