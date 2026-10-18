@@ -545,3 +545,27 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .compare-breakdown summary{min-height:44px;display:flex;align-items:center;font-weight:650}
 .compare-breakdown th,.compare-breakdown td{font-size:.76rem}
 @media(max-width:370px){.compare-grid{grid-template-columns:1fr}.compare-period{padding:10px}}
+
+/* v1.6.0 LIVING COMPANION: a restorative optional experience */
+.nursery[data-room="meadow"]{background-image:linear-gradient(170deg,#eff8e9,#f9fff8 60%,#eaf4df);border-color:#cfe3bd}
+.nursery[data-room="room"]{background-image:linear-gradient(170deg,#fff6e9,#fffbf5 60%,#f2e7d7);border-color:#e9d8bc}
+.nursery[data-room="stars"]{background-image:linear-gradient(170deg,#eef1ff,#f7f5ff 60%,#e8e7f6);border-color:#d5d8ee}
+.companion-life{border-top:1px solid var(--border);margin:13px auto 0;padding:12px 0 0;max-width:420px;text-align:left}
+.companion-life h3{font-size:.98rem;margin:0 0 6px}
+.companion-life .help{font-size:.74rem;line-height:1.55;margin:7px 0}
+.companion-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.companion-actions button{min-height:48px;font-size:.88rem}
+.companion-room-label{display:block;font-size:.85rem;font-weight:650;margin-top:14px}
+.companion-room-label select{min-height:46px;margin-top:7px;width:100%}
+.companion-album>details>summary{font-weight:750;min-height:48px}
+.companion-stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:9px;margin:12px 0}
+.companion-stage{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;border:1px solid var(--border);border-radius:11px;background:#fafcf8;padding:10px 7px;text-align:center}
+.companion-stage img{width:90px;height:88px;object-fit:contain}
+.companion-stage.locked img{filter:grayscale(1);opacity:.34}
+.companion-stage strong{font-size:.79rem;overflow-wrap:anywhere}
+.companion-stage small{font-size:.71rem;color:var(--muted)}
+.companion-memories{list-style:none;padding:0;margin:8px 0}
+.companion-memories li{padding:10px 3px;border-bottom:1px solid var(--border);font-size:.82rem}
+.nursery[data-motion="on"] .pet-touch:active .pet{transform:translateY(-3px) rotate(-3deg)}
+@media(max-width:359px){.companion-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.companion-actions button{font-size:.78rem}}
+@media(prefers-reduced-motion:reduce){.nursery .pet,.nursery .pet-touch:active .pet{animation:none!important;transition:none!important;transform:none!important}}
