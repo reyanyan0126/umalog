@@ -30,6 +30,7 @@ on:
       - work/v1.3.2-backup-freshness
       - work/v1.4.0-smart-entry
       - work/v1.5.0-period-comparison
+      - work/v1.6.0-living-companion
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -80,6 +81,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.6.0 companion source browser
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs
+      - name: v1.6.0 companion publish browser
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs
 
       - name: v1.5.0 comparison source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
