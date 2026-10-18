@@ -27,6 +27,7 @@ on:
       - work/v1.3.0-dev30-screen-roles-simplify-home
       - work/v1.3.0-stable-dev31-36
       - work/v1.3.1-dev37-40-ux-safety
+      - work/v1.3.2-backup-freshness
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
