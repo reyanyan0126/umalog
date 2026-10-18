@@ -86,6 +86,11 @@ jobs:
       - name: v1.5.0 comparison publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
 
+      - name: v1.5.0 analysis comparison source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
+      - name: v1.5.0 analysis comparison publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
+
       - name: v1.4.0 smart entry source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs
       - name: v1.4.0 smart entry publish
