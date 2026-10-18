@@ -17,7 +17,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#openPurchaseSheet').click();await page.locator('[data-bet-fast="ワイド"]').click();await page.locator('#numbers').fill('1 2');await page.locator('#addLine').click();
    await page.locator('#openPurchaseSheet').click();await page.locator('[data-bet-fast="単勝"]').click();await page.locator('#numbers').fill('3');await page.locator('#addLine').click();
    await page.locator('#openOutcomeSheet').click();assert.equal(await page.locator('.fast-bet-row').count(),2);
-   await page.locator('#fastTypeFilter').selectOption('単勝');assert.equal(await page.locator('.fast-bet-row').count(),1);
+   await page.locator('#fastTypeFilter').selectOption('単勝');assert.equal(await page.locator('.fast-bet-row').count(),1);assert.match(await page.locator('#fastMatchingCount').innerText(),/表示対象 1点/);
    assert.match(await page.locator('.fast-bet-row').innerText(),/単勝 3/);
    await page.locator('[data-fast-hit="1"]').click();await page.locator('[data-fast-payout="1"]').fill('600');
    await page.locator('[data-fast-filter="pending"]').click();assert.equal(await page.locator('.fast-bet-row').count(),0);
