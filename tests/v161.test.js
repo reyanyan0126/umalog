@@ -24,7 +24,7 @@ test('v1.6.1 all costumes cosmetic, optional, persistent, and previous data vali
  const old=grow(base,'play',null,now);
  assert.equal(old.growthV2.companion.outfit,'none');
  const legacy=JSON.parse(JSON.stringify(old));delete legacy.growthV2.companion.outfit;
- assert.equal(validateData(legacy),legacy);
+ assert.deepEqual(validateData(legacy),recalculate(legacy));
  assert.equal(companionProgress(legacy.growthV2,'2026-10-18').outfit,'none');
  const updated=grow(legacy,'outfit','scarf',now);
  assert.equal(updated.growthV2.companion.outfit,'scarf');
