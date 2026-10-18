@@ -29,6 +29,7 @@ on:
       - work/v1.3.1-dev37-40-ux-safety
       - work/v1.3.2-backup-freshness
       - work/v1.4.0-smart-entry
+      - work/v1.5.0-period-comparison
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -60,6 +61,7 @@ jobs:
       - name: Check ESM syntax in source and publish
         run: |
           for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js screen-roles.js ledger-calendar.js ledger-trends.js growth-companion.js; do node --check "$name"; node --check "publish/$name"; done
+          node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js;
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
@@ -78,6 +80,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.5.0 comparison source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
+      - name: v1.5.0 comparison publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs
 
       - name: v1.4.0 smart entry source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs
