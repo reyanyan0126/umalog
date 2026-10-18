@@ -74,5 +74,9 @@ export function mountEntryResults(host,{onDirty=()=>{}}={}){
   lines[Number(index)][key]=e.target.value===''?NaN:Number(e.target.value);
   updateSummary();onDirty();
  });
- return {render,values,updateSummary,reset(next=lines){selections.clear();render(next);}};
+ return {render,values,updateSummary,reveal(index){
+  if(!Number.isInteger(index)||index<0||index>=lines.length)return null;
+  if(index>=visible){visible=Math.ceil((index+1)/50)*50;render(lines);}
+  return host.querySelector('[data-entry-outcome="'+index+'"]');
+ },reset(next=lines){selections.clear();render(next);}};
 }
