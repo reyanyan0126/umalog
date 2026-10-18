@@ -1,0 +1,109 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
+(async()=>{
+ const root=path.resolve(__dirname,'..'),prefix=process.env.PUBLISH==='1'?'/publish/':'/';
+ const server=http.createServer((req,res)=>{
+  let p=decodeURIComponent(req.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';
+  try{res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.svg':'image/svg+xml'}[path.extname(p)]||'application/octet-stream'));res.end(fs.readFileSync(path.join(root,p)));}
+  catch{res.writeHead(404).end();}
+ }).listen(8200,'127.0.0.1');
+ let browser;
+ try{
+  const adapter=require(process.env.CHROMIUM_MODULE);
+  browser=await chromium.launch({headless:true,executablePath:await adapter.executablePath(),args:adapter.args.filter(x=>x!=='--disable-web-security'&&x!=='--allow-running-insecure-content')});
+  const context=await browser.newContext({viewport:{width:390,height:844}}),page=await context.newPage(),errors=[],dialogTexts=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  page.on('dialog',d=>{dialogTexts.push(d.message());d.accept();});
+  page.setDefaultTimeout(18000);
+  await page.goto('http://127.0.0.1:8200'+prefix);
+  await page.waitForSelector('#homeEntry');
+  const base=await page.evaluate(async()=>JSON.stringify(await(await import('./db.js')).load()));
+  await page.evaluate(()=>location.hash='entry');
+  await page.waitForSelector('#entryForm');
+  await page.locator('[data-race-quick="8"]').click();
+  await page.locator('#raceName').fill('v2購入金額一括・個別テスト');
+  await page.locator('#openPurchaseSheet').click();
+  await page.locator('#type').selectOption('三連単');
+  await page.locator('#mode').selectOption('formation');
+  for(const n of [1,2])await page.locator('[data-pattern-number="'+n+'"]').click();
+  await page.locator('[data-pattern-next]').click();
+  for(const n of [2,3])await page.locator('[data-pattern-number="'+n+'"]').click();
+  await page.locator('[data-pattern-next]').click();
+  for(const n of [3,4])await page.locator('[data-pattern-number="'+n+'"]').click();
+  await page.locator('#addLine').click();
+  assert.equal(await page.locator('[data-amount]').count(),4);
+  assert.equal(await page.locator('#entryPurchasePanel').isVisible(),true);
+  await page.locator('[data-bulk-preset="100"]').click();
+  await page.locator('[data-stake-select="1"]').check();
+  await page.locator('[data-selected-preset="200"]').click();
+  assert.deepEqual(await page.locator('[data-amount]').evaluateAll(xs=>xs.map(x=>Number(x.value))),[100,200,100,100]);
+  assert.match(await page.locator('#stakeSelectedCount').innerText(),/1点選択中/);
+  assert.match(await page.locator('.review-total').innerText(),/500円/);
+  await page.locator('#stakeUndo').click();
+  assert.deepEqual(await page.locator('[data-amount]').evaluateAll(xs=>xs.map(x=>Number(x.value))),[100,100,100,100]);
+  await page.locator('#stakeSelectVisible').click();
+  assert.match(await page.locator('#stakeSelectedCount').innerText(),/4点選択中/);
+  await page.locator('#selectedStakeAmount').fill('300');
+  await page.locator('#stakeSelectedApply').click();
+  assert.match(await page.locator('.review-total').innerText(),/1,200円/);
+  await page.locator('#stakeUndo').click();
+  assert.match(await page.locator('.review-total').innerText(),/400円/);
+  await page.locator('#stakeClearSelection').click();
+  await page.locator('[data-stake-select="1"]').check();
+  await page.locator('[data-stake-select="3"]').check();
+  await page.locator('[data-selected-preset="200"]').click();
+  assert.deepEqual(await page.locator('[data-amount]').evaluateAll(xs=>xs.map(x=>Number(x.value))),[100,200,100,200]);
+  assert.match(await page.locator('.review-total').innerText(),/600円/);
+  assert.equal(await page.evaluate(async()=>JSON.stringify(await(await import('./db.js')).load())),base,'must not persist until save');
+  await page.locator('#entryPurchasePanel .sheet-close').click();
+  await page.locator('.entry-legacy summary').click();
+  await page.locator('#allowUnfinished').check();
+  await page.locator('#entryForm button[type="submit"]').click();
+  await page.waitForFunction(()=>location.hash==='#history');
+  let stored=await page.evaluate(async()=>(await(await import('./db.js')).load()).lines);
+  assert.deepEqual(stored.map(x=>x.stake),[100,200,100,200]);
+  assert.equal(stored.every(x=>x.status==='pending'),true);
+  assert.match(await page.locator('#historyFinanceOverview').innerText(),/600円/);
+  assert.match(await page.locator('#historyFinanceOverview').innerText(),/結果待ち/);
+  await page.locator('#historyPendingShortcut').click();
+  assert.equal(await page.locator('#sf').inputValue(),'pending');
+  await page.locator('#historyClearFilters').click();
+  assert.equal(await page.locator('#sf').inputValue(),'');
+  await page.locator('.history-bet-details summary').first().click();
+  await page.locator('[data-stake-edit]').first().click();
+  await page.waitForFunction(()=>location.hash.startsWith('#edit-stakes/'));
+  await page.waitForSelector('#allocationEditor');
+  assert.equal(await page.locator('#entryPurchasePanel').isVisible(),true);
+  await page.locator('[data-stake-select="0"]').check();
+  await page.locator('[data-selected-preset="500"]').click();
+  assert.match(await page.locator('#stakeDiffReview').innerText(),/600円/);
+  assert.match(await page.locator('#stakeDiffReview').innerText(),/1,000円/);
+  assert.deepEqual(await page.locator('[data-amount]').evaluateAll(xs=>xs.map(x=>Number(x.value))),[500,200,100,200]);
+  const unchanged=await page.evaluate(async()=>(await(await import('./db.js')).load()).lines);
+  assert.equal(unchanged[0].stake,100);
+  await page.locator('#entryPurchasePanel .sheet-close').click();
+  await page.locator('.entry-legacy summary').click();
+  await page.locator('#allowUnfinished').check();
+  await page.locator('#entryForm button[type="submit"]').click();
+  await page.waitForFunction(()=>location.hash==='#history');
+  stored=await page.evaluate(async()=>(await(await import('./db.js')).load()).lines);
+  assert.deepEqual(stored.map(x=>x.stake),[500,200,100,200]);
+  assert.ok(dialogTexts.some(s=>s.includes('保存済みの購入記録を訂正')));
+  await page.locator('.history-bet-details summary').first().click();
+  await page.locator('[data-stake-edit]').first().click();
+  await page.waitForSelector('#allocationEditor');
+  for(const width of [320,390,440]){
+   await page.setViewportSize({width,height:844});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'entry horizontal overflow '+width);
+  }
+  await page.locator('#entryPurchasePanel .sheet-close').click();
+  await page.evaluate(()=>location.hash='history');
+  await page.waitForSelector('#historyFinanceOverview');
+  for(const width of [320,390,440]){
+   await page.setViewportSize({width,height:844});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'history horizontal overflow '+width);
+  }
+  assert.deepEqual(errors,[]);
+  console.log('PASS v2.0.0 source/publish: formation, selected stakes, undo, 600->1000 saved diff, review confirm, pending summary, 320–440px mobile');
+ }finally{if(browser)await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exit(1);});
