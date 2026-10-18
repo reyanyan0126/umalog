@@ -56,9 +56,22 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.deepEqual(loaded,[true,true,true,true,true]);
   });
   await pass('dev36 stable version, no schema migration and mobile layout',async()=>{
-   await go('settings');assert.match(await page.locator('#app').innerText(),/v1.3.1 正式版/);
+   await go('settings');assert.match(await page.locator('#app').innerText(),/v1.3.2 正式版/);
    const saved=await page.evaluate(async()=> (await (await import('./db.js')).load()));assert.equal(saved.schemaVersion,1);
    for(const width of [320,390,440]){await page.setViewportSize({width,height:844});for(const route of ['home','entry','history','calendar','analysis','growth','settings']){await go(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' '+width);}}
+  });
+
+  await pass('v1.3.2 confirmed backup is marked outdated after a newer ledger save',async()=>{
+   await go('settings');await page.waitForSelector('#lastBackupConfirmed');
+   await page.evaluate(async()=>{const db=await import('./db.js');await db.confirmBackupStored();});
+   await go('home');await go('settings');
+   await page.waitForFunction(()=>document.querySelector('#lastBackupConfirmed')?.textContent.includes('その後の記録更新なし'));
+   await page.evaluate(async()=>{
+    const db=await import('./db.js'),state=await db.loadWithRevision(),latest=structuredClone(state.data);
+    latest.settings.name='確認後に更新した帳簿';await db.save(latest,{expectedRevision:state.revision});
+   });
+   await go('home');await go('settings');
+   await page.waitForFunction(()=>document.querySelector('#lastBackupConfirmed')?.textContent.includes('最新のJSONを再保存'));
   });
   assert.deepEqual(errors,[]);console.log('ALL '+passed.length+' STABLE V1.3 CHECKS PASSED');
  }finally{if(browser)await browser.close();server.close();}
