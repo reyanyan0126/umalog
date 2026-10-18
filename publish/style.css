@@ -569,3 +569,19 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .nursery[data-motion="on"] .pet-touch:active .pet{transform:translateY(-3px) rotate(-3deg)}
 @media(max-width:359px){.companion-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.companion-actions button{font-size:.78rem}}
 @media(prefers-reduced-motion:reduce){.nursery .pet,.nursery .pet-touch:active .pet{animation:none!important;transition:none!important;transform:none!important}}
+
+/* v1.6.1 costumes and action animations: cosmetic only, no betting incentives. */
+.nursery .pet-touch{position:relative;isolation:isolate}
+.nursery .companion-outfit{position:absolute;z-index:1;top:10px;left:calc(50% + 24px);pointer-events:none;user-select:none;font-size:36px;line-height:1.2;filter:drop-shadow(0 2px 2px #0002)}
+.nursery .companion-outfit[data-outfit="scarf"]{top:98px;left:calc(50% + 27px);transform:rotate(-14deg)}
+.nursery .companion-outfit[data-outfit="clover"]{top:20px;left:calc(50% + 35px);font-size:33px}
+.nursery[data-motion="on"] .pet-touch[data-reaction="play"] .pet{animation:companion-hop .72s cubic-bezier(.22,.7,.22,1) 1 both}
+.nursery[data-motion="on"] .pet-touch[data-reaction="rest"] .pet{animation:companion-rest 1s ease-in-out 1 both}
+.nursery[data-motion="on"] .pet-touch[data-reaction="outfit"] .pet{animation:companion-pose .63s ease-in-out 1 both}
+.nursery[data-motion="on"] .pet-touch[data-reaction="care"] .pet{animation:pet-nod .4s ease-in-out 1 both}
+@keyframes companion-hop{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-13px) rotate(-6deg)}60%{transform:translateY(-5px) rotate(5deg)}}
+@keyframes companion-rest{0%,100%{transform:scale(1) translateY(0)}55%{transform:scale(1.045,.95) translateY(5px)}}
+@keyframes companion-pose{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(5deg) scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.nursery .pet-touch[data-reaction] .pet{animation:none!important;transform:none!important}}
+body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off"] .pet-touch[data-reaction] .pet{animation:none!important;transform:none!important}
+@media(max-width:359px){.nursery .companion-outfit{font-size:30px}}

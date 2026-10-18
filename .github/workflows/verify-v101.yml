@@ -31,6 +31,7 @@ on:
       - work/v1.4.0-smart-entry
       - work/v1.5.0-period-comparison
       - work/v1.6.0-living-companion
+      - work/v1.6.1-companion-animation-outfits
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -81,6 +82,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.6.1 costume animations source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs
+      - name: v1.6.1 costume animations publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs
 
       - name: v1.6.0 companion source browser
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs
