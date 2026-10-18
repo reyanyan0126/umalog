@@ -644,7 +644,7 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .allocation-editor h3{font-size:.98rem;margin:12px 0 0}
 .allocation-editor .help{font-size:.76rem;line-height:1.5;margin:3px 0}
 .allocation-editor .entry-total{font-size:1.1rem;font-weight:750;margin:6px 0;position:sticky;top:0;z-index:2;background:#fff;padding:9px 6px;border-bottom:1px solid var(--border)}
-.bet-bulk{display:grid;gap:8px;background:#f3f8f2;border:1px solid var(--border);border-radius:12px;padding:10px}
+.bet-bulk{display:block;background:#f3f8f2;border:1px solid var(--border);border-radius:12px;padding:10px}.bet-bulk>summary{font-size:.86rem;font-weight:750;min-height:44px;padding:10px 0}.bet-bulk .stake-preset-row,.bet-bulk .bet-bulk-form{margin:8px 0}
 .bet-bulk>strong{font-size:.85rem}
 .stake-preset-row{display:flex;flex-wrap:wrap;gap:6px}
 .stake-preset-row button{flex:1 1 auto;min-width:65px;min-height:44px;padding:7px 8px;font-size:.81rem;white-space:nowrap}
