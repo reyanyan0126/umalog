@@ -67,7 +67,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#backupConfirmed').click();
    await page.waitForFunction(()=>document.querySelector('#lastBackupConfirmed')?.textContent.includes('確認した日'));
    await page.evaluate(async()=>{const d=await import('./db.js');await d.saveEntryDraft('new',{from:'obsolete'});await d.saveEntryDraft('old-edit',{from:'obsolete'});});
-   await page.locator('#restoreAgree').check();await page.locator('#restore').click();await page.waitForSelector('#homeMonthly');
+   await page.locator('#restoreAgree').check();await page.locator('#restore').click();await page.waitForSelector('#homeSummary');
    assert.equal(await stored(),null);
    const old=await page.evaluate(async()=>(await (await import('./db.js')).loadEntryDraft('old-edit')));
    assert.equal(old,null);
