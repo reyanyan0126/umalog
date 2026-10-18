@@ -53,7 +53,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.match(await page.locator('.daily-trend').innerText(),/\+300円/);
   });
   await pass('dev14 cosmetic milestones and touch-safe mobile layout',async()=>{
-   await nav('growth');await page.waitForSelector('#growthRewards');
+   await nav('growth');await page.locator('.growth-optional > summary').click();await page.waitForSelector('#growthRewards');
    assert.equal(await page.locator('.reward-item').count(),5);
    const before=await page.evaluate(async()=>{const d=await (await import('./db.js')).load();return {races:d.races,lines:d.lines,tickets:d.tickets};});
    for(const width of [320,390,440]){await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),String(width));}
