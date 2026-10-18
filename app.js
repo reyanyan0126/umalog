@@ -18,7 +18,7 @@ import {mountFastResults} from './fast-results.js';
 import {mountEntrySheets} from './entry-sheets.js';
 import {openLineCorrection} from './line-correction.js';
 import {raceHistory,ledgerCSV,budgetStatus,setMonthlyBudget,monthReview} from './ledger-tools.js';
-import {homeSummary,raceHistoryRows,matchesRaceQuery,typeVenueMatrix} from './screen-roles.js';
+import {homeSummary,raceHistoryRows,ticketIndex,matchesRaceQuery,typeVenueMatrix} from './screen-roles.js';
 import {dayLedger,existingPurchaseDuplicates,periodInsights} from './day-ledger.js';
 import {growthRewards} from './growth-rewards.js';
 import {mountRaceBatch} from './batch-ui.js';
@@ -276,11 +276,12 @@ function history(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return historyClassic();
  app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>レースを探す<input id="historySearch" type="search" placeholder="日付・競馬場・レース名・メモ"></label><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="pending">未入力</option><option value="void">全額返還</option></select></label></div><p id="historyCount" class="help"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
  let shown=50;
+ const indexedHistory=ticketIndex(data).linesByTicket;
  const update=()=>{
   const q=$('#historySearch').value.trim(),venue=$('#vf').value,type=$('#tf').value,status=$('#sf').value;
   const list=raceHistoryRows(data).map(item=>{
    const filtered=item.tickets.filter(t=>{
-    const lines=data.lines.filter(l=>l.ticketId===t.id),s=summarize(lines);
+    const lines=indexedHistory.get(t.id)||[],s=summarize(lines);
     return (!type||t.type===type)&&(!status||(status==='hit'&&lines.some(l=>l.payout>0))||(status==='pending'&&s.pendingCount>0)||(status==='miss'&&!s.pendingCount&&s.lineCount>0&&!s.lineHits)||(status==='void'&&lines.length>0&&lines.every(l=>l.status==='void')));
    });
    return {...item,tickets:filtered};
@@ -290,7 +291,7 @@ function history(){
    const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);
    return `<section class="history-race"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${stat.settledCount?signed(stat.profit):'—'}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · 払戻 ${yen(stat.payout)} · 返還 ${yen(stat.refund)} · ${tickets.length}券種</p>
    <details class="history-bet-details"><summary>券種・買い目を確認する</summary>${tickets.map(t=>{
-    const ls=lines.filter(l=>l.ticketId===t.id),v=summarize(ls);
+    const ls=indexedHistory.get(t.id)||[],v=summarize(ls);
     return `<div class="history-ticket"><div class="row"><b>${esc(t.type)} · ${ls.length}点</b><span class="${v.profit<0?'negative':'positive'}">${v.settledCount?signed(v.profit):'—'}</span></div><div class="history-ticket-actions"><button type="button" class="quiet" data-detail="${esc(t.id)}">券種の詳細</button></div><details><summary>各買い目の訂正</summary>${ls.slice(0,30).map(l=>`<div class="day-edit-row"><span>${l.numbers.join(['馬単','三連単'].includes(t.type)?'→':'－')}</span><small>購入 ${yen(l.stake)} / 払戻 ${yen(l.payout)}</small><button type="button" class="quiet" data-quick-edit="${esc(l.id)}">訂正</button></div>`).join('')}${ls.length>30?'<p class="help">残りの買い目は券種の詳細から確認できます。</p>':''}</details></div>`;
    }).join('')}</details></section>`;
   }).join('')||'<p class="empty">該当する記録がありません。</p>';
@@ -345,6 +346,11 @@ function growthScreen(){data=recalculate(data);const c=data.character,g=data.gro
  document.querySelectorAll('[data-learn]').forEach(b=>b.onclick=guard(async()=>{await commit(grow(data,'learn',b.dataset.learn));growthScreen();$('#book').open=true;}));
  const reviewLoad=()=>{const v=$('#reviewWeek').value;if(!v)return;$('#reviewWeek').value=weekOf(v);const found=data.reviews.find(r=>r.week===$('#reviewWeek').value);$('#reviewText').value=found?.text||'';$('#reviewStatus').textContent=found?'記録済み。文章を訂正できます（EXPの追加付与なし）。':'未記録の週です。';};$('#reviewWeek').onchange=reviewLoad;reviewLoad();$('#reviewForm').oninput=()=>dirty=true;$('#reviewForm').onsubmit=guard(async e=>{e.preventDefault();const week=weekOf($('#reviewWeek').value),text=$('#reviewText').value.trim();check(week<w,'今週の終了後に記録できます。');check(text,'振り返りを入力してください。');const next=clone(data),r=next.reviews.find(r=>r.week===week);if(r)r.text=text;else next.reviews.push({id:uid(),week,text});await commit(grow(next,'review',week));growthScreen();$('#reviewDetails').open=true;notify('振り返りを保存しました。');});}
 function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section class="card"><h2>同梱重賞</h2><p>2026年 32件 / 2027年 6件</p><p class="help">2026年10月17日以降の重賞を年末まで掲載。2027年は一部予定のみで、未発表のレース番号は自動入力しません。個人取り込みデータの削除後も同梱情報は残ります。</p></section><div id="calendarManager"></div>${catalogPanel()}<section class="card"><form id="settingsForm"><label class="checklabel"><input id="motion" type="checkbox" ${data.settings.motion?'checked':''}>画面の動きを有効にする</label><button type="submit">設定を保存</button></form></section><section class="card" id="budgetSettings"><h2>月間購入予算（任意）</h2><p class="help">買った馬券の金額を月単位で確認するための設定です。払戻や育成には影響しません。</p><form id="budgetForm"><label>対象月<input id="budgetMonth" type="month" required min="2000-01" max="2199-12" value="${jstToday().slice(0,7)}"></label><label>購入予算（円）<input id="budgetAmount" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${data.settings.monthlyBudgets?.[jstToday().slice(0,7)]||0}"></label><p class="help" id="budgetCurrent"></p><button class="quiet full" type="submit">この月の予算を保存（0円で解除）</button></form></section><section class="card"><h2>バックアップ</h2><div id="backupSummary" class="backup-summary"><div class="day-metrics">${metric('レース',String(data.races.length)+'件')}${metric('購入記録',String(data.tickets.length)+'件')}${metric('買い目',String(data.lines.length)+'点')}</div><p id="lastLocalSave" class="help">端末内の保存日時を確認中</p><p id="lastBackupConfirmed" class="help" role="status">外部バックアップの確認状況を読み込み中</p><button id="backupConfirmed" type="button" class="quiet full">保存先でJSONファイルを確認済みにする</button></div><p class="help">データはこのブラウザ・端末内に保存されます。ブラウザデータの消去や端末故障に備えて、JSONファイルを定期的に保存してください。端末間の自動同期はありません。</p><button id="export" class="full">収支・育成を書き出す（JSON）</button><button id="exportCsv" class="quiet full" type="button">買い目の明細をCSVで出力</button><p class="help">CSVは表計算ソフトで確認するためのものです。復元にはJSONバックアップを使ってください。</p><p id="storageInfo" class="help muted"></p><button id="persist" class="quiet">永続ストレージをリクエスト</button></section><section class="card"><h2>バックアップから復元</h2><p class="help">全件置換です。先に現在のデータを書き出してください。読み込み後に内容を確認し、もう一度確認してから置換します。</p><label>JSONファイル<input type="file" id="import" accept=".json,application/json"></label><div id="restorePreview"></div></section><section class="card"><h2>このアプリについて</h2><p class="help">うまログ（仮）v1.3.0-rc.2（dev.22〜30：画面役割整理・ホーム簡素化）<br>対象：JRA中央競馬10場・8券種。レース情報や結果の自動取得なし。記録は自己申告で、購入の証明にはなりません。<br>同一端末で複数タブを同時編集しないでください。保存は最後に保存した画面の内容が優先されます。</p></section>`;
+ // dev29: put frequently used safety settings first; leave every legacy control reachable.
+ const originalInfo=app.querySelector('.card'),motionCard=$('#settingsForm').closest('.card'),backupCard=$('#backupSummary').closest('.card'),restoreCard=$('#restorePreview').closest('.card'),budgetCard=$('#budgetSettings');
+ for(const card of [motionCard,backupCard,restoreCard,budgetCard])app.insertBefore(card,originalInfo);
+ const title=(name,node)=>{const label=document.createElement('h2');label.className='settings-group-title';label.textContent=name;app.insertBefore(label,node);};
+ title('表示・操作',motionCard);title('データの保護',backupCard);title('レース情報・高度な設定',originalInfo);
  loadMainSaveTime().then(when=>{const el=$('#lastLocalSave');if(el)el.textContent='端末内で最後に保存した日時：'+(when?new Date(when).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}):'不明（旧バージョンの記録）')+'。外部バックアップの保存日時ではありません。';}).catch(()=>{const el=$('#lastLocalSave');if(el)el.textContent='端末内の保存日時を取得できませんでした。';});
  const updateBackupCheck=()=>loadBackupConfirmation().then(time=>{
   const el=$('#lastBackupConfirmed');if(!el)return;
