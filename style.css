@@ -618,3 +618,23 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .manual-correction-controls button,#manualCorrectionApply{min-height:46px}
 #manualCorrectionPreview{overflow-wrap:anywhere}
 @media(max-width:375px){#manualCorrectionForm{grid-template-columns:1fr}#manualCorrectionForm>label{grid-column:1/-1}.manual-correction-controls{grid-template-columns:1fr}}
+
+/* v1.8.0: fast, read-only race information audit and discovery */
+.race-audit-panel{border:1px solid var(--border);border-radius:12px;margin:12px 0;padding:12px;background:#f7faf8}
+.race-audit-panel>summary{font-size:.96rem;font-weight:750;min-height:46px;padding:10px 0}
+.race-audit-panel .help{font-size:.77rem;line-height:1.6}
+.race-audit-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.race-audit-counts>span{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 9px;font-size:.76rem;overflow-wrap:anywhere}
+.race-audit-counts strong{font-variant-numeric:tabular-nums}
+.race-audit-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+.race-audit-filters label{min-width:0;font-size:.81rem}
+.race-audit-filters select,.race-audit-filters input{min-height:46px;width:100%;min-width:0;margin-top:5px}
+.race-audit-filters .race-audit-search{grid-column:1/-1}
+.race-audit-results{display:grid;gap:8px;margin:10px 0}
+.race-audit-row{background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px}
+.race-audit-info{display:grid;min-width:0;gap:5px;overflow-wrap:anywhere}
+.race-audit-info strong{font-size:.81rem}
+.race-audit-info small{font-size:.71rem;color:var(--muted)}
+.race-audit-info a{font-size:.79rem;overflow-wrap:anywhere}
+.race-audit-row>button{min-width:62px;min-height:46px;flex-shrink:0}
+@media(max-width:359px){.race-audit-filters,.race-audit-counts{grid-template-columns:1fr}.race-audit-filters .race-audit-search{grid-column:auto}}
