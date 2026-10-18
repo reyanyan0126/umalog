@@ -474,7 +474,7 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .calendar-metric label{font-size:.8rem;margin:0}
 .calendar-metric select{min-height:44px;margin:4px 0 0}
 .analysis-jumps{display:flex;flex-wrap:wrap;gap:7px;margin:-5px 0 14px}
-.analysis-jumps a{border:1px solid var(--border);background:#fff;color:var(--green);text-decoration:none;border-radius:99px;font-size:.75rem;padding:9px 10px;min-height:42px;display:inline-flex;align-items:center}
+.analysis-jumps button{border:1px solid var(--border);background:#fff;color:var(--green);text-decoration:none;border-radius:99px;font-size:.75rem;padding:9px 10px;min-height:42px;display:inline-flex;align-items:center}
 .analysis-cross{max-width:100%}
 .analysis-cross summary{min-height:46px;font-weight:650}
 .analysis-cross table{white-space:nowrap}
@@ -486,5 +486,5 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .nursery[data-season="summer"]{background-image:linear-gradient(170deg,#f4fbfa,#fff);border-color:#cce6dd}
 .nursery[data-season="autumn"]{background-image:linear-gradient(170deg,#fffbf4,#fff);border-color:#eadfc9}
 .nursery[data-season="winter"]{background-image:linear-gradient(170deg,#f6f8fc,#fff);border-color:#d7dfeb}
-@media(max-width:359px){.bet-type-fast{gap:4px}.bet-type-fast button{font-size:.71rem;padding:5px 1px}.analysis-jumps{gap:4px}.analysis-jumps a{padding:8px}}
+@media(max-width:359px){.bet-type-fast{gap:4px}.bet-type-fast button{font-size:.71rem;padding:5px 1px}.analysis-jumps{gap:4px}.analysis-jumps button{padding:8px}}
 @media(prefers-reduced-motion:reduce){.home-entry-cta,.bet-type-fast button{transition:none}}
