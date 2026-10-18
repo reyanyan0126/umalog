@@ -7,7 +7,39 @@ let connection;
 export function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別のタブを閉じて再試行してください。'));req.onsuccess=()=>{connection=req.result;connection.onversionchange=()=>connection.close();resolve(connection);};});}
 export async function load(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get('main');r.onsuccess=()=>{try{resolve(r.result?migrateGrowth(validateData(r.result),new Date(),r.result.character.exp):migrateGrowth(emptyData()));}catch(e){reject(e);}};r.onerror=()=>reject(r.error);});}
 // One atomic write: failed validation/transaction leaves the old snapshot intact.
-export async function save(input,{clearDraftKey=null,clearAllDrafts=false}={}){const data=validateData(recalculate(input)),db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(data,'main');tx.objectStore(STORE).put(new Date().toISOString(),'lastMainSaveAt');if(clearAllDrafts){const cursor=tx.objectStore(STORE).openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};}else if(clearDraftKey!==null)tx.objectStore(STORE).delete('entryDraft:'+clearDraftKey);tx.oncomplete=()=>resolve(data);tx.onerror=()=>reject(tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));tx.onabort=()=>reject(tx.error||new Error('保存が中止されました。入力内容を保持しています。'));});}
+export async function loadWithRevision(){
+ const db=connection||await openDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readonly'),store=tx.objectStore(STORE),main=store.get('main'),rev=store.get('mainRevision');
+  let snapshot;
+  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:rev.result||0});}catch(e){reject(e);}};
+  main.onsuccess=()=>{snapshot=main.result;};
+  tx.onabort=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
+  tx.onerror=()=>reject(tx.error);
+ });
+}
+export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
+ const data=validateData(recalculate(input)),db=connection||await openDB();
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
+  let problem;
+  lookup.onsuccess=()=>{
+   const revision=lookup.result||0;
+   if(expectedRevision!==null&&revision!==expectedRevision){
+    problem=new Error('別のタブで記録が更新されています。現在の入力は保存していません。JSONバックアップを取ってから画面を再読込し、変更内容を確認してください。');
+    problem.code='STALE_LEDGER';tx.abort();return;
+   }
+   store.put(data,'main');store.put(revision+1,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
+   if(clearAllDrafts){
+    const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
+    cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
+   }else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
+  };
+  tx.oncomplete=()=>resolve(data);
+  tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));
+  tx.onabort=()=>reject(problem||tx.error||new Error('保存が中止されました。入力内容を保持しています。'));
+ });
+}
 
 // Disposable metadata is isolated from the v1 accounting snapshot and its backups.
 export async function loadCatalog(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get('raceCatalog');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
