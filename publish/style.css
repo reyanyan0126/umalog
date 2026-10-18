@@ -659,3 +659,38 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 #editStakes{margin-top:12px;min-height:48px}
 @media(max-width:359px){.allocation-editor .bet-slip-row{grid-template-columns:minmax(0,1fr) minmax(90px,33%) 44px;gap:4px}.stake-preset-row.per-line button{min-width:55px;font-size:.76rem;padding:5px 6px}}
 @media(prefers-reduced-motion:reduce){.allocation-editor{scroll-behavior:auto}}
+
+/* v2.0.0 — accessible allocation workbench and reviewed accounting */
+.stake-multi-editor{display:grid;gap:9px;padding:12px;border:1px solid #bedac7;background:#f4faf5;border-radius:13px;margin:7px 0 13px}
+.stake-multi-editor>.row{align-items:center;gap:8px;flex-wrap:wrap}
+.stake-multi-editor strong{font-size:.92rem}.stake-multi-editor small{color:var(--muted);font-variant-numeric:tabular-nums}
+.stake-multi-editor .help{margin:0;font-size:.78rem;line-height:1.55}
+.stake-multi-actions{display:flex;flex-wrap:wrap;gap:6px}
+.stake-multi-actions button{min-height:44px;flex:1 1 115px;font-size:.78rem;padding:8px}
+.stake-multi-editor button:disabled{opacity:.52;cursor:not-allowed}
+.stake-multi-apply{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,auto);align-items:end;gap:9px}
+.stake-multi-apply label{font-size:.78rem;font-weight:650;min-width:0}
+.stake-multi-apply input{width:100%;min-width:0;min-height:48px;margin-top:5px}
+.stake-multi-apply button{min-height:48px;font-weight:700}
+.allocation-editor .bet-slip-row:has([data-stake-select]:checked){background:#f1f8ec;border-radius:9px;border-color:#afd0b6}
+.stake-row-select{display:inline-flex!important;align-items:center;gap:6px;width:max-content;max-width:100%;font-size:.75rem!important;font-weight:600;color:#35604b;cursor:pointer}
+.stake-row-select input{width:20px!important;height:20px!important;min-height:20px!important;margin:0!important;accent-color:#285a46;flex:0 0 auto}
+.stake-row-select span{white-space:nowrap}
+.stake-diff-preview{display:grid;gap:7px;border:1px solid #d7c793;background:#fffbef;padding:13px;border-radius:12px;margin:12px 0;overflow-wrap:anywhere}
+.stake-diff-preview>strong{font-size:.9rem}.stake-diff-preview>p{margin:0;line-height:1.55;font-size:.82rem}
+.stake-diff-row{display:flex;align-items:baseline;justify-content:space-between;gap:9px;border-top:1px solid #e6ddc0;padding-top:8px;font-size:.77rem}
+.stake-diff-row strong{font-variant-numeric:tabular-nums}
+.history-finance{padding:12px;background:#f2f8f5;border-radius:12px;border:1px solid #d0e3d6;margin-bottom:12px}
+.history-finance h2{font-size:.96rem;margin:0 0 9px}
+.history-finance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.history-finance-grid>div{min-width:0;display:grid;gap:3px;background:#fff;border:1px solid #dce8de;border-radius:9px;padding:10px}
+.history-finance-grid small{font-size:.72rem;color:var(--muted);line-height:1.4}
+.history-finance-grid strong{font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.history-finance .help{font-size:.76rem;margin:9px 0 0;line-height:1.55}
+.history-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.history-controls button{min-height:48px;white-space:normal;font-size:.8rem}
+.history-ticket-actions{display:flex;flex-wrap:wrap;gap:8px}
+.history-ticket-actions button{min-height:44px}
+.entry-review .review-total{font-variant-numeric:tabular-nums}
+@media(max-width:359px){.stake-multi-apply{grid-template-columns:1fr}.stake-multi-editor{padding:9px}.stake-multi-actions button{flex-basis:calc(50% - 6px)}.history-finance-grid strong{font-size:.92rem}.history-controls{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.allocation-editor,.stake-multi-editor{scroll-behavior:auto}}
