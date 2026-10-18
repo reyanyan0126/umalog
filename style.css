@@ -599,3 +599,22 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 #manualRacePreview h3{font-size:.9rem}
 #manualRacePreview button{min-height:48px}
 @media(max-width:375px){.manual-race-panel form{grid-template-columns:1fr;gap:8px}.manual-race-panel form label:nth-last-of-type(1){grid-column:auto}}
+
+/* v1.7.1 metadata-only correction: clear immutable identity and source provenance */
+.manual-correction-panel{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:12px 0;background:#fafbf7}
+.manual-correction-panel>summary{font-weight:700;min-height:46px;padding:10px 2px}
+.manual-correction-panel .help{font-size:.78rem;line-height:1.6}
+.manual-correction-list{display:grid;gap:8px;margin:10px 0}
+.manual-correction-row{border:1px solid var(--border);border-radius:10px;padding:9px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.manual-correction-row>div{display:grid;min-width:0;gap:4px;font-size:.8rem;overflow-wrap:anywhere}
+.manual-correction-row small{font-size:.72rem;color:var(--muted)}
+.manual-correction-row a{font-size:.75rem;overflow-wrap:anywhere}
+.manual-correction-row button{flex-shrink:0;min-height:44px}
+#manualCorrectionForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+#manualCorrectionForm h3,#manualCorrectionForm>p,#manualCorrectionForm label:has([name="sourceURL"]),#manualCorrectionForm .manual-correction-controls{grid-column:1/-1}
+#manualCorrectionForm h3{font-size:.94rem;margin:5px 0}
+#manualCorrectionForm input,#manualCorrectionForm select{min-height:46px;margin-top:6px;width:100%}
+.manual-correction-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.manual-correction-controls button,#manualCorrectionApply{min-height:46px}
+#manualCorrectionPreview{overflow-wrap:anywhere}
+@media(max-width:375px){#manualCorrectionForm{grid-template-columns:1fr}#manualCorrectionForm>label{grid-column:1/-1}.manual-correction-controls{grid-template-columns:1fr}}
