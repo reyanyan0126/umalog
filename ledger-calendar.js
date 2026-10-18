@@ -1,4 +1,5 @@
 import {summarize,jstToday} from './core.js';
+import {calendarMetricValue} from './screen-roles.js';
 import {selectable} from './graded-races.js';
 import {japaneseHolidayName,HOLIDAY_YEARS} from './jp-holidays.js';
 
@@ -37,7 +38,10 @@ const exactMoney=n=>(n>0?'+':'')+n.toLocaleString('ja-JP')+'円';
 const elem=(tag,className,text)=>{const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;};
 
 export function mountLedgerCalendar(host,data,events,month,options={}){
- const model=ledgerMonth(data,events,month);
+ const model=ledgerMonth(data,events,month),metric=options.metric||'profit';
+ const measureNames={profit:'確定収支',purchase:'購入額',receipt:'払戻・返還'};
+ const measureName=measureNames[metric];if(!measureName)throw new Error('カレンダー表示指標が不正です。');
+ const valueFor=summary=>calendarMetricValue(summary,metric);
  host.replaceChildren();
  const section=elem('section','card ledger-calendar');
  section.id='ledgerCalendar';
@@ -93,19 +97,19 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   const button=elem('button','ledger-day');
   button.type='button';button.dataset.date=row.date;
   const s=row.summary;
-  if(s?.settledCount)button.classList.add(s.profit>0?'ledger-win':s.profit<0?'ledger-loss':'ledger-even');
+  if(metric==='profit'&&s?.settledCount)button.classList.add(s.profit>0?'ledger-win':s.profit<0?'ledger-loss':'ledger-even');
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday&&row.date!==today)button.append(elem('span','ledger-holiday-mark','祝'));
-  if(s?.settledCount)button.append(elem('span','ledger-money',smallMoney(s.profit)));
+  const v=valueFor(s);if(v!==null)button.append(elem('span','ledger-money',smallMoney(v)));
   if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
-  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(s?.settledCount?' 確定収支 '+exactMoney(s.profit):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
+  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
   button.onclick=()=>openDay(row);
   grid.append(button);buttons.push(button);
  }
  const dayList=elem('div','ledger-list');dayList.id='ledgerList';
  for(const row of model.days.filter(r=>r.summary||r.events.length||r.holiday)){
   const item=elem('section','ledger-list-item'),button=elem('button','quiet',row.date+(row.holiday?' · '+row.holiday:''));item.dataset.listDate=row.date;listItems.push(item);button.type='button';button.onclick=()=>{openDay(row);detail.scrollIntoView({block:'nearest',behavior:'auto'});};item.append(button);
-  item.append(elem('p',null,row.summary?.settledCount?'確定収支 '+exactMoney(row.summary.profit):'確定収支 —'));
+  const v=valueFor(row.summary);item.append(elem('p',null,v===null?measureName+' —':measureName+' '+exactMoney(v)));
 
   for(const event of row.events)item.append(elem('p','ledger-event-name',event.name+' · '+event.venue+' · '+event.grade));dayList.append(item);
  }
