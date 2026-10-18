@@ -23,7 +23,7 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
   let problem;
-  lookup.onsuccess=()=>{
+  lookup.onsuccess=()=>{try{
    const revision=lookup.result||0;
    if(expectedRevision!==null&&revision!==expectedRevision){
     problem=new Error('別のタブで記録が更新されています。現在の入力は保存していません。JSONバックアップを取ってから画面を再読込し、変更内容を確認してください。');
@@ -34,7 +34,7 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
    }else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
-  };
+  }catch(error){problem=error;if(tx.readyState==='active')tx.abort();}};
   tx.oncomplete=()=>resolve(data);
   tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));
   tx.onabort=()=>reject(problem||tx.error||new Error('保存が中止されました。入力内容を保持しています。'));
