@@ -125,7 +125,7 @@ await pass('formation/flow tap purchase, uneven stakes, bulk edit and saved acco
  await page.locator('[data-amount="0"]').fill('500');await page.locator('[data-amount="0"]').blur();
  await page.locator('[data-amount="1"]').fill('300');await page.locator('[data-amount="1"]').blur();
  assert.match(await page.locator('.entry-total').innerText(),/2,400円/);
- await page.locator('.bet-bulk > summary').click();
+ if(!(await page.locator('.bet-bulk').evaluate(el=>el.open)))await page.locator('.bet-bulk > summary').click();
  assert.equal(await page.locator('.bet-bulk #bulkAmount').isVisible(),true);
  await page.locator('#bulkAmount').fill('200');await page.locator('#bulkApply').click();
  assert.match(await page.locator('.entry-total').innerText(),/3,600円/);
