@@ -515,3 +515,18 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 .fast-type-filter select{min-height:44px;margin-top:4px}
 #fastMatchingCount{font-size:.75rem;margin:3px 0 8px}
 #detailCorrectionsRows .day-edit-row{min-height:48px}
+
+/* v1.4.0: touch-friendly optional purchase shortcuts */
+.stake-shortcuts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 12px}
+.stake-shortcuts span{flex-basis:100%;font-size:.76rem;color:var(--muted)}
+.stake-shortcuts button{min-height:44px;flex:1 1 60px;padding:7px 5px;font-size:.78rem;border-radius:10px}
+.stake-shortcuts button[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+.recent-purchases{margin:8px 0 16px}
+.recent-purchases details{border:1px solid var(--border);border-radius:12px;padding:10px;background:#f7faf6}
+.recent-purchases summary{min-height:44px;padding:9px 3px;font-weight:700}
+.recent-purchases .help{margin:7px 0 10px}
+.recent-purchase-list{display:grid;grid-template-columns:1fr;gap:7px}
+.recent-purchase-button{text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:56px;width:100%;padding:10px;border-radius:10px;white-space:normal}
+.recent-purchase-button strong{font-size:.82rem}
+.recent-purchase-button small{font-size:.73rem;color:var(--muted)}
+@media(max-width:359px){.stake-shortcuts button{font-size:.72rem;padding:7px 2px}}

@@ -28,6 +28,7 @@ on:
       - work/v1.3.0-stable-dev31-36
       - work/v1.3.1-dev37-40-ux-safety
       - work/v1.3.2-backup-freshness
+      - work/v1.4.0-smart-entry
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -77,6 +78,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.4.0 smart entry source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs
+      - name: v1.4.0 smart entry publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs
 
       - name: v1.3.1 large-ledger UX source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs

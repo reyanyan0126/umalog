@@ -1,5 +1,5 @@
 // Pure generators for purchased JRA ticket combinations. They never mutate ledger data.
-import {TYPES,box,combination,check,money} from './core.js';
+import {TYPES,box,combination,check,money,uid} from './core.js';
 // Read-only review. Same combinations across modes remain separate purchases.
 export function reviewBets(lines){
  let total=0;const groups=new Map();
@@ -90,4 +90,26 @@ export function generateBets(type,mode,options={}){
  }
  check(results.length>0,'有効な組み合わせがありません。番号を確認してください。');
  return results;
+}
+
+/* Read-only recent-purchase shortcuts; historical race and payout never transfer. */
+export function recentPurchaseTemplates(data,{limit=4,maxLines=200}={}){
+ const races=new Map(data.races.map(r=>[r.id,r])),byTicket=new Map();
+ for(const line of data.lines){if(!byTicket.has(line.ticketId))byTicket.set(line.ticketId,[]);byTicket.get(line.ticketId).push(line);}
+ return [...data.tickets].map(ticket=>({ticket,race:races.get(ticket.raceId),lines:byTicket.get(ticket.id)||[]}))
+  .filter(x=>x.race&&x.lines.length>0&&x.lines.length<=maxLines)
+  .sort((a,b)=>b.race.date.localeCompare(a.race.date)||b.ticket.createdAt.localeCompare(a.ticket.createdAt))
+  .slice(0,limit)
+  .map(x=>({id:x.ticket.id,date:x.race.date,venue:x.race.venue,number:x.race.number,type:x.ticket.type,
+    count:x.lines.length,total:x.lines.reduce((n,l)=>n+l.stake,0),
+    lines:x.lines.map(l=>({numbers:[...l.numbers],stake:l.stake,purchaseMode:l.purchaseMode||'normal'}))}));
+}
+export function copyPurchaseTemplate(template,idFactory=uid){
+ check(template&&TYPES.includes(template.type)&&Array.isArray(template.lines)&&template.lines.length>0&&template.lines.length<=200,'再利用できる購入記録ではありません。');
+ return template.lines.map(line=>{
+  const numbers=combination(template.type,line.numbers);
+  check(JSON.stringify(numbers)===JSON.stringify(line.numbers),'購入記録の組番が不正です。');
+  const stake=money(line.stake,true),purchaseMode=['normal','box','flow','formation'].includes(line.purchaseMode)?line.purchaseMode:'normal';
+  return {id:idFactory(),type:template.type,numbers:[...numbers],stake,purchaseMode,status:'pending',payout:0,refund:0};
+ });
 }
