@@ -26,6 +26,7 @@ on:
       - work/v1.3.0-rc1-draft-recovery-data-safety
       - work/v1.3.0-dev30-screen-roles-simplify-home
       - work/v1.3.0-stable-dev31-36
+      - work/v1.3.1-dev37-40-ux-safety
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -75,6 +76,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v1.3.1 large-ledger UX source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs
+      - name: v1.3.1 large-ledger UX publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs
 
       - name: Stable v1.3 real-browser source acceptance
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs
