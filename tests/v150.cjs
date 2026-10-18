@@ -37,7 +37,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.match(await panel.innerText(),/結果未入力|未入力/);
   assert.match(await panel.innerText(),/少数|30点未満/);
   await page.locator('#analysisCompare .compare-breakdown').first().locator('summary').click();
-  assert.equal(await panel.locator('table').count(),1);
+  assert.equal(await panel.locator('table:visible').count(),1);
   assert.match(await panel.locator('table').first().innerText(),/ワイド/);
   await page.locator('[data-analysis-jump="analysisCompare"]').click();
   assert.ok(await panel.isVisible());
