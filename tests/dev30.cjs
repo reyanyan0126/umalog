@@ -65,7 +65,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   await pass('dev26-27 analytical matrix and scoped navigation do not alter ledger',async()=>{
    await go('analysis');await page.waitForSelector('#analysisMatrix');
-   assert.equal(await page.locator('[data-analysis-jump]').count(),3);
+   assert.equal(await page.locator('[data-analysis-jump]').count(),4);
+   assert.equal(await page.locator('[data-analysis-jump="analysisCompare"]').count(),1);
    await page.locator('[data-analysis-jump="analysisMatrix"]').click();
    assert.equal(await page.locator('#analysisMatrix details').evaluate(e=>e.open),true);
    assert.match(await page.locator('#analysisMatrix').innerText(),/東京/);
