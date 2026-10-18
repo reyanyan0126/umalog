@@ -449,3 +449,42 @@ body.no-motion .reward-panel.reward-celebrate{animation:none}
 #homeBudget .budget-widget{margin-bottom:14px}
 @media(max-width:359px){.race-fast-picks{gap:3px}.race-fast-picks button{font-size:.74rem}.backup-summary{padding:8px}}
 @media(prefers-reduced-motion:reduce){.entry-draft-alert{animation:none}}
+
+
+/* dev22–30: Each screen has one job. Home stays deliberately minimal. */
+.home-minimal-title{margin-bottom:12px}
+.home-minimal{padding:18px 16px 20px;margin-bottom:12px}
+.home-minimal h2{margin:0;font-size:1rem}
+.home-minimal .row small{color:#d3e4da}
+.home-minimal .home-profit{text-align:center;font-weight:800;font-size:clamp(2.1rem,10vw,3.4rem);line-height:1.18;letter-spacing:-.045em;margin:24px 0 5px;overflow-wrap:anywhere}
+.home-minimal .home-minimal-note{text-align:center;font-size:.75rem;color:#d4e8dc;margin:0 0 22px}
+.home-minimal-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid rgba(255,255,255,.28);padding-top:16px}
+.home-minimal-totals .metric{min-width:0;text-align:center}
+.home-minimal-totals .metric span{color:#d5e5d9;font-size:.72rem}
+.home-minimal-totals .metric strong{font-size:clamp(.85rem,3.8vw,1.15rem);overflow-wrap:anywhere}
+.home-minimal .help{color:#e1eddf;font-size:.73rem}
+.home-entry-cta{display:flex;justify-content:center;align-items:center;min-height:55px;border-radius:12px;text-decoration:none;font-weight:750;font-size:1rem}
+.home-minimal-foot{text-align:center;font-size:.72rem;color:var(--muted);margin:12px 0}
+.home-minimal-foot a{color:var(--green)}
+.bet-type-fast{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:6px 0 16px}
+.bet-type-fast button{min-width:0;min-height:44px;padding:8px 3px;border-radius:10px;font-size:.78rem;line-height:1.2}
+.bet-type-fast button[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+#betTypeFast[hidden]{display:none}
+.calendar-metric{margin:4px 0 10px}
+.calendar-metric label{font-size:.8rem;margin:0}
+.calendar-metric select{min-height:44px;margin:4px 0 0}
+.analysis-jumps{display:flex;flex-wrap:wrap;gap:7px;margin:-5px 0 14px}
+.analysis-jumps button{border:1px solid var(--border);background:#fff;color:var(--green);text-decoration:none;border-radius:99px;font-size:.75rem;padding:9px 10px;min-height:42px;display:inline-flex;align-items:center}
+.analysis-cross{max-width:100%}
+.analysis-cross summary{min-height:46px;font-weight:650}
+.analysis-cross table{white-space:nowrap}
+.analysis-cross td{font-variant-numeric:tabular-nums}
+.growth-optional{background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px;margin:0 0 16px}
+.growth-optional>summary{min-height:44px;font-weight:680;padding:10px 2px}
+.growth-optional .reward-panel{border:0;box-shadow:none;padding:10px 0 0;margin:0}
+.nursery[data-season="spring"]{background-image:linear-gradient(170deg,#f8fdf7,#fff);border-color:#d9eacb}
+.nursery[data-season="summer"]{background-image:linear-gradient(170deg,#f4fbfa,#fff);border-color:#cce6dd}
+.nursery[data-season="autumn"]{background-image:linear-gradient(170deg,#fffbf4,#fff);border-color:#eadfc9}
+.nursery[data-season="winter"]{background-image:linear-gradient(170deg,#f6f8fc,#fff);border-color:#d7dfeb}
+@media(max-width:359px){.bet-type-fast{gap:4px}.bet-type-fast button{font-size:.71rem;padding:5px 1px}.analysis-jumps{gap:4px}.analysis-jumps button{padding:8px}}
+@media(prefers-reduced-motion:reduce){.home-entry-cta,.bet-type-fast button{transition:none}}
