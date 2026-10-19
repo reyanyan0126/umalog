@@ -1,5 +1,6 @@
 // dev.16–18: read-only ledger export/summary and optional monthly purchase budget.
 import {aggregate,check,money,summarize,validDate,VENUES,TYPES} from './core.js';
+import {combinedFinance} from './simple-ledger.js';
 
 const monthRE=/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/;
 export function validateMonthlyBudgets(obj){
@@ -60,10 +61,12 @@ export function ledgerCSV(data){
  return '\uFEFF'+[CSV_COLUMNS.map(h=>cell(h)).join(','),...rows,...simpleRows].join('\r\n')+'\r\n';
 }
 export function monthReview(data,month){
- const totals=aggregate(data,r=>r.date.startsWith(month));
+ const detailed=aggregate(data,r=>r.date.startsWith(month));
+ const combined=combinedFinance(data,{prefix:month});
+ const totals={...detailed,purchase:combined.settledPurchase,payout:combined.payout,refund:combined.refund,profit:combined.profit,pendingCount:combined.pendingCount,pendingStake:combined.pendingStake,settledCount:combined.settledCount};
  const races=data.races.filter(r=>r.date.startsWith(month)), budget=budgetStatus(data,month);
  const settled=totals.settledCount,units=totals.lineCount;
- const days=new Set(races.map(r=>r.date)).size;
+ const days=new Set([...races.map(r=>r.date),...(data.simpleEntries||[]).filter(e=>e.date.startsWith(month)).map(e=>e.date)]).size;
  const result=settled===0?'まだ結果が確定した記録はありません。':totals.profit>0?'確定済みの収支はプラスです。':totals.profit<0?'確定済みの収支はマイナスです。':'確定済みの収支は±0円です。';
- return {month,totals,budget,days,result,warning:totals.pendingCount>0?'結果未入力の買い目は確定収支から除外しています。':'',notes:budget.budget===null?'月間購入予算は未設定です。':budget.over?'購入額が設定予算を超えています。':'購入額は設定予算内です。'};
+ return {month,totals,budget,days,result,warning:totals.pendingCount>0?'結果未入力の買い目・簡易支出は確定収支から除外しています。':'',notes:budget.budget===null?'月間購入予算は未設定です。':budget.over?'購入額が設定予算を超えています。':'購入額は設定予算内です。'};
 }
