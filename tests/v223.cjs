@@ -28,6 +28,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(await page.locator('#simplePayoutFields').isVisible(),true);
   assert.match(await page.locator('#simpleUnsaved').innerText(),/未保存/);
   await page.locator('.simple-entry-head a').first().click();
+  await page.waitForFunction(()=>location.hash==='#quick-date/2026-10-12');
   assert.equal(new URL(page.url()).hash,'#quick-date/2026-10-12','discard refusal keeps edited form');
   assert.equal(await page.locator('#simpleStake').inputValue(),'900');
   await page.locator('#simpleSave').click();
