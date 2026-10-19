@@ -3,7 +3,7 @@ const {chromium,webkit}=require(process.env.PLAYWRIGHT_PATH||'playwright');
 (async()=>{const root=path.resolve(__dirname,'..'),prefix=process.env.PUBLISH==='1'?'/publish/':'/',results=[];const server=http.createServer((req,res)=>{try{let p=decodeURIComponent(req.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';const f=path.join(root,p);res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.html':'text/html','.svg':'image/svg+xml','.png':'image/png'}[path.extname(f)]||'application/json'));res.end(fs.readFileSync(f));}catch{res.writeHead(404).end();}}).listen(8006,'127.0.0.1');let browser;
 try{const launch={headless:true};if(process.env.CHROMIUM_MODULE&&!process.env.WEBKIT){const c=require(process.env.CHROMIUM_MODULE);launch.executablePath=await c.executablePath();launch.args=c.args.filter(x=>x!=='--disable-web-security'&&x!=='--allow-running-insecure-content');}browser=await (process.env.WEBKIT?webkit:chromium).launch(launch);const ctx=await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true}),page=await ctx.newPage();page.setDefaultTimeout(10000);page.on('dialog',d=>d.accept());const errors=[];page.on('pageerror',e=>errors.push(e.message));const nav=async r=>{await page.evaluate(r=>location.hash=r,r);await page.waitForTimeout(80);};const pass=async(name,fn)=>{await fn();results.push(name);console.log('PASS '+name);};
 await page.addInitScript(()=>{window.__UMALOG_ENTRY_CLASSIC__=true;});await page.goto('http://127.0.0.1:8006'+prefix);await page.waitForSelector('.hero');
-await pass('minimal home, legible six-icon dock and character-hosted tips',async()=>{
+await pass('minimal home, legible four-icon dock and character-hosted tips',async()=>{
  await nav('home');
  assert.equal(await page.locator('.hero').count(),1);
  assert.equal(await page.locator('#gradedSoon > li').count(),3);
@@ -12,7 +12,7 @@ await pass('minimal home, legible six-icon dock and character-hosted tips',async
  assert.equal(await page.locator('.recent-history').count(),0);
  assert.equal(await page.locator('#tipsOpen').count(),0);
  assert.equal(await page.locator('.home-extra').count(),0);
- assert.equal(await page.locator('nav svg.dock-icon').count(),6);
+ assert.equal(await page.locator('nav svg.dock-icon').count(),4);
  assert.equal(await page.locator('nav a span').first().innerText(),'ホーム');
  assert.ok(await page.locator('.graded-soon-link').first().evaluate(e=>e.getBoundingClientRect().height>=44));
  await nav('growth');
