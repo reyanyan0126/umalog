@@ -24,11 +24,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(await page.locator('#simpleStatus').isVisible(),false);
   assert.equal(await page.locator('#simpleSave').isVisible(),true);
   assert.match(await page.locator('#simpleReview').innerText(),/金額を入力/);
+  assert.equal(await page.locator('#simpleUnsaved').isVisible(),false,'no duplicate unsaved note before editing');
   // An empty amount cannot be submitted, even though date is filled.
   await page.locator('#simpleSave').click();
   assert.equal(new URL(page.url()).hash,'#quick');
   assert.equal(await page.evaluate(async()=>JSON.stringify(await(await import('./db.js')).load())),before);
   await page.locator('#simpleStake').fill('1200');
+  assert.equal(await page.locator('#simpleUnsaved').isVisible(),true,'unsaved state appears after input');
   assert.match(await page.locator('#simpleReview').innerText(),/1,200円/);
   await page.locator('#simpleSave').click();await page.waitForFunction(()=>location.hash==='#history');
   let saved=await page.evaluate(async()=>(await(await import('./db.js')).load()).simpleEntries);

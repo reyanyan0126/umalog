@@ -48,10 +48,10 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  host.replaceChildren();
  const section=elem('section','card ledger-calendar');
  section.id='ledgerCalendar';
- let view=options.view||'month',selectedDate=options.selectedDate;
+ let view=options.home?'month':options.view||'month',selectedDate=options.selectedDate;
  const toggle=elem('div','view-toggle');toggle.setAttribute('aria-label','カレンダー表示');
  const monthButton=elem('button','quiet','月表示'),listButton=elem('button','quiet','詳細リスト');monthButton.type=listButton.type='button';toggle.append(monthButton,listButton);
- section.append(toggle);
+ if(!options.home)section.append(toggle);
  const grid=elem('div','ledger-grid');
  grid.setAttribute('aria-label',month+'の収支カレンダー');
  for(const [i,weekday] of ['日','月','火','水','木','金','土'].entries())grid.append(elem('span','ledger-weekday'+(i===6?' saturday':i===0?' sunday':''),weekday));
@@ -62,6 +62,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  detail.id='ledgerDayDetail';
  detail.setAttribute('aria-live','polite');
  function openDay(row){
+  detail.hidden=false;
   selectedDate=row.date;options.onState?.({date:selectedDate,view});
   for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.date===row.date));
   for(const item of listItems)item.classList.toggle('is-selected',item.dataset.listDate===row.date);
@@ -123,6 +124,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  // Selected day's full details are kept above the long list, so tapping a list row can reveal them immediately.
  section.append(grid,detail,dayList);host.append(section);setView(view);
  const chosen=model.days.find(r=>r.date===selectedDate)||model.days.find(r=>r.date===today)||model.days.find(r=>r.summary||r.events.length)||model.days[0];
- if(chosen)openDay(chosen);
+ if(options.home)detail.hidden=true;
+ else if(chosen)openDay(chosen);
  return model;
 }

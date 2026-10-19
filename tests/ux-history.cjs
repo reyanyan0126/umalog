@@ -47,6 +47,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#historyPendingShortcut').click();
   assert.deepEqual(await entries.evaluateAll(nodes=>nodes.map(n=>n.dataset.historyDate)),['2026-10-19']);
   assert.equal(await page.locator('#historyPendingShortcut').getAttribute('aria-pressed'),'true');
+  assert.match(await page.locator('#historyPendingShortcut').innerText(),/絞り込みを解除/);
   await page.locator('#historyPendingShortcut').click();
   assert.equal(await entries.count(),3,'same shortcut restores all entries');
   assert.equal(await page.locator('#historyPendingShortcut').getAttribute('aria-pressed'),'false');
