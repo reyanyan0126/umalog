@@ -30,7 +30,7 @@ import {createDock} from './dock.js';
 import {mountNumberPad} from './number-pad.js';
 import {mountAdvancedPattern} from './advanced-picker.js';
 import {stakeBreakdown,setIndividualStake,setUniformStakes,STAKE_PRESETS} from './stake-allocation.js';
-import {makeSimpleEntry,combinedFinance,quickBreakdown} from './simple-ledger.js';
+import {makeSimpleEntry,combinedFinance,quickBreakdown,recentSimpleTemplates} from './simple-ledger.js';
 import {selectedStakeUpdate,stakeChanges,stakeSnapshot,restoreStakeSnapshot,purchaseHistoryOverview} from './stake-workflow.js';
 import {generateBets,reviewBets,recentPurchaseTemplates,copyPurchaseTemplate} from './bet-patterns.js';
 const updateDock=createDock(document.querySelector('nav'));
@@ -144,10 +144,14 @@ function simpleEntry(id=null){
  const editingRow=id?(data.simpleEntries||[]).find(e=>e.id===id):null;
  check(!id||editingRow,'簡易記録が見つかりません。');
  const old=editingRow||{date:jstToday(),stake:1000,venue:null,number:null,type:null,name:'',memo:'',status:'pending',payout:0,refund:0};
+ const templates=id?[]:recentSimpleTemplates(data.simpleEntries||[]);
+ const templatePanel=templates.length?`<section class="simple-recent" aria-label="最近の支出を再利用"><h2>前回の入力を再利用</h2><p class="help">金額・競馬場・券種だけを引き継ぎます。購入日・レース番号・払戻はコピーされません。</p><div class="simple-recent-list">${templates.map((t,i)=>`<button type="button" class="quiet simple-repeat-button" data-simple-template="${i}"><strong>${yen(t.stake)}</strong><small>${esc(t.venue||'競馬場未指定')} · ${esc(t.type||'券種未指定')} · ${esc(t.sourceDate)}</small><span>この条件を入力に使う →</span></button>`).join('')}</div></section>`:'';
+
  app.innerHTML=`<div class="simple-entry-head"><a href="#history">← 記録一覧</a><h1>${id?'かんたん記録を編集':'かんたん支出入力'}</h1><p class="help">日付と購入額だけで記録できます。任意項目を追加すると、その項目の分析にも使われます。馬券の購入処理は行いません。</p><a href="#entry" class="quiet button">買い目まで細かく入力 →</a></div>
  <form id="simpleEntryForm" class="card simple-entry-form"><label>購入日（必須）<input id="simpleDate" type="date" required min="2000-01-01" max="2199-12-31" value="${esc(old.date)}"></label>
  <label>支出額（必須）<input id="simpleStake" type="number" min="100" max="1000000000000" step="100" required inputmode="numeric" value="${old.stake}"></label>
  <div class="stake-shortcuts" role="group" aria-label="支出金額のクイック設定">${[100,500,1000,2000,5000].map(n=>`<button class="quiet" type="button" data-simple-amount="${n}">${n.toLocaleString('ja-JP')}円</button>`).join('')}</div>
+ ${templatePanel}
  <details class="simple-optional" ${old.venue||old.number||old.type||old.name||old.memo?'open':''}><summary>競馬場・券種・メモなどを追加（任意）</summary><div class="simple-optional-fields"><label>競馬場<select id="simpleVenue"><option value="">未指定</option>${opts(VENUES,old.venue)}</select></label><label>レース番号<select id="simpleNumber"><option value="">未指定</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${old.number===i+1?'selected':''}>${i+1}R</option>`).join('')}</select></label><label>券種<select id="simpleType"><option value="">未指定</option>${opts(TYPES,old.type)}</select></label><label>レース名（任意）<input id="simpleName" maxlength="100" value="${esc(old.name)}"></label><label class="simple-optional-full">メモ（任意）<textarea id="simpleMemo" maxlength="4000">${esc(old.memo)}</textarea></label></div></details>
  <div class="simple-settlement"><label>結果入力状況<select id="simpleStatus"><option value="pending" ${old.status==='pending'?'selected':''}>結果待ち（払戻未入力）</option><option value="settled" ${old.status==='settled'?'selected':''}>結果確定（払戻0円も含む）</option></select></label><div id="simplePayoutFields" ${old.status==='settled'?'':'hidden'}><label>実際の払戻金<input id="simplePayout" type="number" min="0" step="1" inputmode="numeric" value="${old.payout}"></label><label>返還金<input id="simpleRefund" type="number" min="0" step="1" inputmode="numeric" value="${old.refund}"></label></div></div>
  <div id="simpleReview" role="status" aria-live="polite"></div>
@@ -164,6 +168,23 @@ function simpleEntry(id=null){
  $('#simpleEntryForm').oninput=()=>{dirty=true;refresh();};
  $('#simpleEntryForm').onchange=()=>{dirty=true;refresh();};
  app.querySelectorAll('[data-simple-amount]').forEach(b=>b.onclick=()=>{$('#simpleStake').value=b.dataset.simpleAmount;dirty=true;refresh();});
+ app.querySelectorAll('[data-simple-template]').forEach(button=>button.onclick=()=>{
+  const template=templates[Number(button.dataset.simpleTemplate)];
+  if(!template)return;
+  $('#simpleStake').value=template.stake;
+  $('#simpleVenue').value=template.venue||'';
+  $('#simpleType').value=template.type||'';
+  $('#simpleNumber').value='';
+  $('#simpleName').value='';
+  $('#simpleMemo').value='';
+  status.value='pending';
+  $('#simplePayout').value='0';
+  $('#simpleRefund').value='0';
+  fields.hidden=true;
+  if(template.venue||template.type)app.querySelector('.simple-optional').open=true;
+  dirty=true;refresh();
+ });
+
  refresh();
  $('#simpleEntryForm').onsubmit=guard(async event=>{
   event.preventDefault();if(!event.currentTarget.reportValidity())return;
