@@ -47,7 +47,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#historyClearPeriod').click();
   assert.equal(await page.locator('#historyFrom').inputValue(),'');
   assert.equal(await page.locator('#historyTo').inputValue(),'');
-  assert.match(await page.locator('#historyCount').innerText(),/簡易.*131件/);
+  assert.match(await page.locator('#historyCount').innerText(),/かんたん支出 131件/);
   await page.locator('#historySearch').fill('対象メモ');
   assert.match(await page.locator('#historyCount').innerText(),/詳細 0レース・かんたん支出 1件/);
   await page.locator('#historyClearFilters').click();
