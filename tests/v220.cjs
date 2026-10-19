@@ -44,7 +44,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(await page.locator('#simpleStatus').inputValue(),'pending');
   assert.equal(await page.locator('#simplePayout').inputValue(),'0');
   assert.equal(await page.locator('#simplePayoutFields').isVisible(),false);
-  assert.match(await page.locator('#simpleReview').innerText(),/結果未入力/);
+  assert.match(await page.locator('#simpleReview').innerText(),/未入力/);
   assert.deepEqual(await page.evaluate(async()=>(await(await import('./db.js')).load()).simpleEntries),before,'reuse preview writes no data');
   await page.locator('#simpleDate').fill('2026-10-19');
   await page.locator('#simpleSave').click();await page.waitForFunction(()=>location.hash==='#history');
