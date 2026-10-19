@@ -54,14 +54,16 @@ export function combinedFinance(data,{prefix='',venue='',type=''}={}){
  return {recordedPurchase:allRecorded,receipts:allReceipts,tentativeNet:rawNet,settledPurchase:stakeSettled,payout,refund,profit:allReceipts-stakeSettled,returnRate:stakeSettled?allReceipts/stakeSettled*100:null,pendingStake:unknown,pendingCount:d.pendingCount+pending.length,settledCount:d.settledCount+settled.length,detailCount:detail.length,simpleCount:quick.length,
   coverage:{all:detail.length+quick.length,venue:detail.length+quick.filter(e=>e.venue!==null).length,number:detail.length+quick.filter(e=>e.number!==null).length,type:detail.length+quick.filter(e=>e.type!==null).length,combination:detail.length}};
 }
-export function quickBreakdown(data,{prefix='',dimension='venue'}={}){
+export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type=''}={}){
  check(['venue','type','date'].includes(dimension),'分析軸が不正です。');
- const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix));
+ check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
+ check(!type||TYPES.includes(type),'券種の指定が不正です。');
+ const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix)&&(!venue||e.venue===venue)&&(!type||e.type===type));
  const raceById=new Map(data.races.map(r=>[r.id,r])),ticketById=new Map(data.tickets.map(t=>[t.id,t]));
  const buckets=new Map();
  const add=(key,stake,payout,refund,pending)=>{const k=key??'未指定';if(!buckets.has(k))buckets.set(k,{label:k,count:0,recordedPurchase:0,settledPurchase:0,receipts:0,pendingStake:0});const b=buckets.get(k);b.count++;b.recordedPurchase+=stake;b.settledPurchase+=pending?0:stake;b.receipts+=payout+refund;b.pendingStake+=pending?stake:0;};
  for(const l of data.lines){
-  const t=ticketById.get(l.ticketId),r=t&&raceById.get(t.raceId);if(!r||!r.date.startsWith(prefix))continue;
+  const t=ticketById.get(l.ticketId),r=t&&raceById.get(t.raceId);if(!r||!r.date.startsWith(prefix)||venue&&r.venue!==venue||type&&t.type!==type)continue;
   const key=dimension==='date'?r.date:dimension==='venue'?r.venue:t.type;
   add(key,l.stake,l.payout,l.refund,l.status==='pending');
  }
