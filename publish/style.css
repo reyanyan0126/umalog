@@ -821,3 +821,14 @@ nav a{width:min(25%,220px)}
 .simple-entry-form .simple-edit-state{padding:0 2px;font-size:.75rem}
 .simple-advanced-link{margin:2px 0 16px;font-size:.82rem;text-align:center}
 .simple-advanced-link a{display:inline-flex;align-items:center;min-height:44px;color:var(--green)}
+
+/* v2.3.0-ux.3: chronological history with progressive disclosure */
+.history-advanced,.history-finance-details{border:1px solid var(--border);border-radius:12px;margin:10px 0;padding:4px 12px}
+.history-advanced>summary,.history-finance-details>summary{min-height:44px;display:flex;align-items:center;font-weight:700;cursor:pointer;font-size:.88rem}
+.history-advanced .filter{margin:8px 0}
+.history-advanced .history-controls{margin:12px 0}
+.history-finance-details .history-finance{margin:8px 0 10px}
+#historyList{display:grid;gap:9px;min-width:0}
+#historyList .history-race{margin:0}
+#historyList .simple-history-row{min-width:0}
+#historyMore{margin-top:12px;min-height:48px}
