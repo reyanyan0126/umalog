@@ -33,6 +33,22 @@ export function makeSimpleEntry(input,id){
  const value={id,date:input.date,stake:money(Number(input.stake),true),venue,number,type,name:(input.name||'').trim(),memo:(input.memo||'').trim(),status:settled?'settled':'pending',payout:settled?money(Number(input.payout||0)):0,refund:settled?money(Number(input.refund||0)):0};
  validateSimpleEntries([value]);return value;
 }
+
+export function recentSimpleTemplates(entries,limit=3){
+ check(Number.isInteger(limit)&&limit>=0&&limit<=10,'再利用候補の件数が不正です。');
+ if(limit===0)return [];
+ const ordered=validateSimpleEntries(entries).map((entry,index)=>({entry,index}))
+  .sort((a,b)=>b.entry.date.localeCompare(a.entry.date)||b.index-a.index);
+ const seen=new Set(),templates=[];
+ for(const {entry} of ordered){
+  const key=JSON.stringify([entry.stake,entry.venue,entry.type]);
+  if(seen.has(key))continue;
+  seen.add(key);
+  templates.push({stake:entry.stake,venue:entry.venue,type:entry.type,sourceDate:entry.date});
+  if(templates.length===limit)break;
+ }
+ return templates;
+}
 const match=(date,month,venue,type)=> (!month||date.startsWith(month))&&(!venue||venue===true||venue===undefined);
 export function combinedFinance(data,{prefix='',venue='',type=''}={}){
  check(typeof prefix==='string'&&/^(?:|\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2})$/.test(prefix),'集計対象期間が不正です。');
