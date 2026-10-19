@@ -20,7 +20,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await save(d);return JSON.stringify(await load());
   });
   await page.reload();await page.waitForSelector('#homeCalendar #ledgerCalendar');
-  assert.deepEqual(await page.locator('nav a').evaluateAll(links=>links.map(x=>[x.getAttribute('href'),x.innerText.trim()])),[['#home','ホーム'],['#quick','登録'],['#history','履歴'],['#analysis','分析']]);
+  assert.deepEqual(await page.locator('nav a').evaluateAll(links=>links.map(x=>[x.getAttribute('href'),x.innerText.trim()])),[['#home','ホーム'],['#quick','記録'],['#history','履歴'],['#analysis','分析']]);
   assert.equal(await page.locator('#homeSummary .home-minimal-totals .metric').count(),2);
   assert.equal(await page.locator('#homeQuickEntry').getAttribute('href'),'#quick');
   assert.equal(await page.locator('#homeEntry').getAttribute('href'),'#entry');
