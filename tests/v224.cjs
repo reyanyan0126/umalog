@@ -39,7 +39,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#simpleDate').focus();await emulate(430);
   assert.equal(await page.evaluate(()=>document.body.classList.contains('mobile-keyboard-open')),false,'native date picker is not a text keyboard');
   await page.locator('#simpleStake').focus();
-  await emulate(690);
+  await emulate(await page.evaluate(()=>window.innerHeight-90));
   assert.equal(await page.evaluate(()=>document.body.classList.contains('mobile-keyboard-open')),false,'small viewport changes do not hide dock');
   await emulate(null);
   await page.locator('#simpleStake').blur();
