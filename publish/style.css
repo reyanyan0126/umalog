@@ -742,3 +742,12 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .simple-result-actions button{min-width:0;min-height:48px;white-space:normal;text-align:center;line-height:1.4;padding:8px}
 .simple-edit-state{margin:0;font-size:.85rem;font-weight:700;color:var(--muted);padding:8px 2px}
 @media(max-width:359px){.simple-result-actions{grid-template-columns:1fr}}
+
+/* v2.2.0-dev.4: usable form space when the iPhone software keyboard appears */
+@media(max-width:720px){
+ body.mobile-keyboard-open nav{visibility:hidden;pointer-events:none}
+ body.mobile-keyboard-open{scroll-padding-bottom:24px}
+ .simple-entry-head>a:first-child{display:inline-flex;align-items:center;min-height:44px;justify-self:start}
+ .simple-entry-form :is(input,select,textarea),#entryForm :is(input,select,textarea),.history-compact :is(input,select){scroll-margin-block:24px}
+ .history-compact :is(input,select),#entryForm :is(input,select,textarea){font-size:16px}
+}

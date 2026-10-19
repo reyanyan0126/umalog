@@ -41,6 +41,7 @@ on:
       - work/v2.2.0-dev1-quick-repeat
       - work/v2.2.0-dev2-history-search
       - work/v2.2.0-dev3-entry-flow
+      - work/v2.2.0-dev4-iphone-keyboard
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -96,6 +97,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
       - name: v2.1.0 simple accounting publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+
+      - name: v2.2.0-dev.4 mobile keyboard UX source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs
+      - name: v2.2.0-dev.4 mobile keyboard UX publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs
 
       - name: v2.2.0-dev.3 entry workflow source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs
