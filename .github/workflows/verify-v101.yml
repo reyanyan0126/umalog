@@ -90,9 +90,9 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Check development root browser scenarios
-        run: TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs || { echo "browser.cjs :: TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs || { echo "browser.cjs -- TEST_URL=http://127.0.0.1:8000/umalog/ node tests/browser.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Check packaged PWA browser scenarios
-        run: TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs || { echo "browser.cjs :: TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs || { echo "browser.cjs -- TEST_URL=http://127.0.0.1:8000/umalog/publish/ node tests/browser.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Prepare portable browser adapter
         run: |
           cat > tests/ci-chromium.cjs <<'EOF'
@@ -103,153 +103,153 @@ jobs:
           EOF
 
       - name: v2.1.0 simple accounting source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs || { echo "v210.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs || { echo "v210.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.1.0 simple accounting publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs || { echo "v210.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs || { echo "v210.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: simplified quick record source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs || { echo "ux-quick.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs || { echo "ux-quick.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: simplified quick record publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs || { echo "ux-quick.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs || { echo "ux-quick.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: basic-first analysis source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs || { echo "ux-analysis.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs || { echo "ux-analysis.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: basic-first analysis publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs || { echo "ux-analysis.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs || { echo "ux-analysis.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: chronological mixed history source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs || { echo "ux-history.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs || { echo "ux-history.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: chronological mixed history publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs || { echo "ux-history.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs || { echo "ux-history.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: simplified home and embedded calendar source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs || { echo "ux-home.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs || { echo "ux-home.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: simplified home and embedded calendar publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs || { echo "ux-home.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs || { echo "ux-home.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.3.0-dev.2 ranking and caution source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs || { echo "v231.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs || { echo "v231.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.3.0-dev.2 ranking and caution publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs || { echo "v231.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs || { echo "v231.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.3.0-dev.1 inclusive monthly analysis source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs || { echo "v230.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs || { echo "v230.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.3.0-dev.1 inclusive monthly analysis publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs || { echo "v230.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs || { echo "v230.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v230.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0 release accounting and offline acceptance source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs || { echo "v220-stable.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs || { echo "v220-stable.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0 release accounting and offline acceptance publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs || { echo "v220-stable.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs || { echo "v220-stable.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220-stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.4 mobile keyboard UX source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs || { echo "v224.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs || { echo "v224.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.4 mobile keyboard UX publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs || { echo "v224.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs || { echo "v224.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v224.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.3 entry workflow source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs || { echo "v223.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs || { echo "v223.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.3 entry workflow publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs || { echo "v223.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs || { echo "v223.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v223.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.2 history filters and pagination source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs || { echo "v222.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs || { echo "v222.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.2 history filters and pagination publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs || { echo "v222.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs || { echo "v222.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.1 repeat simple entry source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs || { echo "v220.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs || { echo "v220.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.2.0-dev.1 repeat simple entry publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs || { echo "v220.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs || { echo "v220.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.0.0 grouped ticket allocation source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs || { echo "v200.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs || { echo "v200.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.0.0 grouped ticket allocation publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs || { echo "v200.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs || { echo "v200.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.8.1 formation stake allocation source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs || { echo "v181.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs || { echo "v181.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.8.1 formation stake allocation publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs || { echo "v181.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs || { echo "v181.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v181.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.8.0 race information dashboard source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs || { echo "v180.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs || { echo "v180.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.8.0 race information dashboard publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs || { echo "v180.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs || { echo "v180.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v180.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.7.1 race correction source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs || { echo "v171.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs || { echo "v171.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.7.1 race correction publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs || { echo "v171.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs || { echo "v171.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v171.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.7.0 manual race entry source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs || { echo "v170.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs || { echo "v170.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.7.0 manual race entry publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs || { echo "v170.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs || { echo "v170.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v170.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.6.1 costume animations source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs || { echo "v161.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs || { echo "v161.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.6.1 costume animations publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs || { echo "v161.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs || { echo "v161.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v161.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.6.0 companion source browser
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs || { echo "v160.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs || { echo "v160.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.6.0 companion publish browser
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs || { echo "v160.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs || { echo "v160.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v160.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.5.0 comparison source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.5.0 comparison publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.5.0 analysis comparison source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.5.0 analysis comparison publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs || { echo "v150.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v150.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.4.0 smart entry source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs || { echo "v140.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs || { echo "v140.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.4.0 smart entry publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs || { echo "v140.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs || { echo "v140.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v140.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.3.1 large-ledger UX source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs || { echo "dev40.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs || { echo "dev40.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v1.3.1 large-ledger UX publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs || { echo "dev40.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs || { echo "dev40.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev40.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Stable v1.3 real-browser source acceptance
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs || { echo "stable.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs || { echo "stable.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Stable v1.3 real-browser publish acceptance
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs || { echo "stable.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs || { echo "stable.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/stable.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev22-30 screen-role UX source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs || { echo "dev30.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs || { echo "dev30.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev22-30 screen-role UX publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs || { echo "dev30.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs || { echo "dev30.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev30.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev19-21 recover drafts, protect backups and improve iPhone source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs || { echo "dev21.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs || { echo "dev21.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev19-21 recover drafts, protect backups and improve iPhone publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs || { echo "dev21.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs || { echo "dev21.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev21.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev15 genuine entry sheets and fast multi-hit source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs || { echo "dev15.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs || { echo "dev15.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev15 genuine entry sheets and fast multi-hit publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs || { echo "dev15.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs || { echo "dev15.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev15.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev16-18 saved corrections, grouped history, budget and CSV source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs || { echo "dev18.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs || { echo "dev18.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev16-18 saved corrections, grouped history, budget and CSV publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs || { echo "dev18.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs || { echo "dev18.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev18.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: 'Old dev.8 to development: preserve IndexedDB and offline behavior'
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs || { echo "update.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs || { echo "update.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Fresh session update protects unsaved edits
-        run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs || { echo "update.cjs :: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs || { echo "update.cjs -- FIRST_SESSION=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/update.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Calendar and nursery source browser checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs || { echo "features.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs || { echo "features.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Calendar and nursery publish browser checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs || { echo "features.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs || { echo "features.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/features.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Graded race and dev3 UI source checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs || { echo "dev3.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs || { echo "dev3.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Graded race and dev3 UI publish checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs || { echo "dev3.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs || { echo "dev3.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev3.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Ledger calendar source browser checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs || { echo "ledger-ui.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs || { echo "ledger-ui.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Ledger calendar publish browser checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs || { echo "ledger-ui.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs || { echo "ledger-ui.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ledger-ui.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: V12 navigation and responsive UI source checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs || { echo "ui-v12.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs || { echo "ui-v12.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: V12 navigation and responsive UI publish checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs || { echo "ui-v12.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs || { echo "ui-v12.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ui-v12.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev9 entry and safe settlement source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs || { echo "dev9.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs || { echo "dev9.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev9 entry and safe settlement publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs || { echo "dev9.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs || { echo "dev9.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev9.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev10 entry source browser checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs || { echo "dev10.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs || { echo "dev10.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev10 entry publish browser checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs || { echo "dev10.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs || { echo "dev10.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev10.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev11 post-race ledger source checks
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs || { echo "dev11.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs || { echo "dev11.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev11 post-race ledger publish checks
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs || { echo "dev11.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs || { echo "dev11.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev11.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev12-14 daily ledger, analysis and rewards browser source
-        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs || { echo "dev14.cjs :: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs || { echo "dev14.cjs -- CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Dev12-14 daily ledger, analysis and rewards browser publish
-        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs || { echo "dev14.cjs :: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs || { echo "dev14.cjs -- PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/dev14.cjs" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Summarize browser regression failures
         if: always()
         run: |
