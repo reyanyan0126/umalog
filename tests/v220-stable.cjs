@@ -70,7 +70,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   assert.deepEqual(schema,{version:1,valid:1},'same schema for old JSON backups');
   assert.equal(dialogs.filter(x=>x.includes('入力済みの払戻・返還金を消して結果待ち')).length,3);
-  await page.reload();await page.waitForSelector('#homeQuickEntry');
+  await page.reload();await page.waitForSelector('.day-summary');
   await page.evaluate(()=>location.hash='history');await page.waitForSelector('#historyCount');
   assert.match(await page.locator('#historyCount').innerText(),/かんたん支出 1件/);
   for(const width of [320,390,440]){
@@ -78,7 +78,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'layout overflow '+width);
   }
   await page.waitForFunction(()=>navigator.serviceWorker.controller!==null);
-  await context.setOffline(true);await page.reload();await page.waitForSelector('#homeQuickEntry');
+  await context.setOffline(true);await page.reload();await page.waitForSelector('#historyCount');
   assert.equal(await page.evaluate(async()=>(await(await import('./db.js')).load()).simpleEntries[0].date),'2026-10-19');
   await context.setOffline(false);
   assert.deepEqual(errors,[]);
