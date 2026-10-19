@@ -100,7 +100,7 @@ function home(){
   ${summary.pendingCount?`<p class="help home-pending-note">別に結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）があります。結果待ちは上記の3つの金額に含めていません。</p>`:''}
  </section>
  <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
- <details class="home-extra-links"><summary>その他の機能</summary><div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a><a href="#growth">育成を見る</a></div></details>
+ <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a></div><details class="home-extra-links"><summary>育成を見る</summary><div class="home-secondary-actions"><a href="#growth">育成画面を開く</a></div></details>
  <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
   <div class="home-calendar-heading"><h2>収支カレンダー</h2><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
   <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
