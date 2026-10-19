@@ -32,7 +32,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#simpleSave').click();await page.waitForFunction(()=>location.hash==='#history');
   let before=await page.evaluate(async()=>(await(await import('./db.js')).load()).simpleEntries);
   assert.equal(before.length,1);assert.equal(before[0].status,'settled');assert.equal(before[0].payout,3800);
-  await nav('quick');await page.waitForSelector('[data-simple-template]');
+  await nav('quick');await page.waitForSelector('[data-simple-template]',{state:'attached'});
   const dateBefore=await page.locator('#simpleDate').inputValue();
   await page.locator('#simpleAssists summary').click();
   await page.locator('[data-simple-template="0"]').click();
@@ -61,7 +61,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(saved.simpleEntries[1].number,null);
   assert.equal(saved.simpleEntries[1].memo,'');
   assert.equal(saved.lines.length,0,'no fake detail bets');
-  await nav('quick');await page.waitForSelector('.simple-recent');
+  await nav('quick');await page.waitForSelector('.simple-recent',{state:'attached'});
   for(const width of [320,390,440]){
    await page.setViewportSize({width,height:844});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'repeat layout overflow '+width);
