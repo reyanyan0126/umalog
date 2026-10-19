@@ -38,6 +38,7 @@ on:
       - work/v1.8.1-formation-stakes
       - work/v2.0.0-release
       - work/v2.1.0-flexible-ledger
+      - work/v2.2.0-dev1-quick-repeat
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -93,6 +94,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
       - name: v2.1.0 simple accounting publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+
+      - name: v2.2.0-dev.1 repeat simple entry source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs
+      - name: v2.2.0-dev.1 repeat simple entry publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs
 
       - name: v2.0.0 grouped ticket allocation source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs
