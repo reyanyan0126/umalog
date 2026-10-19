@@ -39,7 +39,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   await pass('dev34 trend and lazy venue matrix render on request',async()=>{
    await page.reload();await page.waitForSelector('#entryForm');
-   await go('analysis');await page.waitForSelector('#analysisMonthlyFacts');
+   await go('analysis');await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('#analysisMonthlyFacts');
    assert.equal(await page.locator('#analysisMatrixContents table').count(),0);
    assert.match(await page.locator('#analysisMonthlyFacts').innerText(),/購入額と払戻の振り返り/);
    await page.locator('[data-analysis-jump="analysisMatrix"]').click();
