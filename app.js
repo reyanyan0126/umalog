@@ -159,7 +159,6 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  <button type="submit" class="accent full" id="simpleSave">${id?'この記録を更新':'この支出を保存'}</button><p class="help">簡易記録の更新は同じ1件を上書きします。別の詳細記録を新規登録しても自動的には紐づかないため、重複登録しないようにしてください。</p></form>
  ${id?'<button type="button" id="simpleDelete" class="danger full">この簡易記録を削除する</button>':''}`;
  const status=$('#simpleStatus'),fields=$('#simplePayoutFields');
- status.onchange=()=>{fields.hidden=status.value!=='settled';refresh();};
  const get=()=>makeSimpleEntry({date:$('#simpleDate').value,stake:$('#simpleStake').value,venue:$('#simpleVenue').value,number:$('#simpleNumber').value,type:$('#simpleType').value,name:$('#simpleName').value,memo:$('#simpleMemo').value,status:status.value,payout:$('#simplePayout').value,refund:$('#simpleRefund').value},id||'preview');
  const refresh=()=>{
   try{const x=get(),pending=x.status==='pending',net=pending?'—':signed(x.payout+x.refund-x.stake);
@@ -167,13 +166,26 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
   }catch(err){$('#simpleReview').textContent=err.message;}
  };
  const markDirty=()=>{dirty=true;$('#simpleUnsaved').textContent='編集中（未保存）';refresh();};
+ let lastStatus=status.value;
+ const hasResultAmounts=()=>['#simplePayout','#simpleRefund'].some(selector=>{
+  const value=$(selector).value.trim();return value!==''&&Number(value)!==0;
+ });
+ const markPending=()=>{
+  if(hasResultAmounts()&&!confirm('入力済みの払戻・返還金を消して結果待ちに戻しますか？'))return false;
+  status.value='pending';$('#simplePayout').value='0';$('#simpleRefund').value='0';
+  fields.hidden=true;lastStatus='pending';markDirty();return true;
+ };
+ status.onchange=()=>{
+  if(status.value==='pending'){if(!markPending())status.value=lastStatus;return;}
+  lastStatus='settled';fields.hidden=false;markDirty();
+ };
  $('#simpleEntryForm').oninput=markDirty;
  $('#simpleEntryForm').onchange=markDirty;
  app.querySelectorAll('[data-simple-amount]').forEach(b=>b.onclick=()=>{$('#simpleStake').value=b.dataset.simpleAmount;markDirty();});
- $('#simpleMarkPending').onclick=()=>{status.value='pending';$('#simplePayout').value='0';$('#simpleRefund').value='0';fields.hidden=true;markDirty();};
+ $('#simpleMarkPending').onclick=()=>{markPending();};
  $('#simpleMarkMiss').onclick=()=>{
   if((Number($('#simplePayout').value)>0||Number($('#simpleRefund').value)>0)&&!confirm('入力済みの払戻・返還金を0円に変更して確定しますか？'))return;
-  status.value='settled';$('#simplePayout').value='0';$('#simpleRefund').value='0';fields.hidden=false;markDirty();
+  status.value='settled';lastStatus='settled';$('#simplePayout').value='0';$('#simpleRefund').value='0';fields.hidden=false;markDirty();
  };
  app.querySelectorAll('[data-simple-template]').forEach(button=>button.onclick=()=>{
   const template=templates[Number(button.dataset.simpleTemplate)];
@@ -184,7 +196,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
   $('#simpleNumber').value='';
   $('#simpleName').value='';
   $('#simpleMemo').value='';
-  status.value='pending';
+  status.value='pending';lastStatus='pending';
   $('#simplePayout').value='0';
   $('#simpleRefund').value='0';
   fields.hidden=true;
@@ -202,7 +214,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
   const next=clone(data);next.simpleEntries=[...(next.simpleEntries||[])];
   if(id){const index=next.simpleEntries.findIndex(e=>e.id===id);check(index>=0,'訂正する記録が見つかりません。');next.simpleEntries[index]=x;}
   else next.simpleEntries.push(x);
-  await commit(next);notify(id?'簡易記録を更新しました。':'支出を記録しました。');location.hash=backHash;
+  await commit(next);notify(id?'簡易記録を更新しました。':'支出を記録しました。');location.hash=fromDay?'#day/'+x.date:backHash;
  });
  if(id)$('#simpleDelete').onclick=guard(async()=>{
   if(!confirm('この簡易記録 '+yen(old.stake)+' を削除しますか？収支集計からも除外されます。'))return;
