@@ -56,12 +56,12 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#budgetAmount').fill('300');await page.locator('#budgetForm button[type=submit]').click();
    await page.waitForFunction(()=>document.querySelector('#budgetAmount')?.value==='300');
    assert.equal((await loadData()).settings.monthlyBudgets['2026-10'],300);
-   await nav('analysis');assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
-   await page.reload();await page.waitForSelector('.analysis-filter-panel');
+   await nav('analysis');await page.locator('#analysisAdvanced > summary').click();assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
+   await page.reload();await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('.analysis-filter-panel');
    assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
   });
   await pass('dev17 monthly reflection, dev16 real CSV export, dev18 mobile layout',async()=>{
-   await nav('analysis');await page.waitForSelector('.month-review');assert.match(await page.locator('.month-review').innerText(),/2026-10/);
+   await nav('analysis');await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('.month-review');assert.match(await page.locator('.month-review').innerText(),/2026-10/);
    await nav('settings');
    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#exportCsv').click()]);
    assert.ok(download.suggestedFilename().endsWith('.csv'));

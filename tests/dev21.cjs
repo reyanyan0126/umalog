@@ -78,7 +78,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#budgetAmount').fill('4500');await page.locator('#budgetForm button[type=submit]').click();
    await page.waitForFunction(()=>document.querySelector('#notice')?.textContent.includes('月間購入予算を保存しました'));
    await go('home');assert.equal(await page.locator('#homeBudget').count(),0);assert.equal(await page.locator('#homeMonthly').count(),0);
-   await go('analysis');await page.locator('#analysisRange').selectOption('month');await page.locator('#analysisMonth').fill('2026-09');await page.locator('#analysisMonth').dispatchEvent('change');
+   await go('analysis');await page.locator('#analysisAdvanced > summary').click();await page.locator('#analysisRange').selectOption('month');await page.locator('#analysisMonth').fill('2026-09');await page.locator('#analysisMonth').dispatchEvent('change');
    assert.match(await page.locator('.budget-widget').innerText(),/2026-09/);assert.match(await page.locator('.budget-widget').innerText(),/4,500円/);
    await page.locator('#analysisMonth').fill('2026-10');await page.locator('#analysisMonth').dispatchEvent('change');
    assert.match(await page.locator('.budget-widget').innerText(),/2026-10/);

@@ -46,7 +46,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('#number').inputValue(),'');
   });
   await pass('dev13 analytics show consistent daily insights and cumulative movement',async()=>{
-   await nav('analysis');await page.waitForSelector('.analysis-insights');
+   await nav('analysis');await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('.analysis-insights');
    const panel=await page.locator('.analysis-insights').innerText();
    assert.match(panel,/プラスの日/);assert.match(panel,/2026-10-17/);
    await page.locator('.analysis-insights summary').click();
