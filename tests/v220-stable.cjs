@@ -33,7 +33,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.waitForFunction(()=>location.hash==='#history');
   const before=await page.evaluate(async()=>(await(await import('./db.js')).load()).simpleEntries);
   assert.equal(before.length,1);assert.equal(before[0].payout,2000);assert.equal(before[0].status,'settled');
-  await page.locator('#quickHistorySection a[href^="#quick-edit/"]').click();
+  await page.locator('#historyList a[href^="#quick-edit/"]').click();
   await page.waitForSelector('#simpleEntryForm');
   await page.locator('#simplePayout').fill('2400');
   await page.locator('#simpleMarkPending').click();
