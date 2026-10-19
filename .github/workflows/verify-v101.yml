@@ -37,6 +37,7 @@ on:
       - work/v1.8.0-race-audit
       - work/v1.8.1-formation-stakes
       - work/v2.0.0-release
+      - work/v2.1.0-flexible-ledger
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -68,7 +69,7 @@ jobs:
       - name: Check ESM syntax in source and publish
         run: |
           for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js screen-roles.js ledger-calendar.js ledger-trends.js growth-companion.js; do node --check "$name"; node --check "publish/$name"; done
-          node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js; node --check manual-race.js; node --check publish/manual-race.js; node --check manual-race-correction.js; node --check publish/manual-race-correction.js; node --check race-audit.js; node --check publish/race-audit.js; node --check stake-allocation.js; node --check publish/stake-allocation.js; node --check stake-workflow.js; node --check publish/stake-workflow.js;
+          node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js; node --check manual-race.js; node --check publish/manual-race.js; node --check manual-race-correction.js; node --check publish/manual-race-correction.js; node --check race-audit.js; node --check publish/race-audit.js; node --check stake-allocation.js; node --check publish/stake-allocation.js; node --check stake-workflow.js; node --check publish/stake-workflow.js; node --check simple-ledger.js; node --check publish/simple-ledger.js;
       - name: Core, result-state and tips tests
         run: npm test
       - name: Install browser test dependencies
@@ -87,6 +88,11 @@ jobs:
             args: []
           };
           EOF
+
+      - name: v2.1.0 simple accounting source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+      - name: v2.1.0 simple accounting publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
 
       - name: v2.0.0 grouped ticket allocation source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v200.cjs

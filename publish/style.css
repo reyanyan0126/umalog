@@ -694,3 +694,25 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .entry-review .review-total{font-variant-numeric:tabular-nums}
 @media(max-width:359px){.stake-multi-apply{grid-template-columns:1fr}.stake-multi-editor{padding:9px}.stake-multi-actions button{flex-basis:calc(50% - 6px)}.history-finance-grid strong{font-size:.92rem}.history-controls{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.allocation-editor,.stake-multi-editor{scroll-behavior:auto}}
+
+/* v2.1.0 minimal expense entry and scalable accounting */
+.home-quick-cta{margin:8px 0;min-height:50px;text-align:center}
+.simple-entry-head{display:grid;gap:8px;margin-bottom:14px}.simple-entry-head h1{margin:0}
+.simple-entry-head .help{font-size:.82rem;line-height:1.5}.simple-entry-head>a.button{justify-self:start;min-height:44px}
+.simple-entry-form{display:grid;gap:12px}.simple-entry-form>label{font-size:.9rem;font-weight:700}
+.simple-entry-form input,.simple-entry-form select,.simple-entry-form textarea{width:100%;min-width:0;min-height:48px;margin-top:6px;font-size:1rem}
+.simple-entry-form #simpleStake{font-size:1.7rem;font-weight:750;font-variant-numeric:tabular-nums}
+.simple-entry-form .stake-shortcuts{display:flex;flex-wrap:wrap;gap:6px}.simple-entry-form .stake-shortcuts button{min-height:44px;flex:1 1 68px}
+.simple-entry-form details{padding:10px;border:1px solid var(--border);border-radius:12px}.simple-entry-form summary{font-weight:750;min-height:44px;padding:10px 0}
+.simple-optional-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.simple-optional-fields label{font-size:.82rem;min-width:0}.simple-optional-fields .simple-optional-full{grid-column:1/-1}
+.simple-settlement{display:grid;gap:8px}.simple-settlement label{font-size:.83rem}
+#simplePayoutFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#simplePayoutFields[hidden]{display:none}
+#simpleReview{padding:12px;border-radius:12px;background:#f2f8f5;border:1px solid #d7e8db;display:grid;gap:7px}
+.simple-review-row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.simple-review-row strong{font-variant-numeric:tabular-nums}
+#simpleSave{min-height:54px;font-weight:750}.simple-entry-switch{display:grid;gap:5px;margin:12px 0}.simple-entry-switch p{font-size:.77rem;margin:0}
+.quick-history{margin-top:18px;display:grid;gap:8px}.quick-history>.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.quick-history h2{font-size:1rem;margin:0}
+.simple-history-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff}
+.simple-history-row>div{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}.simple-history-row small{font-size:.73rem;color:var(--muted)}.simple-history-row strong{font-variant-numeric:tabular-nums}
+.simple-history-row a.button{min-height:44px;display:flex;align-items:center;flex-shrink:0;font-size:.77rem}
+#inclusiveBreakdown details{padding:8px 0}#inclusiveBreakdown .table-wrap{max-width:100%;overflow-x:auto}
+@media(max-width:359px){.simple-optional-fields,#simplePayoutFields{grid-template-columns:1fr}.simple-optional-fields .simple-optional-full{grid-column:auto}.simple-history-row{align-items:start;flex-direction:column}.simple-history-row a.button{width:100%;justify-content:center}}
