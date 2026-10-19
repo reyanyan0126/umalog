@@ -716,3 +716,5 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .simple-history-row a.button{min-height:44px;display:flex;align-items:center;flex-shrink:0;font-size:.77rem}
 #inclusiveBreakdown details{padding:8px 0}#inclusiveBreakdown .table-wrap{max-width:100%;overflow-x:auto}
 @media(max-width:359px){.simple-optional-fields,#simplePayoutFields{grid-template-columns:1fr}.simple-optional-fields .simple-optional-full{grid-column:auto}.simple-history-row{align-items:start;flex-direction:column}.simple-history-row a.button{width:100%;justify-content:center}}
+
+.detailed-analysis-balance{font-size:1.35rem;font-weight:750;padding:8px 0;font-variant-numeric:tabular-nums}
