@@ -24,7 +24,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await save(d);return JSON.stringify(await load());
   });
   await page.reload();await page.waitForSelector('#homeQuickEntry');
-  await page.evaluate(()=>location.hash='analysis');await page.waitForSelector('#analysisQuality');
+  await page.evaluate(()=>location.hash='analysis');await page.waitForSelector('#analysisQuality');await page.locator('#analysisAdvanced > summary').click();
   assert.match(await page.locator('#analysisQuality').innerText(),/確定済みの記録/);
   assert.match(await page.locator('#analysisQuality').innerText(),/3 \/ 5点・件/);
   assert.match(await page.locator('#analysisQuality').innerText(),/87\.5％/);

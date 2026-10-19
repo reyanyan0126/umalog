@@ -24,7 +24,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await save(d);return JSON.stringify(await load());
   });
   await page.reload();await page.waitForSelector('#homeQuickEntry');
-  await page.evaluate(()=>location.hash='analysis');await page.waitForSelector('#analysisCategoryCompare');
+  await page.evaluate(()=>location.hash='analysis');await page.waitForSelector('#analysisCategoryCompare');await page.locator('#analysisAdvanced > summary').click();
   const labels=async axis=>page.locator('#category'+axis+'Results [data-category-label]').evaluateAll(rows=>rows.map(row=>row.getAttribute('data-category-label')));
   assert.deepEqual(await labels('Venue'),['東京','京都','中山']);
   assert.deepEqual(await labels('Type'),['単勝','ワイド','複勝']);
