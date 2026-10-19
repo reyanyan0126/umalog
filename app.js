@@ -90,21 +90,50 @@ function catalogPanel(){const stamp=v=>v?new Date(v).toLocaleString('ja-JP',{tim
 function bindCatalog(){const button=$('#refreshRaces');if(!button)return;button.onclick=guard(async()=>{if(catalogUpdating||!RACE_PROVIDER)return;catalogUpdating=true;button.disabled=true;$('#raceInfoStatus').textContent='取得中…';try{const result=await refreshCatalog(catalog);if(result.status!=='unconfigured'){await saveCatalog(result.catalog);catalog=result.catalog;catalogWarning='';}}finally{catalogUpdating=false;if($('#raceInfoPanel')){const panel=$('#raceInfoPanel');panel.outerHTML=catalogPanel();bindCatalog();}}});}
 function home(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return homeClassic();
- const currentMonth=jstToday().slice(0,7),s=combinedFinance(data,{prefix:currentMonth}),receive=s.receipts;
- app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1><section class="card hero home-minimal" id="homeSummary">
-   <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
-   <div class="home-profit ${s.profit<0?'negative':'positive'}" aria-label="今月の確定収支">${s.settledCount?signed(s.profit):'—'}</div>
-   <p class="home-minimal-note">${s.settledCount?'結果確定分の収支':'今月はまだ確定した記録がありません'}</p>
-   <div class="home-minimal-totals">${metric('総支出（全記録）',yen(s.recordedPurchase))}${metric('払戻・返還',yen(receive))}${metric('結果確定分の支出',yen(s.settledPurchase))}${metric('暫定収支',signed(s.tentativeNet))}</div>
-   ${s.pendingCount?`<p class="help">結果未入力 ${s.pendingCount}点 · ${yen(s.pendingStake)} は確定収支に含みません。</p>`:''}
-   </section>
-   <a class="button accent full home-entry-cta" id="homeEntry" href="#entry">＋ 結果を記録する</a><a class="button quiet full home-quick-cta" id="homeQuickEntry" href="#quick">⚡ 金額だけで支出を記録</a>
-   <p class="home-minimal-foot">詳しい成績は <a href="#analysis">分析</a> で確認できます。</p>`;
+ const currentMonth=jstToday().slice(0,7),summary=combinedFinance(data,{prefix:currentMonth});
+ app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1>
+ <section class="card hero home-minimal" id="homeSummary">
+  <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
+  <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="今月の確定収支">${summary.settledCount?signed(summary.profit):'—'}</div>
+  <p class="home-minimal-note">${summary.settledCount?'結果が確定した記録の収支':'今月はまだ結果が確定していません'}</p>
+  <div class="home-minimal-totals home-simple-totals">${metric('購入額（全記録）',yen(summary.recordedPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
+  ${summary.pendingCount?`<p class="help">結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）。確定収支には含めていません。</p>`:''}
+ </section>
+ <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
+ <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a><a href="#growth">育成を見る</a></div>
+ <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
+  <div class="home-calendar-heading"><h2>収支カレンダー</h2><label>表示月<input type="month" id="month" min="2000-01" max="2199-12" value="${calendarMonth}"></label></div>
+  <div class="month-actions"><button id="monthPrev" class="quiet" type="button">前月</button><button id="monthToday" class="quiet" type="button">今月</button><button id="monthNext" class="quiet" type="button">翌月</button></div>
+  <div class="calendar-metric"><label>日付の表示<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div>
+  <div id="ledgerCalendarHost"></div>
+ </section>`;
+ mountHomeCalendar();
  loadEntryDraft('new').then(saved=>{
   if(!$('#homeEntry')||!saved)return;
   try{validateEntryDraft(saved);if(saved.key!=='new')return;}catch{return;}
-  $('#homeEntry').textContent='入力途中の記録を再開';
+  $('#homeEntry').textContent='入力途中の買い目を再開';
  }).catch(()=>{});
+}
+function mountHomeCalendar(){
+ const update=()=>mountLedgerCalendar($('#ledgerCalendarHost'),data,gradedEvents(withMaster(calendarState.calendar)),calendarMonth,{
+  selectedDate:calendarSelected,view:calendarView,metric:calendarMeasure,home:true,
+  onState:value=>{calendarSelected=value.date;calendarView=value.view;}
+ });
+ $('#calendarMetric').value=calendarMeasure;
+ $('#calendarMetric').onchange=e=>{calendarMeasure=e.target.value;update();};
+ const change=month=>{
+  if(!/^(20\\d\\d|21\\d\\d)-(0[1-9]|1[0-2])$/.test(month))return;
+  calendarMonth=month;$('#month').value=month;update();
+ };
+ $('#month').onchange=e=>change(e.target.value);
+ for(const [id,delta] of [['monthPrev',-1],['monthNext',1]]){
+  $('#'+id).onclick=()=>{
+   const [y,m]=calendarMonth.split('-').map(Number);
+   change(new Date(Date.UTC(y,m-1+delta,1)).toISOString().slice(0,7));
+  };
+ }
+ $('#monthToday').onclick=()=>{calendarSelected=jstToday();change(jstToday().slice(0,7));};
+ update();
 }
 function homeClassic(){
  const today=jstToday(),daily=aggregate(data,r=>r.date===today);
