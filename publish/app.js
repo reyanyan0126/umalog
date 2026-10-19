@@ -118,7 +118,7 @@ function calendarScreen(){
  $('#month').onchange=e=>change(e.target.value);for(const [id,delta] of [['monthPrev',-1],['monthNext',1]])$('#'+id).onclick=()=>{const [y,m]=calendarMonth.split('-').map(Number);change(new Date(Date.UTC(y,m-1+delta,1)).toISOString().slice(0,7));};$('#monthToday').onclick=()=>{calendarSelected=jstToday();change(jstToday().slice(0,7));};update();
 }
 function dayScreen(date){
- const day=dayLedger(data,date),stat=day.summary;
+ const day=dayLedger(data,date),combined=combinedFinance(data,{prefix:date}),stat=day.summary;
  const section=day.entries.map(({race,tickets,lines,summary})=>{
   const items=tickets.map(t=>{
    const bs=lines.filter(l=>l.ticketId===t.id),v=summarize(bs);
@@ -127,7 +127,8 @@ function dayScreen(date){
   }).join('');
   return `<section class="card day-race"><div class="row"><div><small>${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${summary.profit<0?'negative':'positive'}">${summary.settledCount?signed(summary.profit):'—'}</strong></div>${items}<a class="quiet button day-next" href="#entry-next/${date}/${encodeURIComponent(race.venue)}">同じ競馬場で次を記録 →</a></section>`;
  }).join('');
- app.innerHTML=`<a href="#calendar">← カレンダーへ</a><h1>${date} のうまログ</h1><section class="card day-summary"><div class="day-metrics">${metric('購入',yen(stat.purchase))}${metric('払戻',yen(stat.payout))}${metric('返還',yen(stat.refund))}</div><small>確定収支</small><div class="balance ${stat.profit<0?'negative':'positive'}">${stat.settledCount?signed(stat.profit):'—'}</div><p class="help">${day.raceCount}レース · 結果未入力 ${stat.pendingCount}点（未確定は収支に含みません）</p></section>${section||'<section class="card empty">この日の記録はありません。</section>'}<a class="button quiet full" href="#entry-date/${date}">＋ この日のレースを記録</a>`;
+ const quick=(data.simpleEntries||[]).filter(x=>x.date===date),quickRows=quick.map(x=>`<section class="card simple-history-row"><div><small>${esc(x.venue||'競馬場未指定')} · ${esc(x.type||'券種未指定')}</small><strong>${yen(x.stake)}</strong><small>${x.status==='pending'?'結果待ち':`払戻・返還 ${yen(x.payout+x.refund)}`}</small></div><a class="quiet button" href="#quick-edit/${encodeURIComponent(x.id)}">編集</a></section>`).join('');
+ app.innerHTML=`<a href="#calendar">← カレンダーへ</a><h1>${date} のうまログ</h1><section class="card day-summary"><div class="day-metrics">${metric('総支出',yen(combined.recordedPurchase))}${metric('確定購入',yen(combined.settledPurchase))}${metric('払戻・返還',yen(combined.receipts))}</div><small>確定収支（全記録）</small><div class="balance ${combined.profit<0?'negative':'positive'}">${combined.settledCount?signed(combined.profit):'—'}</div><p class="help">結果待ち ${combined.pendingCount}点・件（${yen(combined.pendingStake)}）。暫定収支 ${signed(combined.tentativeNet)}。</p></section>${section}${quickRows||(!section?'<section class="card empty">この日の記録はありません。</section>':'')}<a class="button quiet full" href="#entry-date/${date}">＋ この日のレースを記録</a><a class="button quiet full" href="#quick">⚡ 支出だけ入力</a>`;
  bindQuickEdits(()=>dayScreen(date));
 }
 function analysisInsightPanel(a){

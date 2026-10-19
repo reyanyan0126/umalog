@@ -23,8 +23,9 @@ export function budgetStatus(data,month){
  const ids=new Set(data.races.filter(r=>r.date.startsWith(month)).map(r=>r.id));
  const tids=new Set(data.tickets.filter(t=>ids.has(t.raceId)).map(t=>t.id));
  const rows=data.lines.filter(l=>tids.has(l.ticketId));
- const purchase=rows.reduce((s,l)=>s+l.stake,0);
- const pending=rows.filter(l=>l.status==='pending').reduce((s,l)=>s+l.stake,0);
+ const quick=(data.simpleEntries||[]).filter(e=>e.date.startsWith(month));
+ const purchase=rows.reduce((s,l)=>s+l.stake,0)+quick.reduce((s,e)=>s+e.stake,0);
+ const pending=rows.filter(l=>l.status==='pending').reduce((s,l)=>s+l.stake,0)+quick.filter(e=>e.status==='pending').reduce((s,e)=>s+e.stake,0);
  return {month,budget,purchase,pending,remaining:budget===null?null:budget-purchase,ratio:budget===null?null:purchase/budget*100,over:budget!==null&&purchase>budget};
 }
 export function raceHistory(data){
@@ -55,7 +56,8 @@ export function ledgerCSV(data){
   cell(l.status==='pending'?'未入力':l.status==='void'?'全額返還':l.refund>0?'一部返還':l.payout>0?'的中':'不的中'),
   cell(t.memo,true)
  ].join(','));
- return '\uFEFF'+[CSV_COLUMNS.map(h=>cell(h)).join(','),...rows].join('\r\n')+'\r\n';
+ const simpleRows=(data.simpleEntries||[]).map(e=>[cell(e.date),cell(e.venue||'',true),cell(e.number??''),cell(e.name||'',true),cell(e.type||'',true),cell('',true),cell(e.stake),cell(e.payout),cell(e.refund),cell(e.status==='pending'?'':e.payout+e.refund-e.stake),cell(e.status==='pending'?'結果待ち（簡易）':'確定（簡易）'),cell(e.memo,true)].join(','));
+ return '\uFEFF'+[CSV_COLUMNS.map(h=>cell(h)).join(','),...rows,...simpleRows].join('\r\n')+'\r\n';
 }
 export function monthReview(data,month){
  const totals=aggregate(data,r=>r.date.startsWith(month));
