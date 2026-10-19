@@ -1,5 +1,6 @@
 // dev.16–18: read-only ledger export/summary and optional monthly purchase budget.
 import {aggregate,check,money,summarize,validDate,VENUES,TYPES} from './core.js';
+import {combinedFinance} from './simple-ledger.js';
 
 const monthRE=/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/;
 export function validateMonthlyBudgets(obj){
@@ -23,8 +24,9 @@ export function budgetStatus(data,month){
  const ids=new Set(data.races.filter(r=>r.date.startsWith(month)).map(r=>r.id));
  const tids=new Set(data.tickets.filter(t=>ids.has(t.raceId)).map(t=>t.id));
  const rows=data.lines.filter(l=>tids.has(l.ticketId));
- const purchase=rows.reduce((s,l)=>s+l.stake,0);
- const pending=rows.filter(l=>l.status==='pending').reduce((s,l)=>s+l.stake,0);
+ const quick=(data.simpleEntries||[]).filter(e=>e.date.startsWith(month));
+ const purchase=rows.reduce((s,l)=>s+l.stake,0)+quick.reduce((s,e)=>s+e.stake,0);
+ const pending=rows.filter(l=>l.status==='pending').reduce((s,l)=>s+l.stake,0)+quick.filter(e=>e.status==='pending').reduce((s,e)=>s+e.stake,0);
  return {month,budget,purchase,pending,remaining:budget===null?null:budget-purchase,ratio:budget===null?null:purchase/budget*100,over:budget!==null&&purchase>budget};
 }
 export function raceHistory(data){
@@ -55,13 +57,16 @@ export function ledgerCSV(data){
   cell(l.status==='pending'?'未入力':l.status==='void'?'全額返還':l.refund>0?'一部返還':l.payout>0?'的中':'不的中'),
   cell(t.memo,true)
  ].join(','));
- return '\uFEFF'+[CSV_COLUMNS.map(h=>cell(h)).join(','),...rows].join('\r\n')+'\r\n';
+ const simpleRows=(data.simpleEntries||[]).map(e=>[cell(e.date),cell(e.venue||'',true),cell(e.number??''),cell(e.name||'',true),cell(e.type||'',true),cell('',true),cell(e.stake),cell(e.payout),cell(e.refund),cell(e.status==='pending'?'':e.payout+e.refund-e.stake),cell(e.status==='pending'?'結果待ち（簡易）':'確定（簡易）'),cell(e.memo,true)].join(','));
+ return '\uFEFF'+[CSV_COLUMNS.map(h=>cell(h)).join(','),...rows,...simpleRows].join('\r\n')+'\r\n';
 }
 export function monthReview(data,month){
- const totals=aggregate(data,r=>r.date.startsWith(month));
+ const detailed=aggregate(data,r=>r.date.startsWith(month));
+ const combined=combinedFinance(data,{prefix:month});
+ const totals={...detailed,purchase:combined.settledPurchase,payout:combined.payout,refund:combined.refund,profit:combined.profit,pendingCount:combined.pendingCount,pendingStake:combined.pendingStake,settledCount:combined.settledCount};
  const races=data.races.filter(r=>r.date.startsWith(month)), budget=budgetStatus(data,month);
  const settled=totals.settledCount,units=totals.lineCount;
- const days=new Set(races.map(r=>r.date)).size;
+ const days=new Set([...races.map(r=>r.date),...(data.simpleEntries||[]).filter(e=>e.date.startsWith(month)).map(e=>e.date)]).size;
  const result=settled===0?'まだ結果が確定した記録はありません。':totals.profit>0?'確定済みの収支はプラスです。':totals.profit<0?'確定済みの収支はマイナスです。':'確定済みの収支は±0円です。';
- return {month,totals,budget,days,result,warning:totals.pendingCount>0?'結果未入力の買い目は確定収支から除外しています。':'',notes:budget.budget===null?'月間購入予算は未設定です。':budget.over?'購入額が設定予算を超えています。':'購入額は設定予算内です。'};
+ return {month,totals,budget,days,result,warning:totals.pendingCount>0?'結果未入力の買い目・簡易支出は確定収支から除外しています。':'',notes:budget.budget===null?'月間購入予算は未設定です。':budget.over?'購入額が設定予算を超えています。':'購入額は設定予算内です。'};
 }

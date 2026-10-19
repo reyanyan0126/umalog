@@ -1,4 +1,5 @@
 import {summarize,jstToday} from './core.js';
+import {combinedFinance} from './simple-ledger.js';
 import {calendarMetricValue} from './screen-roles.js';
 import {selectable} from './graded-races.js';
 import {japaneseHolidayName,HOLIDAY_YEARS} from './jp-holidays.js';
@@ -17,8 +18,10 @@ export function ledgerMonth(data,events,month){
  for(const l of data.lines){const t=ticketsById.get(l.ticketId),r=t&&racesById.get(t.raceId);if(r&&r.date.startsWith(month))group(r.date).lines.push(l);}
  const eventDays=new Map();
  for(const e of events){if(!e.date.startsWith(month))continue;if(!eventDays.has(e.date))eventDays.set(e.date,[]);eventDays.get(e.date).push(e);}
- const days=Array.from({length:count},(_,i)=>{const date=month+'-'+String(i+1).padStart(2,'0'),grouped=byDay.get(date),lines=grouped?.lines||[];
-  return {date,day:i+1,summary:lines.length?summarize(lines):null,tickets:grouped?.tickets||[],events:eventDays.get(date)||[],holiday:japaneseHolidayName(date)};
+ const days=Array.from({length:count},(_,i)=>{const date=month+'-'+String(i+1).padStart(2,'0'),grouped=byDay.get(date),lines=grouped?.lines||[],hasQuick=(data.simpleEntries||[]).some(e=>e.date===date);
+  const inclusive=hasQuick?combinedFinance(data,{prefix:date}):null;
+  const summary=hasQuick?{...summarize(lines),purchase:inclusive.settledPurchase,payout:inclusive.payout,refund:inclusive.refund,profit:inclusive.profit,settledCount:inclusive.settledCount,pendingCount:inclusive.pendingCount,pendingStake:inclusive.pendingStake}:lines.length?summarize(lines):null;
+  return {date,day:i+1,summary,tickets:grouped?.tickets||[],quick:(data.simpleEntries||[]).filter(e=>e.date===date),events:eventDays.get(date)||[],holiday:japaneseHolidayName(date)};
  });
  return {month,offset,days};
 }
@@ -70,6 +73,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
    detail.append(elem('p','help','確定購入 '+stats.purchase.toLocaleString('ja-JP')+'円 / 払戻 '+stats.payout.toLocaleString('ja-JP')+'円 / 返還 '+stats.refund.toLocaleString('ja-JP')+'円'));
 
   }else detail.append(elem('p','help','この日の購入記録はありません。'));
+  if(row.quick?.length){const h=elem('h4',null,'かんたん支出');const ul=elem('ul','ledger-detail-list');for(const e of row.quick){const li=elem('li'),link=elem('a',null,(e.venue||'未指定')+' '+(e.type||'券種未指定')+' · '+e.stake.toLocaleString('ja-JP')+'円 · '+(e.status==='pending'?'結果待ち':'確定'));link.href='#quick-edit/'+encodeURIComponent(e.id);li.append(link);ul.append(li);}detail.append(h,ul);}
   if(row.tickets.length){
    const header=elem('h4',null,'購入履歴');
    const list=elem('ul','ledger-detail-list');
