@@ -46,6 +46,7 @@ on:
       - work/v2.3.0-dev1-inclusive-analytics
       - work/v2.3.0-dev2-category-ranking
       - work/v2.3.0-ux1-simple-home-calendar
+      - work/v2.3.0-ux2-quick-entry-simplify
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -101,6 +102,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
       - name: v2.1.0 simple accounting publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+
+      - name: simplified quick record source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs
+      - name: simplified quick record publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs
 
       - name: simplified home and embedded calendar source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs

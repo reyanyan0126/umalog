@@ -37,6 +37,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#simpleNumber').selectOption('11');
   await page.locator('#simpleType').selectOption('ワイド');
   await page.locator('#simpleName').fill('詳細入力なしの記録');
+  await page.locator('#simpleResultSection summary').click();
   await page.locator('#simpleStatus').selectOption('settled');
   await page.locator('#simplePayout').fill('3000');
   await page.locator('#simpleSave').click();await page.waitForFunction(()=>location.hash==='#history');
@@ -67,7 +68,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'quick overflow '+width);
   }
   assert.deepEqual(errors,[]);
-  assert.ok(dialogs.some(t=>t.includes('支出として記録')));
+  assert.equal(dialogs.filter(t=>t.includes('支出として記録')).length,0,'explicit save does not require a second confirmation');
   console.log('PASS v2.1.0: amount-only -> history -> enrich -> settle -> inclusive analysis/calendar -> delete, legacy data and iPhone widths');
  }finally{if(browser)await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
