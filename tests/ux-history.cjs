@@ -32,6 +32,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    [['2026-10-19','quick'],['2026-10-18','race'],['2026-10-17','quick']]);
   assert.equal(await page.locator('#quickHistorySection').count(),0,'no independent quick list');
   assert.equal(await page.locator('#historyAdvancedFilters').getAttribute('open'),null);
+  assert.equal(await page.locator('#historyClearFilters').count(),1);
+  assert.equal(await page.locator('#historyPendingShortcut').count(),1);
   assert.equal(await page.locator('.history-finance-details').getAttribute('open'),null);
   assert.equal(await page.locator('#historySearch').isVisible(),true);
   assert.equal(await entries.nth(0).locator('a[href^="#quick-edit/"]').count(),1);
