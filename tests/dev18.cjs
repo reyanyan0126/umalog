@@ -23,7 +23,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   await page.reload();await page.waitForSelector('.hero');
   await pass('dev16 history groups same race tickets and filters without merging',async()=>{
-   await nav('history');await page.waitForSelector('.history-race');
+   await nav('history');await page.waitForSelector('.history-race');await page.locator('#historyAdvancedFilters summary').click();
    assert.equal(await page.locator('.history-race').count(),2);
    assert.match(await page.locator('.history-race').last().innerText(),/2券種/);
    await page.locator('#tf').selectOption('複勝');assert.equal(await page.locator('.history-race').count(),1);
