@@ -23,7 +23,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   await page.reload();await page.waitForSelector('.hero');
   await pass('dev16 history groups same race tickets and filters without merging',async()=>{
-   await nav('history');await page.waitForSelector('.history-race');
+   await nav('history');await page.waitForSelector('.history-race');await page.locator('#historyAdvancedFilters summary').click();
    assert.equal(await page.locator('.history-race').count(),2);
    assert.match(await page.locator('.history-race').last().innerText(),/2券種/);
    await page.locator('#tf').selectOption('複勝');assert.equal(await page.locator('.history-race').count(),1);
@@ -56,12 +56,12 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#budgetAmount').fill('300');await page.locator('#budgetForm button[type=submit]').click();
    await page.waitForFunction(()=>document.querySelector('#budgetAmount')?.value==='300');
    assert.equal((await loadData()).settings.monthlyBudgets['2026-10'],300);
-   await nav('analysis');assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
-   await page.reload();await page.waitForSelector('.analysis-filter-panel');
+   await nav('analysis');await page.locator('#analysisAdvanced > summary').click();assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
+   await page.reload();await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('.analysis-filter-panel');
    assert.match(await page.locator('.budget-widget').innerText(),/予算を超えています/);
   });
   await pass('dev17 monthly reflection, dev16 real CSV export, dev18 mobile layout',async()=>{
-   await nav('analysis');await page.waitForSelector('.month-review');assert.match(await page.locator('.month-review').innerText(),/2026-10/);
+   await nav('analysis');await page.locator('#analysisAdvanced').evaluate(e=>e.open=true);await page.waitForSelector('.month-review');assert.match(await page.locator('.month-review').innerText(),/2026-10/);
    await nav('settings');
    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#exportCsv').click()]);
    assert.ok(download.suggestedFilename().endsWith('.csv'));

@@ -63,10 +63,11 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   let stored=await page.evaluate(async()=>(await(await import('./db.js')).load()).lines);
   assert.deepEqual(stored.map(x=>x.stake),[100,200,100,200]);
   assert.equal(stored.every(x=>x.status==='pending'),true);
-  assert.match(await page.locator('#historyFinanceOverview').innerText(),/600円/);
-  assert.match(await page.locator('#historyFinanceOverview').innerText(),/結果待ち/);
+  assert.match(await page.locator('#historyFinanceOverview').textContent(),/600円/);
+  assert.match(await page.locator('#historyFinanceOverview').textContent(),/結果待ち/);
   await page.locator('#historyPendingShortcut').click();
   assert.equal(await page.locator('#sf').inputValue(),'pending');
+  await page.locator('#historyAdvancedFilters summary').click();
   await page.locator('#historyClearFilters').click();
   assert.equal(await page.locator('#sf').inputValue(),'');
   await page.locator('.history-bet-details summary').first().click();
@@ -98,7 +99,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   }
   await page.locator('#entryPurchasePanel .sheet-close').click();
   await page.evaluate(()=>location.hash='history');
-  await page.waitForSelector('#historyFinanceOverview');
+  await page.waitForSelector('#historyFinanceOverview',{state:'attached'});
   for(const width of [320,390,440]){
    await page.setViewportSize({width,height:844});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'history horizontal overflow '+width);

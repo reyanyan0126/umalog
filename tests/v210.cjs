@@ -48,7 +48,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.equal(saved.simpleEntries[0].payout,3000);
   assert.match(await page.locator('#historyFinanceOverview').textContent(),/3,000円/);
   assert.match(await page.locator('#historyFinanceOverview').textContent(),/1,500円/);
-  await nav('analysis');await page.waitForSelector('#analysisBasics');await page.locator('#analysisAdvanced > summary').click();
+  await nav('analysis');await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('#analysisBasics');
   assert.match(await page.locator('#analysisBasics').innerText(),/総支出/);
   assert.match(await page.locator('#analysisBasics').innerText(),/1,500円/);
   assert.match(await page.locator('#analysisBasics').innerText(),/券種判明 1/);

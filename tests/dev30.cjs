@@ -64,7 +64,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.match(await day.getAttribute('aria-label'),/550円/);
   });
   await pass('dev26-27 analytical matrix and scoped navigation do not alter ledger',async()=>{
-   await go('analysis');await page.waitForSelector('#analysisMatrix');await page.locator('#analysisAdvanced > summary').click();
+   await go('analysis');await page.locator('#analysisAdvanced > summary').click();await page.waitForSelector('#analysisMatrix');
    assert.ok(await page.locator('[data-analysis-jump]').count()>=4,'original analysis sections remain');
    assert.equal(await page.locator('[data-analysis-jump="analysisCategoryCompare"]').count(),1);
    assert.equal(await page.locator('[data-analysis-jump="analysisCompare"]').count(),1);
