@@ -846,3 +846,15 @@ nav a{width:min(25%,220px)}
 .analysis-advanced-content{padding-top:12px}
 .analysis-advanced-content>.card{margin-left:0;margin-right:0}
 @media(max-width:359px){.analysis-essential-grid>div{padding:9px}.analysis-essential-grid strong{font-size:1.12rem}.analysis-advanced{padding:4px 8px}}
+
+/* v2.3.0-ux.5: one-line calendar navigation and comparable home totals */
+.home-calendar-navigation{display:flex;align-items:center;gap:6px;min-width:0}
+.home-calendar-navigation label{margin:0;min-width:0}
+.home-calendar-navigation input{width:145px;min-width:0;max-width:100%;min-height:44px;font-size:16px}
+.home-calendar-navigation button{min-width:42px;min-height:44px;padding:7px 10px;font-weight:750}
+.home-calendar-navigation #monthToday{font-size:.78rem;font-weight:650;padding:7px}
+.home-calendar-navigation #monthToday[hidden]{display:none}
+.home-calendar-heading{flex-wrap:wrap}
+.home-calendar-heading .visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.home-pending-note{border-top:1px solid rgba(255,255,255,.28);padding-top:9px}
+@media(max-width:400px){.home-calendar-navigation{width:100%;justify-content:space-between}.home-calendar-navigation label{flex:1}.home-calendar-navigation input{width:100%}}

@@ -96,14 +96,13 @@ function home(){
   <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
   <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="今月の確定収支">${summary.settledCount?signed(summary.profit):'—'}</div>
   <p class="home-minimal-note">${summary.settledCount?'結果が確定した記録の収支':'今月はまだ結果が確定していません'}</p>
-  <div class="home-minimal-totals home-simple-totals">${metric('購入額（全記録）',yen(summary.recordedPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
-  ${summary.pendingCount?`<p class="help">結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）。確定収支には含めていません。</p>`:''}
+  <div class="home-minimal-totals home-simple-totals">${metric('確定した購入額',yen(summary.settledPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
+  ${summary.pendingCount?`<p class="help home-pending-note">別に結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）があります。結果待ちは上記の3つの金額に含めていません。</p>`:''}
  </section>
  <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
  <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a><a href="#growth">育成を見る</a></div>
  <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
-  <div class="home-calendar-heading"><h2>収支カレンダー</h2><label>表示月<input type="month" id="month" min="2000-01" max="2199-12" value="${calendarMonth}"></label></div>
-  <div class="month-actions"><button id="monthPrev" class="quiet" type="button">前月</button><button id="monthToday" class="quiet" type="button">今月</button><button id="monthNext" class="quiet" type="button">翌月</button></div>
+  <div class="home-calendar-heading"><h2>収支カレンダー</h2><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
   <div class="calendar-metric"><label>日付の表示<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div>
   <div id="ledgerCalendarHost"></div>
  </section>`;
@@ -123,7 +122,7 @@ function mountHomeCalendar(){
  $('#calendarMetric').onchange=e=>{calendarMeasure=e.target.value;update();};
  const change=month=>{
   if(!/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/.test(month))return;
-  calendarMonth=month;$('#month').value=month;update();
+  calendarMonth=month;$('#month').value=month;$('#monthToday').hidden=month===jstToday().slice(0,7);update();
  };
  $('#month').onchange=e=>change(e.target.value);
  for(const [id,delta] of [['monthPrev',-1],['monthNext',1]]){

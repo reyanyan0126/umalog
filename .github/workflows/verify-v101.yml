@@ -49,6 +49,7 @@ on:
       - work/v2.3.0-ux2-quick-entry-simplify
       - work/v2.3.0-ux3-unified-history
       - work/v2.3.0-ux4-basic-analysis
+      - work/v2.3.0-ux5-home-final
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
