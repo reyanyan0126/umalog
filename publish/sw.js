@@ -1,5 +1,5 @@
 // Increment VERSION whenever any app asset changes. Never touch IndexedDB here.
-const VERSION='2.3.0-ux.1';
+const VERSION='2.3.0-ux.2';
 const PREFIX='umalog-'+self.registration.scope+'-';
 const CACHE=PREFIX+VERSION;
 const ASSETS=['./','./index.html','./style.css','./app.js','./core.js','./db.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./icon-maskable.png',...Array.from({length:5},(_,i)=>`./stage-${i}.svg`)];
