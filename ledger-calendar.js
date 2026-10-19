@@ -66,7 +66,7 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.date===row.date));
   for(const item of listItems)item.classList.toggle('is-selected',item.dataset.listDate===row.date);
   detail.replaceChildren();
-  detail.append(elem('h3',null,(row.date===today?'今日 · ':'')+row.date+(row.holiday?' · '+row.holiday:'')+' の記録'));const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);const daily=elem('a','quiet button','この日のログ全体を見る →');daily.href='#day/'+row.date;detail.append(daily);
+  detail.append(elem('h3',null,(row.date===today?'今日 · ':'')+row.date+(row.holiday?' · '+row.holiday:'')+' の記録'));if(options.home){const quick=elem('a','button accent ledger-day-record','＋ この日を記録');quick.href='#quick-date/'+row.date;detail.append(quick);const daily=elem('a','quiet button','この日の記録を見る');daily.href='#day/'+row.date;detail.append(daily);const register=elem('a','quiet ledger-advanced-link','買い目まで詳しく入力');register.href='#entry-date/'+row.date;detail.append(register);}else{const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);const daily=elem('a','quiet button','この日のログ全体を見る →');daily.href='#day/'+row.date;detail.append(daily);}
   const stats=row.summary;
   if(stats){
    detail.append(elem('p','ledger-detail-profit',stats.settledCount?'確定収支 '+exactMoney(stats.profit):'確定収支 —'));

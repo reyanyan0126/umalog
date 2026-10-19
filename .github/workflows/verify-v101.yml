@@ -45,6 +45,7 @@ on:
       - work/v2.2.0-stable-release
       - work/v2.3.0-dev1-inclusive-analytics
       - work/v2.3.0-dev2-category-ranking
+      - work/v2.3.0-ux1-simple-home-calendar
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -100,6 +101,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
       - name: v2.1.0 simple accounting publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+
+      - name: simplified home and embedded calendar source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs
+      - name: simplified home and embedded calendar publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-home.cjs
 
       - name: v2.3.0-dev.2 ranking and caution source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v231.cjs

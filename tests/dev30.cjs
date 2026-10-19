@@ -20,7 +20,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('#homeYearly').count(),0);
    assert.equal(await page.locator('.home-minimal .metrics').count(),0);
    assert.match(await page.locator('.home-minimal').innerText(),/今月の収支/);
-   assert.equal(await page.locator('nav a').count(),6);
+   assert.equal(await page.locator('nav a').count(),4);
   });
   await page.evaluate(async()=>{
    const {save}=await import('./db.js'),{emptyData}=await import('./core.js'),d=emptyData();
@@ -32,7 +32,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.reload();await page.waitForSelector('#homeSummary');
   await pass('dev22 home uses confirmed accounting and flags excluded pending stakes',async()=>{
    const txt=await page.locator('#homeSummary').innerText();
-   assert.match(txt,/\+350円/);assert.match(txt,/200円/);assert.match(txt,/550円/);assert.match(txt,/結果未入力 1点/);
+   assert.match(txt,/\+350円/);assert.match(txt,/200円/);assert.match(txt,/550円/);assert.match(txt,/結果待ち 1点・件/);
    assert.equal(await page.locator('#homeEntry').getAttribute('href'),'#entry');
   });
   await pass('dev23 quick type control synchronizes with existing bet engine and 8 supported types',async()=>{

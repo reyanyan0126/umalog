@@ -6,7 +6,7 @@ export function createDock(nav){
  function position(){const a=links.find(a=>a.hash==='#'+current);if(!a)return;indicator.style.width=a.offsetWidth+'px';indicator.style.transform=`translateX(${a.offsetLeft}px)`;indicator.style.height=a.offsetHeight+'px';indicator.style.top=a.offsetTop+'px';}
  window.addEventListener('resize',position);if(typeof ResizeObserver!=='undefined')new ResizeObserver(position).observe(nav);document.fonts?.ready.then(position);
  return route=>{
-  if(route!=='settings')current=route==='entry-date'?'entry':['detail','edit'].includes(route)?'history':links.some(a=>a.hash==='#'+route)?route:'home';
+  if(route!=='settings')current=['entry','entry-next','entry-date','quick','quick-date'].includes(route)?'quick':['detail','edit','edit-stakes','quick-edit','day'].includes(route)?'history':links.some(a=>a.hash==='#'+route)?route:'home';
   links.forEach(a=>{if(a.hash==='#'+current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   position();if(!ready){ready=true;requestAnimationFrame(()=>requestAnimationFrame(()=>nav.classList.add('dock-ready')));}
  };
