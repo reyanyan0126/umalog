@@ -803,3 +803,21 @@ nav a{width:min(25%,220px)}
 .home-calendar-section .ledger-detail .ledger-advanced-link{display:inline-flex;align-items:center;font-size:.84rem;min-height:44px;padding:7px}
 .home-calendar-section .ledger-detail p,.home-calendar-section .ledger-detail ul,.home-calendar-section .ledger-detail h4{flex:1 1 100%}
 @media(max-width:359px){.home-calendar-heading label{width:100%;justify-content:space-between}.home-calendar-heading input{flex:1}.home-secondary-actions{gap:8px}.home-secondary-actions a{font-size:.78rem}}
+
+/* v2.3.0-ux.2: keep the daily entry surface focused on date, amount and Save. */
+.simple-entry-head p.help{margin:3px 0 9px}
+.simple-entry-form{gap:10px}
+.simple-entry-form .required-mark{font-size:.74rem;font-weight:600;color:var(--muted);margin-left:5px}
+.simple-entry-form details{min-width:0}
+.simple-entry-form details>summary{font-size:.88rem;cursor:pointer}
+.simple-entry-form details:not([open])>:not(summary){display:none!important}
+.simple-entry-form #simpleAssists[open]{display:grid;gap:12px}
+.simple-entry-form .simple-recent{border:0;border-top:1px solid var(--border);border-radius:0;padding:12px 0 0}
+.simple-entry-form .simple-recent h3{font-size:.93rem;margin:0}
+.simple-entry-form #simpleResultSection[open]{display:grid;gap:10px}
+.simple-entry-form #simpleReview{gap:5px;padding:10px 12px}
+.simple-entry-form #simpleReview .simple-review-row{font-size:.85rem}
+.simple-entry-form #simpleReview .help{font-size:.74rem;line-height:1.4;margin:2px 0 0}
+.simple-entry-form .simple-edit-state{padding:0 2px;font-size:.75rem}
+.simple-advanced-link{margin:2px 0 16px;font-size:.82rem;text-align:center}
+.simple-advanced-link a{display:inline-flex;align-items:center;min-height:44px;color:var(--green)}
