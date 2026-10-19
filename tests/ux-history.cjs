@@ -26,7 +26,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    ];
    await db.save(data);
   });
-  await page.goto('http://127.0.0.1:8240'+prefix+'#history');await page.waitForSelector('#historyCount');
+  await page.goto('http://127.0.0.1:8240'+prefix+'#history');await page.reload();await page.waitForSelector('#historyCount');
   const entries=page.locator('#historyList > [data-history-kind]');
   assert.deepEqual(await entries.evaluateAll(nodes=>nodes.map(n=>[n.dataset.historyDate,n.dataset.historyKind])),
    [['2026-10-19','quick'],['2026-10-18','race'],['2026-10-17','quick']]);
