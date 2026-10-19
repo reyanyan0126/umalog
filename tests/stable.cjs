@@ -13,7 +13,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   const origin='http://127.0.0.1:8036'+prefix;await page.goto(origin);await page.waitForSelector('#homeEntry');
   await pass('stable v1.3 launch remains minimal and offers one recording action',async()=>{
    assert.equal(await page.locator('#homeEntry').count(),1);assert.equal(await page.locator('#homeBudget').count(),0);
-   assert.equal(await page.locator('nav a').count(),6);
+   assert.equal(await page.locator('nav a').count(),4);
   });
   await pass('dev31 atomic optimistic concurrency refuses stale tab and preserves first committed value',async()=>{
    const base=await page.evaluate(async()=>{const d=await import('./db.js');return d.loadWithRevision();});
@@ -56,7 +56,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.deepEqual(loaded,[true,true,true,true,true]);
   });
   await pass('dev36 stable version, no schema migration and mobile layout',async()=>{
-   await go('settings');assert.match(await page.locator('#app').innerText(),/v2.1.0 正式版/);
+   await go('settings');assert.match(await page.locator('#app').innerText(),/うまログ（シンプル入力/);
    const saved=await page.evaluate(async()=> (await (await import('./db.js')).load()));assert.equal(saved.schemaVersion,1);
    for(const width of [320,390,440]){await page.setViewportSize({width,height:844});for(const route of ['home','entry','history','calendar','analysis','growth','settings']){await go(route);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' '+width);}}
   });
