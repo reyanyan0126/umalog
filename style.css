@@ -864,3 +864,26 @@ nav a{width:min(25%,220px)}
 .history-quick-controls button{min-height:44px;padding:9px 14px;font-size:.86rem;font-weight:700}
 .history-quick-controls button[aria-pressed="true"]{background:var(--green);color:#fff;border-color:var(--green)}
 .history-quick-controls button:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+
+/* ux.7 — compact by default, detailed only on demand */
+.home-extra-links{margin:2px 0 10px}
+.home-extra-links>summary{padding:5px 4px;min-height:44px;font-size:.8rem;color:var(--muted);font-weight:650}
+.home-extra-links .home-secondary-actions{margin:3px 0 7px;gap:12px}
+.home-calendar-options{margin:0 0 8px}
+.home-calendar-options>summary{font-size:.76rem;color:var(--muted);min-height:40px;padding:7px 4px}
+.home-calendar-options .calendar-metric{margin:4px 0 8px}
+.home-calendar-section .ledger-calendar .view-toggle{display:none}
+.home-calendar-section .ledger-calendar .ledger-detail[hidden]{display:none}
+.home-calendar-section .ledger-calendar{margin-bottom:8px}
+.simple-review-compact{display:flex;flex-wrap:wrap;gap:2px 10px;padding:7px 10px;font-size:.8rem;line-height:1.5;border-radius:8px;background:#f3f7f3;color:var(--muted)}
+.simple-review-compact strong{color:var(--text);font-weight:750}
+.simple-edit-state[hidden]{display:none}
+.simple-history-row.simple-history-compact{display:flex;align-items:center;flex-direction:row;gap:8px;padding:9px 10px;min-width:0}
+.simple-history-compact .simple-history-content{display:grid;gap:3px;flex:1;min-width:0}
+.simple-history-compact .simple-history-amount{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 10px;font-size:.8rem}
+.simple-history-compact .simple-history-amount strong{font-size:.98rem}
+.simple-history-compact .simple-history-amount .pending{color:#905e1f}
+.simple-history-compact .simple-history-amount .settled{color:var(--muted)}
+.simple-history-compact .simple-history-note{overflow-wrap:anywhere;line-height:1.4}
+.simple-history-row.simple-history-compact a.button{width:auto;min-width:48px;min-height:44px;padding:9px;flex-shrink:0;font-size:.8rem}
+@media(max-width:359px){.simple-history-row.simple-history-compact{gap:5px;padding:8px 7px}.simple-history-compact .simple-history-amount{gap:2px 6px}.simple-review-compact{padding:6px 8px}}

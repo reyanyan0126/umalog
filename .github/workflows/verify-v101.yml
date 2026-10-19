@@ -51,6 +51,7 @@ on:
       - work/v2.3.0-ux4-basic-analysis
       - work/v2.3.0-ux5-home-final
       - work/v2.3.0-ux6-history-clarity
+      - work/v2.3.0-ux7-compact-daily
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'

@@ -100,10 +100,10 @@ function home(){
   ${summary.pendingCount?`<p class="help home-pending-note">別に結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）があります。結果待ちは上記の3つの金額に含めていません。</p>`:''}
  </section>
  <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
- <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a><a href="#growth">育成を見る</a></div>
+ <details class="home-extra-links"><summary>その他の機能</summary><div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a><a href="#growth">育成を見る</a></div></details>
  <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
   <div class="home-calendar-heading"><h2>収支カレンダー</h2><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
-  <div class="calendar-metric"><label>日付の表示<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div>
+  <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
   <div id="ledgerCalendarHost"></div>
  </section>`;
  mountHomeCalendar();
@@ -186,17 +186,17 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  ${templatePanel}</details>
  <details class="simple-optional" ${old.venue||old.number||old.type||old.name||old.memo?'open':''}><summary>競馬場・券種・メモを追加（任意）</summary><div class="simple-optional-fields"><label>競馬場<select id="simpleVenue"><option value="">未指定</option>${opts(VENUES,old.venue)}</select></label><label>レース番号<select id="simpleNumber"><option value="">未指定</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${old.number===i+1?'selected':''}>${i+1}R</option>`).join('')}</select></label><label>券種<select id="simpleType"><option value="">未指定</option>${opts(TYPES,old.type)}</select></label><label>レース名（任意）<input id="simpleName" enterkeyhint="next" maxlength="100" value="${esc(old.name)}"></label><label class="simple-optional-full">メモ（任意）<textarea id="simpleMemo" maxlength="4000">${esc(old.memo)}</textarea></label></div></details>
  <details class="simple-settlement" id="simpleResultSection" ${old.status==='settled'?'open':''}><summary id="simpleResultSummary">${old.status==='settled'?'結果確定：払戻を編集':'結果が分かったら入力する（任意）'}</summary><div class="simple-result-actions" role="group" aria-label="結果入力ショートカット"><button type="button" class="quiet" id="simpleMarkPending">結果待ちにする</button><button type="button" class="quiet" id="simpleMarkMiss">不的中（0円）で確定</button></div><label>結果入力状況<select id="simpleStatus"><option value="pending" ${old.status==='pending'?'selected':''}>結果待ち（払戻未入力）</option><option value="settled" ${old.status==='settled'?'selected':''}>結果確定（払戻0円も含む）</option></select></label><div id="simplePayoutFields" ${old.status==='settled'?'':'hidden'}><label>実際の払戻金<input id="simplePayout" type="number" min="0" step="1" inputmode="numeric" value="${old.payout}"></label><label>返還金<input id="simpleRefund" type="number" min="0" step="1" inputmode="numeric" value="${old.refund}"></label></div></details>
- <div id="simpleReview" role="status" aria-live="polite"></div><p id="simpleUnsaved" class="simple-edit-state" role="status">${id?'変更はありません':'新規記録：まだ保存されていません'}</p>
+ <div id="simpleReview" class="simple-review-compact" role="status" aria-live="polite"></div><p id="simpleUnsaved" class="simple-edit-state" role="status" hidden>編集中（未保存）</p>
  <button type="submit" class="accent full" id="simpleSave">${id?'この記録を更新':'この支出を保存'}</button></form><p class="simple-advanced-link"><a href="#entry">買い目まで詳しく入力する →</a></p>
  ${id?'<button type="button" id="simpleDelete" class="danger full">この簡易記録を削除する</button>':''}`;
  const status=$('#simpleStatus'),fields=$('#simplePayoutFields');
  const get=()=>makeSimpleEntry({date:$('#simpleDate').value,stake:$('#simpleStake').value,venue:$('#simpleVenue').value,number:$('#simpleNumber').value,type:$('#simpleType').value,name:$('#simpleName').value,memo:$('#simpleMemo').value,status:status.value,payout:$('#simplePayout').value,refund:$('#simpleRefund').value},id||'preview');
  const refresh=()=>{
   try{const x=get(),pending=x.status==='pending',net=pending?'—':signed(x.payout+x.refund-x.stake);
-   $('#simpleReview').innerHTML=`<div class="simple-review-row"><span>支出</span><strong>${yen(x.stake)}</strong></div><div class="simple-review-row"><span>払戻・返還</span><strong>${pending?'未入力':yen(x.payout+x.refund)}</strong></div><div class="simple-review-row"><span>確定収支</span><strong>${net}</strong></div><p class="help">${pending?'結果待ち：収支にはまだ反映しません。':'結果確定済みの収支です。'}</p>`;
+   $('#simpleReview').innerHTML=`<span>支出 <strong>${yen(x.stake)}</strong></span><span>${pending?'結果待ち（収支には未反映）':`払戻・返還 ${yen(x.payout+x.refund)} ／ 確定収支 <strong>${net}</strong>`}</span>`;
   }catch(err){$('#simpleReview').textContent=$('#simpleStake').value.trim()?'入力内容を確認してください。':'金額を入力してください。';}
  };
- const markDirty=()=>{dirty=true;$('#simpleUnsaved').textContent='編集中（未保存）';refresh();};
+ const markDirty=()=>{dirty=true;$('#simpleUnsaved').hidden=false;$('#simpleUnsaved').textContent='編集中（未保存）';refresh();};
  const resultTitle=()=>{$('#simpleResultSummary').textContent=status.value==='settled'?'結果確定：払戻を編集':'結果が分かったら入力する（任意）';};
  let lastStatus=status.value;
  const hasResultAmounts=()=>['#simplePayout','#simpleRefund'].some(selector=>{
@@ -473,7 +473,7 @@ function renderDraft(){
 function history(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return historyClassic();
  app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><div class="history-quick-controls"><button type="button" id="historyPendingShortcut" class="quiet" aria-pressed="false">結果待ちだけ見る</button></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="pending">未入力</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
- let shown=50;
+ let shown=20;
  const indexedHistory=ticketIndex(data).linesByTicket;
  const historyRows=raceHistoryRows(data);
  const update=()=>{
@@ -497,8 +497,8 @@ function history(){
   const recordedTotal=overview.recordedPurchase+qp,finalizedTotal=overview.settledPurchase+settledStake,receiveTotal=overview.receipts+receipts,finalProfit=receiveTotal-finalizedTotal;
   $('#historyFinanceOverview').innerHTML=`<h2>表示中の購入履歴</h2><div class="history-finance-grid"><div><small>総支出（詳細＋簡易）</small><strong>${yen(recordedTotal)}</strong></div><div><small>結果確定分の支出</small><strong>${yen(finalizedTotal)}</strong></div><div><small>払戻・返還</small><strong>${yen(receiveTotal)}</strong></div><div><small>確定収支</small><strong class="${finalProfit<0?'negative':'positive'}">${overview.hasSettled||qs.length?signed(finalProfit):'—'}</strong></div></div><p class="help">結果待ち：詳細 ${overview.pendingCount}点＋簡易 ${quick.length-qs.length}件／合計 ${yen(overview.pendingStake+qpnd)}。支出は全件計上し、結果待ちは確定収支から除外。暫定収支 ${signed(receiveTotal-recordedTotal)}。</p>`;
   $('#historyPendingShortcut').setAttribute('aria-pressed',String(status==='pending'));
-  $('#historyPendingShortcut').textContent=status==='pending'?'すべての記録を見る':'結果待ちだけ見る';
-  $('#historyCount').textContent=`${combinedRows.length}件の記録（詳細 ${list.length}レース・かんたん支出 ${quick.length}件）／${Math.min(combinedRows.length,shown)}件表示中`;
+  $('#historyPendingShortcut').textContent=status==='pending'?'結果待ちの絞り込みを解除':'結果待ちだけ見る';
+  $('#historyCount').textContent=`${combinedRows.length}件中 ${Math.min(combinedRows.length,shown)}件を表示（詳細 ${list.length}レース・かんたん ${quick.length}件）${q||venue||type||status||from||to?'・絞り込み中':''}`;
   const renderRace=item=>{
    const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);
    return `<section class="history-race" data-history-kind="race" data-history-date="${esc(race.date)}"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${stat.settledCount?signed(stat.profit):'—'}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · 払戻 ${yen(stat.payout)} · 返還 ${yen(stat.refund)} · ${tickets.length}券種</p>
@@ -509,16 +509,16 @@ function history(){
   };
   $('#historyList').innerHTML=combinedRows.slice(0,shown).map(row=>row.kind==='race'
    ?renderRace(row.item)
-   :`<article class="simple-history-row" data-history-kind="quick" data-history-date="${esc(row.date)}"><div><small>${esc(row.date)} · ${esc(row.item.venue||'競馬場未指定')} ${row.item.number?row.item.number+'R':''} ${esc(row.item.type||'券種未指定')}</small><strong>${yen(row.item.stake)}</strong><small>${esc(row.item.name||row.item.memo||'支出のみ')} · ${row.item.status==='pending'?'結果待ち':`払戻・返還 ${yen(row.item.payout+row.item.refund)}`}</small></div><a href="#quick-edit/${encodeURIComponent(row.item.id)}" class="quiet button">編集・結果入力</a></article>`
+   :`<article class="simple-history-row simple-history-compact" data-history-kind="quick" data-history-date="${esc(row.date)}"><div class="simple-history-content"><small>${esc(row.date)} · ${esc(row.item.venue||'競馬場未指定')} ${row.item.number?row.item.number+'R':''} ${esc(row.item.type||'券種未指定')}</small><div class="simple-history-amount"><strong>${yen(row.item.stake)}</strong><span class="${row.item.status==='pending'?'pending':'settled'}">${row.item.status==='pending'?'結果待ち':`払戻・返還 ${yen(row.item.payout+row.item.refund)}`}</span></div>${row.item.name||row.item.memo?`<small class="simple-history-note">${esc(row.item.name||row.item.memo)}</small>`:''}</div><a href="#quick-edit/${encodeURIComponent(row.item.id)}" class="quiet button">編集</a></article>`
   ).join('')||'<p class="empty">該当する記録がありません。</p>';
-  $('#historyMore').hidden=combinedRows.length<=shown;  bindDetails();$('#historyList').querySelectorAll('[data-stake-edit]').forEach(button=>button.onclick=()=>location.hash='edit-stakes/'+button.dataset.stakeEdit);bindQuickEdits(()=>history());
+  $('#historyMore').hidden=combinedRows.length<=shown;$('#historyMore').textContent=`さらに表示（残り${Math.max(0,combinedRows.length-shown)}件）`;  bindDetails();$('#historyList').querySelectorAll('[data-stake-edit]').forEach(button=>button.onclick=()=>location.hash='edit-stakes/'+button.dataset.stakeEdit);bindQuickEdits(()=>history());
  };
- $('#historyMore').onclick=()=>{shown+=50;update();}; ['vf','tf','sf','historyFrom','historyTo'].forEach(id=>$('#'+id).onchange=()=>{shown=50;update();});
- $('#historySearch').oninput=()=>{shown=50;update();};
- $('#historyPendingShortcut').onclick=()=>{shown=50;$('#sf').value=$('#sf').value==='pending'?'':'pending';update();};
- $('#historyThisMonth').onclick=()=>{const month=jstToday().slice(0,7),[year,number]=month.split('-').map(Number);$('#historyFrom').value=month+'-01';$('#historyTo').value=month+'-'+String(new Date(year,number,0).getDate()).padStart(2,'0');shown=50;update();};
- $('#historyClearPeriod').onclick=()=>{$('#historyFrom').value='';$('#historyTo').value='';shown=50;update();};
- $('#historyClearFilters').onclick=()=>{shown=50;$('#sf').value='';$('#vf').value='';$('#tf').value='';$('#historyFrom').value='';$('#historyTo').value='';$('#historySearch').value='';update();};
+ $('#historyMore').onclick=()=>{shown+=20;update();}; ['vf','tf','sf','historyFrom','historyTo'].forEach(id=>$('#'+id).onchange=()=>{shown=20;update();});
+ $('#historySearch').oninput=()=>{shown=20;update();};
+ $('#historyPendingShortcut').onclick=()=>{shown=20;$('#sf').value=$('#sf').value==='pending'?'':'pending';update();};
+ $('#historyThisMonth').onclick=()=>{const month=jstToday().slice(0,7),[year,number]=month.split('-').map(Number);$('#historyFrom').value=month+'-01';$('#historyTo').value=month+'-'+String(new Date(year,number,0).getDate()).padStart(2,'0');shown=20;update();};
+ $('#historyClearPeriod').onclick=()=>{$('#historyFrom').value='';$('#historyTo').value='';shown=20;update();};
+ $('#historyClearFilters').onclick=()=>{shown=20;$('#sf').value='';$('#vf').value='';$('#tf').value='';$('#historyFrom').value='';$('#historyTo').value='';$('#historySearch').value='';update();};
  update();
 }
 function historyClassic(){app.innerHTML=`<h1>購入履歴</h1><section class="card"><label>記録を探す<input id="historySearch" type="search" placeholder="日付・レース名・競馬場"></label><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="pending">結果待ち</option><option value="void">全額返還のみ</option></select></label></div><div id="historyList"></div></section>`;const update=()=>{const list=sortedTickets().filter(t=>{const {r,ls,s}=ticketInfo(t),st=$('#sf').value,q=$('#historySearch').value.trim();return (!q||`${r.date} ${r.name} ${r.venue}`.includes(q))&&(!$('#vf').value||r.venue===$('#vf').value)&&(!$('#tf').value||t.type===$('#tf').value)&&(!st||(st==='hit'&&ls.some(l=>l.payout>0))||(st==='pending'&&s.pendingCount>0)||(st==='miss'&&!s.pendingCount&&s.lineCount>0&&!s.lineHits)||(st==='void'&&!s.pendingCount&&s.lineCount===0));});$('#historyList').innerHTML=list.map(ticketCard).join('')||'<p class="empty">該当する記録がありません。</p>';bindDetails();};['vf','tf','sf'].forEach(id=>$('#'+id).onchange=update);$('#historySearch').oninput=update;update();}
