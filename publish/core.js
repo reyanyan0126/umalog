@@ -1,4 +1,5 @@
 import {growthTotal,validateGrowthV2} from './growth-v2.js';
+import {validateSimpleEntries} from './simple-ledger.js';
 // Pure domain functions; no DOM, network or database dependency.
 export const SCHEMA_VERSION = 1;
 export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
@@ -48,6 +49,7 @@ export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===
  for(const t of d.tickets){check(idsets.races.has(t.raceId)&&TYPES.includes(t.type)&&['reported','advance'].includes(t.kind)&&typeof t.memo==='string'&&t.memo.length<=4000&&typeof t.createdAt==='string'&&Number.isFinite(Date.parse(t.createdAt)),'馬券情報が不正です。');check(d.lines.some(l=>l.ticketId===t.id),'明細がない馬券があります。');}
  for(const r of d.races)check(d.tickets.some(t=>t.raceId===r.id),'馬券がないレースがあります。');
  let total=0;for(const l of d.lines){check(idsets.tickets.has(l.ticketId),'買い目の参照先が不正です。');const t=d.tickets.find(t=>t.id===l.ticketId);const c=combination(t.type,l.numbers);check(JSON.stringify(c)===JSON.stringify(l.numbers),'買い目の順序が不正です。');if(l.purchaseMode!==undefined)check(['normal','box','flow','formation'].includes(l.purchaseMode),'買い方の種類が不正です。');money(l.stake,true);check(['pending','settled','void'].includes(l.status),'精算状態が不正です。');money(l.payout);money(l.refund);check(l.refund<=l.stake,'返還額が購入額を超えています。');check(l.status!=='pending'||(l.payout===0&&l.refund===0),'未確定の金額が不正です。');check(l.status!=='void'||fullRefund(l),'無効行は全額返還のみです。');check(!(l.refund===l.stake&&l.payout>0),'全額返還に払戻は設定できません。');total+=l.stake+l.payout+l.refund;check(Number.isSafeInteger(total),'金額合計が上限を超えています。');}
+ validateSimpleEntries(d.simpleEntries);
  const weeks=new Set();for(const r of d.reviews){check(validDate(r.week)&&weekOf(r.week)===r.week&&typeof r.text==='string'&&r.text.trim().length>0&&r.text.length<=4000&&!weeks.has(r.week),'振り返りが不正・重複しています。');weeks.add(r.week);}
  check(d.settings&&typeof d.settings.name==='string'&&d.settings.name.length<=40&&d.settings.name.trim().length>0&&typeof d.settings.motion==='boolean','設定が不正です。');if(d.settings.monthlyBudgets!==undefined){
   const budgets=d.settings.monthlyBudgets;
