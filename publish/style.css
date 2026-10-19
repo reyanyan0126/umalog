@@ -876,7 +876,7 @@ nav a{width:min(25%,220px)}
 .home-calendar-section .ledger-calendar .ledger-detail[hidden]{display:none}
 .home-calendar-section .ledger-calendar{margin-bottom:8px}
 .simple-review-compact{display:flex;flex-wrap:wrap;gap:2px 10px;padding:7px 10px;font-size:.8rem;line-height:1.5;border-radius:8px;background:#f3f7f3;color:var(--muted)}
-.simple-review-compact strong{color:var(--text);font-weight:750}
+.simple-review-compact strong{color:#233c30;font-weight:750}
 .simple-edit-state[hidden]{display:none}
 .simple-history-row.simple-history-compact{display:flex;align-items:center;flex-direction:row;gap:8px;padding:9px 10px;min-width:0}
 .simple-history-compact .simple-history-content{display:grid;gap:3px;flex:1;min-width:0}
@@ -887,3 +887,6 @@ nav a{width:min(25%,220px)}
 .simple-history-compact .simple-history-note{overflow-wrap:anywhere;line-height:1.4}
 .simple-history-row.simple-history-compact a.button{width:auto;min-width:48px;min-height:44px;padding:9px;flex-shrink:0;font-size:.8rem}
 @media(max-width:359px){.simple-history-row.simple-history-compact{gap:5px;padding:8px 7px}.simple-history-compact .simple-history-amount{gap:2px 6px}.simple-review-compact{padding:6px 8px}}
+
+/* Keep the compact preview ahead of older ID-scoped layout rules. */
+#simpleReview.simple-review-compact{display:flex;flex-wrap:wrap;gap:2px 10px;padding:7px 10px;line-height:1.5;border-radius:8px}
