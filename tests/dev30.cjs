@@ -20,7 +20,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.equal(await page.locator('#homeYearly').count(),0);
    assert.equal(await page.locator('.home-minimal .metrics').count(),0);
    assert.match(await page.locator('.home-minimal').innerText(),/今月の収支/);
-   assert.equal(await page.locator('nav a').count(),6);
+   assert.equal(await page.locator('nav a').count(),4);
   });
   await page.evaluate(async()=>{
    const {save}=await import('./db.js'),{emptyData}=await import('./core.js'),d=emptyData();
