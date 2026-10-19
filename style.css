@@ -751,3 +751,18 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
  .simple-entry-form :is(input,select,textarea),#entryForm :is(input,select,textarea),.history-compact :is(input,select){scroll-margin-block:24px}
  .history-compact :is(input,select),#entryForm :is(input,select,textarea){font-size:16px}
 }
+
+/* v2.3.0-dev.1: transparent completeness and all-entry monthly facts */
+.analysis-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.analysis-quality-grid>div{display:grid;gap:4px;min-width:0;padding:12px;background:#f5f8f5;border:1px solid var(--border);border-radius:12px}
+.analysis-quality-grid strong{font-size:1.03rem;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.analysis-quality-grid small{font-size:.77rem}
+.analysis-quality-warning{border-left:4px solid var(--orange);padding:10px 12px;background:#fff9ed;font-weight:650;font-size:.87rem;line-height:1.5}
+.analysis-inclusive-rows{display:grid;gap:10px}
+.analysis-inclusive-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0;padding:12px;border:1px solid var(--border);border-radius:12px}
+.analysis-inclusive-row h3{grid-column:1/-1;margin:0 0 2px}
+.analysis-inclusive-row>div{display:grid;gap:3px;min-width:0}
+.analysis-inclusive-row>div small{font-size:.74rem}
+.analysis-inclusive-row b,.analysis-inclusive-row strong{font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.analysis-inclusive-row-foot{grid-column:1/-1;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:359px){.analysis-quality-grid{grid-template-columns:1fr}.analysis-inclusive-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
