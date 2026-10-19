@@ -30,7 +30,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   });
   await page.reload();await page.waitForSelector('#homeEntry');
   const before=await page.evaluate(async()=>(await (await import('./db.js')).load()));
-  await go('analysis');await page.waitForSelector('#analysisCompare');
+  await go('analysis');await page.waitForSelector('#analysisCompare');await page.locator('#analysisAdvanced > summary').click();
   const panel=page.locator('#analysisCompare');
   assert.match(await panel.innerText(),/直近30日とその前の30日/);
   assert.match(await panel.innerText(),/1,250円/);

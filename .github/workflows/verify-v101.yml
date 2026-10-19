@@ -48,6 +48,7 @@ on:
       - work/v2.3.0-ux1-simple-home-calendar
       - work/v2.3.0-ux2-quick-entry-simplify
       - work/v2.3.0-ux3-unified-history
+      - work/v2.3.0-ux4-basic-analysis
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -108,6 +109,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs
       - name: simplified quick record publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-quick.cjs
+
+      - name: basic-first analysis source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs
+      - name: basic-first analysis publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-analysis.cjs
 
       - name: chronological mixed history source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-history.cjs
