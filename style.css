@@ -766,3 +766,15 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .analysis-inclusive-row b,.analysis-inclusive-row strong{font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .analysis-inclusive-row-foot{grid-column:1/-1;line-height:1.5;overflow-wrap:anywhere}
 @media(max-width:359px){.analysis-quality-grid{grid-template-columns:1fr}.analysis-inclusive-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v2.3.0-dev.2: descriptive venue/type ranking, never a wagering recommendation */
+.analysis-category-compare{display:grid;gap:12px;min-width:0}
+.analysis-category-group{min-width:0;border-top:1px solid var(--border);padding-top:12px}
+.analysis-category-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.analysis-category-heading h3{margin:0}
+.analysis-category-heading label{display:grid;gap:4px;min-width:min(100%,200px);font-size:.81rem}
+.analysis-category-heading select{min-height:44px;font-size:16px;width:100%}
+.category-ranking-table{min-width:520px}
+.category-ranking-table th,.category-ranking-table td{vertical-align:top}
+.category-ranking-table th[scope=row]{min-width:115px}
+.category-rank-caution{display:block;font-size:.73rem;font-weight:500;margin-top:4px;line-height:1.4}
