@@ -778,3 +778,28 @@ body.no-motion .nursery .pet-touch[data-reaction] .pet,.nursery[data-motion="off
 .category-ranking-table th,.category-ranking-table td{vertical-align:top}
 .category-ranking-table th[scope=row]{min-width:115px}
 .category-rank-caution{display:block;font-size:.73rem;font-weight:500;margin-top:4px;line-height:1.4}
+
+/* UX simplification: four essential destinations and the full finance calendar on Home */
+nav a{width:min(25%,220px)}
+.home-minimal{margin-bottom:12px}
+.home-simple-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+.home-entry-cta{min-height:56px;font-size:1.06rem;font-weight:750}
+.home-secondary-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:8px 2px 24px}
+.home-secondary-actions a{font-size:.85rem;color:var(--green);min-height:44px;display:inline-flex;align-items:center}
+.home-calendar-section{scroll-margin-top:16px;min-width:0}
+.home-calendar-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.home-calendar-heading h2{margin:0}
+.home-calendar-heading label{display:flex;gap:8px;align-items:center;min-width:0;margin:0}
+.home-calendar-heading input{min-width:0;width:160px;max-width:100%;margin:0;font-size:16px}
+.home-calendar-section .month-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.home-calendar-section .month-actions button{min-width:0;min-height:44px;padding:8px}
+.home-calendar-section .calendar-metric{margin:10px 0 8px}
+.home-calendar-section .calendar-metric label{display:flex;align-items:center;gap:10px}
+.home-calendar-section .calendar-metric select{max-width:190px;margin:0}
+.home-calendar-section .ledger-calendar{margin-bottom:10px}
+.home-calendar-section .ledger-detail{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.home-calendar-section .ledger-detail h3{flex:1 1 100%}
+.home-calendar-section .ledger-detail .ledger-day-record{flex:1 1 120px;text-align:center}
+.home-calendar-section .ledger-detail .ledger-advanced-link{display:inline-flex;align-items:center;font-size:.84rem;min-height:44px;padding:7px}
+.home-calendar-section .ledger-detail p,.home-calendar-section .ledger-detail ul,.home-calendar-section .ledger-detail h4{flex:1 1 100%}
+@media(max-width:359px){.home-calendar-heading label{width:100%;justify-content:space-between}.home-calendar-heading input{flex:1}.home-secondary-actions{gap:8px}.home-secondary-actions a{font-size:.78rem}}
