@@ -42,7 +42,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.locator('#monthNext').click();
   assert.equal(await page.locator('#month').inputValue(),'2026-10');
   await page.locator('#calendarMetric').selectOption('purchase');
-  assert.match(await page.locator('#homeCalendar [data-date="2026-10-18"]').getAttribute('aria-label'),/購入額 \\+1,200円/);
+  assert.match(await page.locator('#homeCalendar [data-date="2026-10-18"]').getAttribute('aria-label'),/購入額 \+1,200円/);
   await page.locator('#calendarMetric').selectOption('profit');
   await page.evaluate(()=>location.hash='calendar');await page.waitForSelector('h1');
   assert.equal(await page.locator('h1').first().innerText(),'収支カレンダー','legacy calendar deep links remain');
