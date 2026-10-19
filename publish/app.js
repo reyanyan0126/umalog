@@ -122,7 +122,7 @@ function mountHomeCalendar(){
  $('#calendarMetric').value=calendarMeasure;
  $('#calendarMetric').onchange=e=>{calendarMeasure=e.target.value;update();};
  const change=month=>{
-  if(!/^(20\\d\\d|21\\d\\d)-(0[1-9]|1[0-2])$/.test(month))return;
+  if(!/^(20\d\d|21\d\d)-(0[1-9]|1[0-2])$/.test(month))return;
   calendarMonth=month;$('#month').value=month;update();
  };
  $('#month').onchange=e=>change(e.target.value);
