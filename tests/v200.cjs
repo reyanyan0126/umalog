@@ -99,7 +99,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   }
   await page.locator('#entryPurchasePanel .sheet-close').click();
   await page.evaluate(()=>location.hash='history');
-  await page.waitForSelector('#historyFinanceOverview');
+  await page.waitForSelector('#historyFinanceOverview',{state:'attached'});
   for(const width of [320,390,440]){
    await page.setViewportSize({width,height:844});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'history horizontal overflow '+width);

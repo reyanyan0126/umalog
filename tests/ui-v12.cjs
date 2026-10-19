@@ -36,6 +36,7 @@ await pass('ledger-only ticket entry and breakdown filters respect pending state
  assert.equal(await page.locator('#kind').count(),0);
  assert.match(await page.locator('#entryForm').innerText(),/買い目を入力/);
  await nav('analysis');
+ await page.locator('#analysisAdvanced > summary').click();
  assert.equal(await page.locator('#analysisRange').inputValue(),'all');
  assert.equal(await page.locator('#analysisType').isVisible(),true);
  await page.locator('#analysisType').selectOption('ワイド');
@@ -214,7 +215,7 @@ await pass('batch payout previews race-wide candidate statuses without touching 
   ['batch-l7','settled',1500]
  ]);
  assert.equal(after.methods[0],'flow');assert.equal(after.methods[5],null);
- await nav('analysis');
+ await nav('analysis');await page.locator('#analysisAdvanced > summary').click();
  assert.match(await page.locator('#racingStyle').innerText(),/買い方別の購入傾向と成績/);
  assert.match(await page.locator('#racingStyle').innerText(),/旧記録（不明）/);
 });
