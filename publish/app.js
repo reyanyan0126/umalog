@@ -193,7 +193,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  const get=()=>makeSimpleEntry({date:$('#simpleDate').value,stake:$('#simpleStake').value,venue:$('#simpleVenue').value,number:$('#simpleNumber').value,type:$('#simpleType').value,name:$('#simpleName').value,memo:$('#simpleMemo').value,status:status.value,payout:$('#simplePayout').value,refund:$('#simpleRefund').value},id||'preview');
  const refresh=()=>{
   try{const x=get(),pending=x.status==='pending',net=pending?'—':signed(x.payout+x.refund-x.stake);
-   $('#simpleReview').innerHTML=`<span>支出 <strong>${yen(x.stake)}</strong></span><span>${pending?'結果待ち（収支には未反映）':`払戻・返還 ${yen(x.payout+x.refund)} ／ 確定収支 <strong>${net}</strong>`}</span>`;
+   $('#simpleReview').innerHTML=`<span>支出 <strong>${yen(x.stake)}</strong></span><span>${pending?'払戻未入力（結果待ち）':`払戻・返還 ${yen(x.payout+x.refund)} ／ 確定収支 <strong>${net}</strong>`}</span>`;
   }catch(err){$('#simpleReview').textContent=$('#simpleStake').value.trim()?'入力内容を確認してください。':'金額を入力してください。';}
  };
  const markDirty=()=>{dirty=true;$('#simpleUnsaved').hidden=false;$('#simpleUnsaved').textContent='編集中（未保存）';refresh();};
@@ -498,7 +498,7 @@ function history(){
   $('#historyFinanceOverview').innerHTML=`<h2>表示中の購入履歴</h2><div class="history-finance-grid"><div><small>総支出（詳細＋簡易）</small><strong>${yen(recordedTotal)}</strong></div><div><small>結果確定分の支出</small><strong>${yen(finalizedTotal)}</strong></div><div><small>払戻・返還</small><strong>${yen(receiveTotal)}</strong></div><div><small>確定収支</small><strong class="${finalProfit<0?'negative':'positive'}">${overview.hasSettled||qs.length?signed(finalProfit):'—'}</strong></div></div><p class="help">結果待ち：詳細 ${overview.pendingCount}点＋簡易 ${quick.length-qs.length}件／合計 ${yen(overview.pendingStake+qpnd)}。支出は全件計上し、結果待ちは確定収支から除外。暫定収支 ${signed(receiveTotal-recordedTotal)}。</p>`;
   $('#historyPendingShortcut').setAttribute('aria-pressed',String(status==='pending'));
   $('#historyPendingShortcut').textContent=status==='pending'?'結果待ちの絞り込みを解除':'結果待ちだけ見る';
-  $('#historyCount').textContent=`${combinedRows.length}件中 ${Math.min(combinedRows.length,shown)}件を表示（詳細 ${list.length}レース・かんたん ${quick.length}件）${q||venue||type||status||from||to?'・絞り込み中':''}`;
+  $('#historyCount').textContent=`${combinedRows.length}件の記録（詳細 ${list.length}レース・かんたん支出 ${quick.length}件）／${Math.min(combinedRows.length,shown)}件表示中${q||venue||type||status||from||to?'・絞り込み中':''}`;
   const renderRace=item=>{
    const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);
    return `<section class="history-race" data-history-kind="race" data-history-date="${esc(race.date)}"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${stat.settledCount?signed(stat.profit):'—'}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · 払戻 ${yen(stat.payout)} · 返還 ${yen(stat.refund)} · ${tickets.length}券種</p>
