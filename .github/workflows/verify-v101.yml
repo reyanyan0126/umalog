@@ -39,6 +39,7 @@ on:
       - work/v2.0.0-release
       - work/v2.1.0-flexible-ledger
       - work/v2.2.0-dev1-quick-repeat
+      - work/v2.2.0-dev2-history-search
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -94,6 +95,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
       - name: v2.1.0 simple accounting publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v210.cjs
+
+      - name: v2.2.0-dev.2 history filters and pagination source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs
+      - name: v2.2.0-dev.2 history filters and pagination publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/v222.cjs
 
       - name: v2.2.0-dev.1 repeat simple entry source
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/v220.cjs
