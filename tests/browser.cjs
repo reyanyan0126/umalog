@@ -95,7 +95,7 @@ const base=process.env.TEST_URL||'http://127.0.0.1:8000/umalog/';
   await page.locator('#racingStyle .style-group').evaluateAll(els=>els.forEach(e=>e.open=true));
   assert.match(await page.locator('#racingStyle').innerText(),/情報未取得/);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const before=await page.evaluate(async()=>{const db=await import('./db.js');const d=await db.load();const {emptyCatalog}=await import('./race-info.js');await db.saveCatalog({...emptyCatalog(),records:[{date:d.races[0].date,venue:d.races[0].venue,number:d.races[0].number,name:'TEST ONLY',condition:'テスト条件',grade:null,surface:'芝',distance:1600,source:'fixture',updatedAt:'2026-10-16T00:00:00Z'}]});return d;});
-  await context.setOffline(true);await page.reload();await page.waitForSelector('#racingStyle');await page.locator('#analysisAdvanced > summary').click();assert.match(await page.locator('#racingStyle').innerText(),/条件照合 1 \/ 1レース/);
+  await context.setOffline(true);await page.reload();await page.waitForSelector('#racingStyle',{state:'attached'});await page.locator('#analysisAdvanced > summary').click();assert.match(await page.locator('#racingStyle').innerText(),/条件照合 1 \/ 1レース/);
   await page.locator('#racingStyle .style-group').evaluateAll(els=>els.forEach(e=>e.open=true));assert.match(await page.locator('#racingStyle').innerText(),/テスト条件/);
   await nav('history');await page.locator('[data-detail]').first().click();await page.waitForSelector('#settlement');assert.match(await page.locator('#app').innerText(),/TEST ONLY/);
   assert.deepEqual(await page.evaluate(async()=> (await import('./db.js')).load()),before);
