@@ -27,6 +27,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   assert.match(await page.locator('#homeSummary').innerText(),/2,000円/);
   assert.match(await page.locator('#homeSummary').innerText(),/800円/);
   assert.match(await page.locator('#homeSummary').innerText(),/結果待ち 1点・件（500円）/);
+  assert.equal(await page.locator('#homeSummary a[href="#history-pending"]').count(),1,'pending amount has a direct result-entry link');
+  assert.equal(await page.locator('#homeCalendar h2').innerText(),'カレンダー');
   assert.equal(await page.locator('#homeCalendar .home-calendar-navigation').count(),1);
   assert.equal(await page.locator('#homeCalendar .view-toggle').count(),0,'home shows only the monthly calendar');
   assert.equal(await page.locator('#ledgerDayDetail').isVisible(),false,'day details appear only after tapping a date');
@@ -69,6 +71,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal home overflow '+width);
    const count=await page.locator('#homeCalendar .ledger-day').count();assert.ok(count>=28&&count<=31);
    assert.equal(await page.locator('nav a').count(),4);
+   assert.ok(await page.locator('#homeQuickEntry').evaluate(el=>el.getBoundingClientRect().height>=44),'record button has touch-sized hit area');
   }
   assert.deepEqual(errors,[]);
   console.log('PASS simplified home and calendar: 4-tab dock, full calendar, dated quick entry, monthly navigation, deep links, iPhone widths and storage');
