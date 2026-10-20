@@ -14,14 +14,14 @@ export function monthlyTrend(data,count=12){
 }
 export function ledgerInsights(data,months=6){
  const trend=monthlyTrend(data,months);
- const active=trend.filter(m=>m.purchase>0||m.pending>0);
- if(!active.length)return {trend,lines:['この期間に確定した記録はありません。'],minimumSample:true};
- const purchased=active.reduce((sum,m)=>sum+m.purchase+m.pending,0);
+ const active=trend.filter(m=>m.purchase>0);
+ if(!active.length)return {trend,lines:['この期間に購入記録はありません。'],minimumSample:true};
+ const purchased=active.reduce((sum,m)=>sum+m.purchase,0);
  const pending=active.reduce((sum,m)=>sum+m.pending,0);
  const confirmed=active.reduce((sum,m)=>sum+m.settled,0);
  const lines=[`集計期間の記録済み購入額は${purchased.toLocaleString('ja-JP')}円です。`];
- if(pending)lines.push(`結果未入力の購入額は${pending.toLocaleString('ja-JP')}円で、確定収支から除外しています。`);
- if(confirmed<30)lines.push('確定買い目が少ないため、回収率などの比較には大きな変動があります。');
+
+ if(confirmed<30)lines.push('記録した買い目が少ないため、回収率などの比較には大きな変動があります。');
  else lines.push('実績は過去の記録に限られ、次の結果を予測するものではありません。');
  return {trend,lines,minimumSample:confirmed<30};
 }

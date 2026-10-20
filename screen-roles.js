@@ -37,7 +37,7 @@ export function typeVenueMatrix(data){
  }
  return VENUES.map(venue=>({venue,types:TYPES.map(type=>{
   const lines=buckets.get(venue+'|'+type)||[],stat=summarize(lines);
-  return {type,stake:lines.reduce((n,l)=>n+l.stake,0),profit:stat.profit,returnRate:stat.returnRate,settledCount:stat.settledCount,pending:stat.pendingCount,lines:lines.length,description:stat.settledCount?'確定収支 '+money(stat.profit):'確定なし'};
+  return {type,stake:lines.reduce((n,l)=>n+l.stake,0),profit:stat.profit,returnRate:stat.returnRate,settledCount:stat.settledCount,pending:stat.pendingCount,lines:lines.length,description:stat.settledCount?'収支 '+money(stat.profit):'記録なし'};
  })}));
 }
 export function calendarMetricValue(summary,metric='profit'){

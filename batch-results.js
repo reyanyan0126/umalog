@@ -39,7 +39,7 @@ export function raceCandidates(data,raceId,podium,context={}){
  const types=new Map(data.tickets.filter(t=>t.raceId===raceId).map(t=>[t.id,t.type]));
  return data.lines.filter(l=>types.has(l.ticketId)).map(l=>({
   lineId:l.id,ticketId:l.ticketId,type:types.get(l.ticketId),
-  numbers:[...l.numbers],stake:l.stake,payout:l.payout,refund:l.refund,status:l.status,
-  candidate:l.status==='pending'?candidateOutcome(types.get(l.ticketId),l.numbers,top,context):'settled'
+  numbers:[...l.numbers],stake:l.stake,payout:l.payout,refund:l.refund,status:l.payout===0&&l.refund===0?'candidate':'recorded',
+  candidate:l.payout===0&&l.refund===0?candidateOutcome(types.get(l.ticketId),l.numbers,top,context):'settled'
  }));
 }

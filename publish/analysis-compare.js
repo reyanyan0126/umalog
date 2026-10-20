@@ -1,5 +1,5 @@
 // v1.5.0: read-only comparison of two adjacent calendar periods in Japan.
-// Uses the same settled/pending/refund accounting as the main ledger.
+// Uses the same purchase/receipt/refund accounting as the main ledger.
 import {VENUES,TYPES,addDays,aggregate,check,jstToday,summarize,validDate} from './core.js';
 export function periodComparison(data,today=jstToday(),days=30){
  check(validDate(today)&&Number.isInteger(days)&&days>=1&&days<=366,'比較期間が不正です。');
@@ -19,7 +19,7 @@ export function periodComparison(data,today=jstToday(),days=30){
  }
  const segments=key=>[...grouped[key]].map(([label,lines])=>{
   const summary=summarize(lines);
-  return {label,...summary,recordedStake:summary.purchase+summary.pendingStake};
+  return {label,...summary,recordedStake:summary.purchase};
  }).filter(row=>row.recordedStake>0).sort((a,b)=>b.recordedStake-a.recordedStake||a.label.localeCompare(b.label,'ja'));
  const rateDelta=current.returnRate===null||previous.returnRate===null?null:current.returnRate-previous.returnRate;
  return {today,days,recent:snapshots[0],previous:snapshots[1],
