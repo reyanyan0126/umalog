@@ -53,6 +53,7 @@ on:
       - work/v2.3.0-ux6-history-clarity
       - work/v2.3.0-ux7-compact-daily
       - work/v2.4.0-compact-release
+      - work/v2.4.1-fast-results-and-history
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -256,6 +257,10 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v240.cjs || { echo "ux-v240.cjs source -- rapid result, analysis and mobile" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.4.0 mobile and rapid-result publish acceptance
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v240.cjs || { echo "ux-v240.cjs publish -- rapid result, analysis and mobile" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.4.1 dedicated result screen source
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v241.cjs || { echo "ux-v241.cjs source" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.4.1 dedicated result screen publish
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v241.cjs || { echo "ux-v241.cjs publish" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Summarize browser regression failures
         if: always()
         run: |
