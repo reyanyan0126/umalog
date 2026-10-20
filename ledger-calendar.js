@@ -42,7 +42,7 @@ const elem=(tag,className,text)=>{const el=document.createElement(tag);if(classN
 
 export function mountLedgerCalendar(host,data,events,month,options={}){
  const model=ledgerMonth(data,events,month),metric=options.metric||'profit';
- const measureNames={profit:'確定収支',purchase:'購入額',receipt:'払戻・返還'};
+ const measureNames={profit:'収支',purchase:'購入額',receipt:'払戻・返還'};
  const measureName=measureNames[metric];if(!measureName)throw new Error('カレンダー表示指標が不正です。');
  const valueFor=summary=>calendarMetricValue(summary,metric);
  host.replaceChildren();
@@ -80,11 +80,11 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   detail.append(elem('h3',null,(row.date===today?'今日 · ':'')+row.date+(row.holiday?' · '+row.holiday:'')+' の記録'));if(options.home){const quick=elem('a','button accent ledger-day-record','＋ この日を記録');quick.href='#quick-date/'+row.date;detail.append(quick);const daily=elem('a','quiet button','この日の記録を見る');daily.href='#day/'+row.date;detail.append(daily);const register=elem('a','quiet ledger-advanced-link','買い目まで詳しく入力');register.href='#entry-date/'+row.date;detail.append(register);}else{const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);const daily=elem('a','quiet button','この日のログ全体を見る →');daily.href='#day/'+row.date;detail.append(daily);}
   const stats=row.summary;
   if(stats){
-   detail.append(elem('p','ledger-detail-profit',stats.settledCount?'確定収支 '+exactMoney(stats.profit):'確定収支 —'));
-   detail.append(elem('p','help','確定購入 '+stats.purchase.toLocaleString('ja-JP')+'円 / 払戻 '+stats.payout.toLocaleString('ja-JP')+'円 / 返還 '+stats.refund.toLocaleString('ja-JP')+'円'));
+   detail.append(elem('p','ledger-detail-profit','収支 '+exactMoney(stats.profit)));
+   detail.append(elem('p','help','購入 '+stats.purchase.toLocaleString('ja-JP')+'円 / 払戻 '+stats.payout.toLocaleString('ja-JP')+'円 / 返還 '+stats.refund.toLocaleString('ja-JP')+'円'));
 
   }else detail.append(elem('p','help','この日の購入記録はありません。'));
-  if(row.quick?.length){const h=elem('h4',null,'かんたん支出');const ul=elem('ul','ledger-detail-list');for(const e of row.quick){const li=elem('li'),link=elem('a',null,(e.venue||'未指定')+' '+(e.type||'券種未指定')+' · '+e.stake.toLocaleString('ja-JP')+'円 · '+(e.status==='pending'?'結果待ち':'確定'));link.href='#quick-edit/'+encodeURIComponent(e.id);li.append(link);ul.append(li);}detail.append(h,ul);}
+  if(row.quick?.length){const h=elem('h4',null,'かんたん支出');const ul=elem('ul','ledger-detail-list');for(const e of row.quick){const li=elem('li'),link=elem('a',null,(e.venue||'未指定')+' '+(e.type||'券種未指定')+' · '+e.stake.toLocaleString('ja-JP')+'円 · ');link.href='#quick-edit/'+encodeURIComponent(e.id);li.append(link);ul.append(li);}detail.append(h,ul);}
   if(row.tickets.length){
    const header=elem('h4',null,'購入履歴');
    const list=elem('ul','ledger-detail-list');
@@ -119,9 +119,8 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday&&row.date!==today)button.append(elem('span','ledger-holiday-mark','祝'));
   const v=valueFor(s);if(v!==null)button.append(elem('span','ledger-money',smallMoney(v)));
-  if(s?.pendingCount){const waiting=elem('span','ledger-pending-mark','待');waiting.setAttribute('aria-hidden','true');button.append(waiting);}
   if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
-  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(s?.pendingCount?' 結果待ち '+s.pendingCount+'点・件':'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
+  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
   button.onclick=()=>{
    if(options.home&&!detail.hidden&&selectedDate===row.date){closeDay();return;}
    openDay(row);

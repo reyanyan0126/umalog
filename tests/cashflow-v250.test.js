@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {emptyData,aggregate,recalculate,validateData} from '../core.js';
+import {makeSimpleEntry,combinedFinance,quickBreakdown} from '../simple-ledger.js';
+import {ledgerMonth} from '../ledger-calendar.js';
+
+test('cash-flow: purchase counts immediately, including legacy no-receipt records',()=>{
+ const d=emptyData();
+ d.races.push({id:'r',date:'2026-10-21',venue:'東京',number:1,name:''});
+ d.tickets.push({id:'t',raceId:'r',type:'単勝',kind:'reported',memo:'',createdAt:'2026-10-21T00:00:00Z'});
+ d.lines.push({id:'l',ticketId:'t',numbers:[1],stake:100,status:'pending',payout:0,refund:0});
+ const before=JSON.stringify(d);
+ const stats=aggregate(d);
+ assert.equal(stats.purchase,100);
+ assert.equal(stats.profit,-100);
+ assert.equal(stats.returnRate,0);
+ assert.equal(stats.pendingCount,0);
+ assert.equal(JSON.stringify(d),before,'reading summary never mutates source');
+ const legacy=validateData(d);
+ assert.equal(legacy.lines[0].status,'settled','legacy backup is accepted and normalized in memory');
+ assert.equal(d.lines[0].status,'pending','caller-owned backup is untouched');
+});
+test('cash-flow: basic input saves a purchase with zero receipts, no status selection',()=>{
+ const d=emptyData();
+ const bought=makeSimpleEntry({date:'2026-10-21',stake:1200},'p1');
+ assert.equal(bought.status,'settled');
+ d.simpleEntries=[bought];
+ let f=combinedFinance(d,{prefix:'2026-10'});
+ assert.equal(f.recordedPurchase,1200);
+ assert.equal(f.settledPurchase,1200);
+ assert.equal(f.profit,-1200);
+ assert.equal(f.returnRate,0);
+ assert.equal(f.pendingCount,0);
+ assert.equal(f.pendingStake,0);
+ assert.equal(quickBreakdown(d,{dimension:'date'})[0].profit,-1200);
+ const corrected=makeSimpleEntry({...bought,payout:1600},bought.id);
+ d.simpleEntries[0]=corrected;
+ f=combinedFinance(d,{prefix:'2026-10'});
+ assert.equal(f.profit,400);
+ assert.equal(f.returnRate,1600/1200*100);
+ assert.equal(f.recordedPurchase,1200);
+});
+test('cash-flow: calendar includes negative day and has no waiting marker data',()=>{
+ const d=emptyData();
+ d.simpleEntries=[makeSimpleEntry({date:'2026-10-21',stake:500},'calendar1')];
+ const row=ledgerMonth(d,[],'2026-10').days.find(x=>x.date==='2026-10-21');
+ assert.equal(row.summary.profit,-500);
+ assert.equal(row.summary.pendingCount,0);
+ assert.equal(row.summary.settledCount,1);
+});

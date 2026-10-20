@@ -5,7 +5,6 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 export function lineCorrectionValues(line,mode,stake,payout,refund){
  money(stake,true);
- if(mode==='pending'){check(line.status==='pending','確定済み結果を未入力へ戻す操作はできません。');return {stake,status:'pending',payout:0,refund:0};}
  if(mode==='miss')return {stake,status:'settled',payout:0,refund:0};
  if(mode==='refund')return {stake,status:'void',payout:0,refund:stake};
  if(mode==='hit'){money(payout);check(payout>0,'的中した払戻金を1円以上で入力してください。');return {stake,status:'settled',payout,refund:0};}
@@ -17,12 +16,12 @@ export function lineCorrectionValues(line,mode,stake,payout,refund){
 }
 
 export function openLineCorrection({line,ticket,onSave,onClose=()=>{}}){
- const initial=line.status==='pending'?'pending':line.status==='void'?'refund':line.refund>0?'advanced':line.payout>0?'hit':'miss';
+ const initial=line.status==='void'?'refund':line.refund>0?'advanced':line.payout>0?'hit':'miss';
  const dialog=document.createElement('dialog');dialog.className='correction-dialog';
  dialog.innerHTML=`<form id="correctionForm" class="correction-form" novalidate><div class="row"><h2>買い目の訂正</h2><button type="button" id="correctionClose" class="quiet">閉じる</button></div>
  <p class="help">${esc(ticket.type)} · ${line.numbers.join(['馬単','三連単'].includes(ticket.type)?'→':'－')}。この1点だけを変更します。</p>
  <label>購入金額（円）<input id="correctStake" type="number" min="100" step="100" inputmode="numeric" required value="${line.stake}"></label>
- <label>結果<select id="correctMode"><option value="miss">不的中</option><option value="hit">的中</option><option value="refund">全額返還</option><option value="advanced">一部返還・詳細</option>${line.status==='pending'?'<option value="pending">旧記録：未入力</option>':''}</select></label>
+ <label>結果<select id="correctMode"><option value="miss">不的中</option><option value="hit">的中</option><option value="refund">全額返還</option><option value="advanced">一部返還・詳細</option></select></label>
  <label id="correctPayoutWrap">実際の払戻金（円）<input id="correctPayout" type="number" min="0" step="1" inputmode="numeric" value="${line.payout}"></label>
  <label id="correctRefundWrap">返還金（円）<input id="correctRefund" type="number" min="0" step="1" inputmode="numeric" value="${line.refund}"></label>
  <div class="correction-preview"><p class="help" id="correctionBefore">変更前：購入 ${yen(line.stake)} ／ 払戻 ${yen(line.payout)} ／ 返還 ${yen(line.refund)}</p><div id="correctionPreview" role="status"></div><p id="correctionDifference" class="help"></p></div>
@@ -42,9 +41,9 @@ export function openLineCorrection({line,ticket,onSave,onClose=()=>{}}){
    const payout=mode==='hit'||mode==='advanced'?read('correctPayout'):0;
    const refund=mode==='advanced'?read('correctRefund'):0;
    result=lineCorrectionValues(line,mode,stake,payout,refund);
-   el('correctionPreview').textContent=`変更後：購入 ${yen(stake)} ／ 払戻 ${yen(result.payout)} ／ 返還 ${yen(result.refund)} ／ ${result.status==='pending'?'収支未計算':'収支 '+(result.payout+result.refund-stake>=0?'+':'')+yen(result.payout+result.refund-stake)}`;
+   el('correctionPreview').textContent=`変更後：購入 ${yen(stake)} ／ 払戻 ${yen(result.payout)} ／ 返還 ${yen(result.refund)} ／ '収支 '+(result.payout+result.refund-stake>=0?'+':'')+yen(result.payout+result.refund-stake)`;
    const diff=result.payout+result.refund-stake-(line.payout+line.refund-line.stake);
-   el('correctionDifference').textContent=line.status==='pending'||result.status==='pending'?'未入力が含まれるため確定収支の差額は保存後に再計算します。':'確定収支の差額 '+(diff>0?'+':'')+yen(diff)+'（該当する1点のみ）';
+   el('correctionDifference').textContent='収支の差額 '+(diff>0?'+':'')+yen(diff)+'（該当する1点のみ）';
   }catch(error){el('correctionPreview').textContent=error.message;}
   return result;
  }

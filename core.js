@@ -32,17 +32,24 @@ export function box(type,numbers){check(Array.isArray(numbers)&&numbers.length>0
  const k=['単勝','複勝'].includes(type)?1:['三連複','三連単'].includes(type)?3:2;check(numbers.length>=k,'BOXの選択数が不足しています。');const ordered=['馬単','三連単'].includes(type),out=[];
  function visit(a){if(a.length===k){out.push(combination(type,a));return;}for(const n of numbers){if(a.includes(n)||(!ordered&&a.length&&n<=a[a.length-1]))continue;visit([...a,n]);}}visit([]);return out;
 }
-export function fullRefund(l){return l.status!=='pending'&&l.payout===0&&l.refund===l.stake;}
+export function fullRefund(l){return l.payout===0&&l.refund===l.stake;}
 export function aggregate(data,predicate=()=>true){const races=data.races.filter(predicate),ids=new Set(races.map(r=>r.id)),tickets=data.tickets.filter(t=>ids.has(t.raceId)),tids=new Set(tickets.map(t=>t.id)),lines=data.lines.filter(l=>tids.has(l.ticketId));return summarize(lines,races,tickets);}
-export function summarize(lines,races=[],tickets=[]){const done=lines.filter(l=>l.status!=='pending'),valid=done.filter(l=>!fullRefund(l)),pending=lines.filter(l=>l.status==='pending');const sum=(ls,k)=>ls.reduce((n,l)=>n+l[k],0);const purchase=sum(done,'stake'),payout=sum(done,'payout'),refund=sum(done,'refund');let raceCount=0,raceHits=0;
- for(const r of races){const ids=new Set(tickets.filter(t=>t.raceId===r.id).map(t=>t.id));const ls=lines.filter(l=>ids.has(l.ticketId));if(!ls.length||ls.some(l=>l.status==='pending')||!ls.some(l=>!fullRefund(l)))continue;raceCount++;if(ls.some(l=>l.payout>0))raceHits++;}
+export function summarize(lines,races=[],tickets=[]){const done=lines,valid=done.filter(l=>!fullRefund(l)),pending=[];const sum=(ls,k)=>ls.reduce((n,l)=>n+l[k],0);const purchase=sum(done,'stake'),payout=sum(done,'payout'),refund=sum(done,'refund');let raceCount=0,raceHits=0;
+ for(const r of races){const ids=new Set(tickets.filter(t=>t.raceId===r.id).map(t=>t.id));const ls=lines.filter(l=>ids.has(l.ticketId));if(!ls.length||!ls.some(l=>!fullRefund(l)))continue;raceCount++;if(ls.some(l=>l.payout>0))raceHits++;}
  return {purchase,payout,refund,profit:payout+refund-purchase,returnRate:purchase?(payout+refund)/purchase*100:null,lineCount:valid.length,lineHits:valid.filter(l=>l.payout>0).length,lineRate:valid.length?valid.filter(l=>l.payout>0).length/valid.length*100:null,raceCount,raceHits,raceRate:raceCount?raceHits/raceCount*100:null,pendingCount:pending.length,pendingStake:sum(pending,'stake'),settledCount:done.length};}
 export function growth(data,today=jstToday()){const current=weekOf(today),weeks=new Set([...data.races.map(r=>weekOf(r.date)),...data.reviews.map(r=>r.week)]);const history=[...weeks].sort().map(week=>{const stats=aggregate(data,r=>weekOf(r.date)===week),closed=week<current,all=stats.pendingCount===0&&stats.settledCount>0;
  // A requires a fully settled race, including a fully refunded race.
- const rs=data.races.filter(r=>weekOf(r.date)===week);const first=rs.some(r=>{const ids=new Set(data.tickets.filter(t=>t.raceId===r.id).map(t=>t.id));const ls=data.lines.filter(l=>ids.has(l.ticketId));return ls.length&&ls.every(l=>l.status!=='pending');});
+ const rs=data.races.filter(r=>weekOf(r.date)===week);const first=rs.some(r=>{const ids=new Set(data.tickets.filter(t=>t.raceId===r.id).map(t=>t.id));const ls=data.lines.filter(l=>ids.has(l.ticketId));return ls.length>0;});
  const a=first?10:0,b=closed&&all?10:0,c=closed&&data.reviews.some(r=>r.week===week)?20:0,eligible=closed&&all&&stats.raceCount>=3,d=eligible?(stats.returnRate>=120?40:stats.returnRate>=100?30:stats.returnRate>=80?15:0):0,e=eligible?(stats.raceRate>=50?20:stats.raceRate>=30?10:0):0;
  return {week,a,b,c,d,e,exp:a+b+c+d+e,closed,stats};});const exp=history.reduce((s,h)=>s+h.exp,0);return {character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)},history};}
-export function recalculate(data,today=jstToday()){if(data.growthV2){const exp=growthTotal(data.growthV2);return {...data,character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)}};}const g=growth(data,today);return {...data,character:g.character,growth:g.history};}
+export function recalculate(data,today=jstToday()){
+ // Legacy 'pending' rows are preserved in backups but become ordinary 0-yen receipt records in memory.
+ // Do not infer any racing result; the spending was real when the ticket was bought.
+ if(data.lines.some(l=>l.status==='pending')||data.simpleEntries?.some(e=>e.status==='pending')){
+  data={...data,lines:data.lines.map(l=>l.status==='pending'?{...l,status:'settled'}:l),
+   simpleEntries:(data.simpleEntries||[]).map(e=>e.status==='pending'?{...e,status:'settled'}:e)};
+ }
+ if(data.growthV2){const exp=growthTotal(data.growthV2);return {...data,character:{exp,level:1+Math.floor(exp/100),stage:STAGES.reduce((s,n,i)=>exp>=n?i:s,0)}};}const g=growth(data,today);return {...data,character:g.character,growth:g.history};}
 export function validateData(d){check(d&&typeof d==='object'&&d.schemaVersion===SCHEMA_VERSION,'対応していないバックアップ形式・バージョンです。');for(const k of ['races','tickets','lines','reviews','growth'])check(Array.isArray(d[k])&&d[k].length<=100000,`${k}の形式が不正です。`);
  const idsets={};for(const k of ['races','tickets','lines','reviews']){idsets[k]=new Set();for(const x of d[k]){check(x&&typeof x.id==='string'&&x.id.length>0&&x.id.length<=100&&!idsets[k].has(x.id),'IDの欠落・重複があります。');idsets[k].add(x.id);}}
  const keys=new Set();for(const r of d.races){check(validDate(r.date)&&VENUES.includes(r.venue)&&Number.isInteger(r.number)&&r.number>=1&&r.number<=12&&typeof r.name==='string'&&r.name.length<=100,'レース情報が不正です。');if(r.podium!==undefined)validatePodium(r.podium);check(!keys.has(raceKey(r)),'レースが重複しています。');keys.add(raceKey(r));}

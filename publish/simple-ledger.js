@@ -29,7 +29,7 @@ export function makeSimpleEntry(input,id){
  check(typeof id==='string'&&id.length>0&&id.length<=100,'記録IDが不正です。');
  check(input&&typeof input==='object','入力内容が不正です。');
  const venue=input.venue||null,number=input.number===''||input.number===null||input.number===undefined?null:Number(input.number);
- const type=input.type||null,settled=input.status==='settled';
+ const type=input.type||null,settled=true;
  const value={id,date:input.date,stake:money(Number(input.stake),true),venue,number,type,name:(input.name||'').trim(),memo:(input.memo||'').trim(),status:settled?'settled':'pending',payout:settled?money(Number(input.payout||0)):0,refund:settled?money(Number(input.refund||0)):0};
  validateSimpleEntries([value]);return value;
 }
@@ -62,7 +62,7 @@ export function combinedFinance(data,{prefix='',venue='',type=''}={}){
  const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix)&&(!venue||e.venue===venue)&&(!type||e.type===type));
  const d=summarize(detail);
  const simpleRecorded=quick.reduce((n,e)=>n+e.stake,0),allRecorded=detail.reduce((n,l)=>n+l.stake,0)+simpleRecorded;
- const settled=quick.filter(e=>e.status==='settled'),pending=quick.filter(e=>e.status==='pending');
+ const settled=quick,pending=[];
  const sum=(rows,key)=>rows.reduce((n,e)=>n+e[key],0);
  const stakeSettled=d.purchase+sum(settled,'stake'),payout=d.payout+sum(settled,'payout'),refund=d.refund+sum(settled,'refund');
  const allReceipts=payout+refund,unknown=d.pendingStake+sum(pending,'stake'),rawNet=allReceipts-allRecorded;
@@ -81,8 +81,8 @@ export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type='
  for(const l of data.lines){
   const t=ticketById.get(l.ticketId),r=t&&raceById.get(t.raceId);if(!r||!r.date.startsWith(prefix)||venue&&r.venue!==venue||type&&t.type!==type)continue;
   const key=dimension==='date'?r.date:dimension==='venue'?r.venue:t.type;
-  add(key,l.stake,l.payout,l.refund,l.status==='pending');
+  add(key,l.stake,l.payout,l.refund,false);
  }
- for(const e of quick){add(dimension==='date'?e.date:e[dimension],e.stake,e.payout,e.refund,e.status==='pending');}
+ for(const e of quick){add(dimension==='date'?e.date:e[dimension],e.stake,e.payout,e.refund,false);}
  return [...buckets.values()].map(b=>({...b,profit:b.receipts-b.settledPurchase})).sort((a,b)=>b.recordedPurchase-a.recordedPurchase||a.label.localeCompare(b.label,'ja'));
 }

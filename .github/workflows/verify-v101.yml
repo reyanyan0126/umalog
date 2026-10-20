@@ -57,6 +57,7 @@ on:
       - work/v2.4.2-readable-history-profit
       - work/v2.4.3-readability-accessibility
       - work/v2.4.4-calendar-clarity
+      - work/v2.5.0-cashflow-no-pending
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -90,7 +91,7 @@ jobs:
           for name in app.js entry-results.js fast-results.js entry-sheets.js ledger-tools.js line-correction.js core.js db.js advanced-picker.js entry-drafts.js screen-roles.js ledger-calendar.js ledger-trends.js growth-companion.js; do node --check "$name"; node --check "publish/$name"; done
           node --check analysis-compare.js; node --check publish/analysis-compare.js; node --check app.js; node --check publish/app.js; node --check manual-race.js; node --check publish/manual-race.js; node --check manual-race-correction.js; node --check publish/manual-race-correction.js; node --check race-audit.js; node --check publish/race-audit.js; node --check stake-allocation.js; node --check publish/stake-allocation.js; node --check stake-workflow.js; node --check publish/stake-workflow.js; node --check simple-ledger.js; node --check publish/simple-ledger.js; node --check analysis-quality.js; node --check publish/analysis-quality.js; node --check category-compare.js; node --check publish/category-compare.js;
       - name: Core, result-state and tips tests
-        run: npm test
+        run: npm test || { echo 'npm test -- current cashflow and legacy unit regressions' >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Install browser test dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1
@@ -268,6 +269,10 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v243.cjs || { echo "ux-v243.cjs source" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.4.3 visual accessibility publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v243.cjs || { echo "ux-v243.cjs publish" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.5.0 cashflow source acceptance
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs || { echo "ux-v250.cjs source" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.5.0 cashflow publish acceptance
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs || { echo "ux-v250.cjs publish" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Summarize browser regression failures
         if: always()
         run: |

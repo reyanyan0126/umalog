@@ -42,7 +42,7 @@ export function typeVenueMatrix(data){
 }
 export function calendarMetricValue(summary,metric='profit'){
  if(!summary)return null;
- if(metric==='purchase')return summary.purchase+summary.pendingStake;
+ if(metric==='purchase')return summary.purchase;
  if(metric==='receipt')return summary.payout+summary.refund;
  if(metric==='profit')return summary.settledCount?summary.profit:null;
  throw new Error('表示指標が不正です。');
