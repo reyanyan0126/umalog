@@ -102,7 +102,7 @@ function home(){
  <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
  <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a></div><details class="home-extra-links"><summary>育成を見る</summary><div class="home-secondary-actions"><a href="#growth">育成画面を開く</a></div></details>
  <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
-  <div class="home-calendar-heading"><h2>カレンダー</h2><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
+  <div class="home-calendar-heading"><h2>カレンダー</h2><small class="home-calendar-explain" id="homeCalendarMetricLabel">数字：確定収支 ／ 待：結果待ち</small><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
   <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">確定収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
   <div id="ledgerCalendarHost"></div>
  </section>`;
@@ -114,10 +114,10 @@ function home(){
  }).catch(()=>{});
 }
 function mountHomeCalendar(){
- const update=()=>mountLedgerCalendar($('#ledgerCalendarHost'),data,gradedEvents(withMaster(calendarState.calendar)),calendarMonth,{
+ const update=()=>{const labels={profit:'確定収支',purchase:'購入額',receipt:'払戻・返還'};$('#homeCalendarMetricLabel').textContent='数字：'+labels[calendarMeasure]+' ／ 待：結果待ち';mountLedgerCalendar($('#ledgerCalendarHost'),data,gradedEvents(withMaster(calendarState.calendar)),calendarMonth,{
   selectedDate:calendarSelected,view:calendarView,metric:calendarMeasure,home:true,
   onState:value=>{calendarSelected=value.date;calendarView=value.view;}
- });
+ });};
  $('#calendarMetric').value=calendarMeasure;
  $('#calendarMetric').onchange=e=>{calendarMeasure=e.target.value;update();};
  const change=month=>{
