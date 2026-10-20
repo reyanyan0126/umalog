@@ -73,6 +73,17 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   ]);
   assert.equal(result.detailed.length,2);
   assert.ok(result.detailed.every(x=>x.status==='pending'&&x.stake===100),'detailed bets untouched');
+  await page.evaluate(()=>location.hash='history');await page.waitForSelector('#historyList');
+  const profitRows=await page.locator('#historyList .simple-history-row').evaluateAll(nodes=>nodes.map(el=>({
+   date:el.dataset.historyDate,display:el.querySelector('.simple-history-amount')?.innerText,receipts:el.querySelector('.simple-history-receipts')?.innerText
+  })));
+  assert.equal(profitRows.length,3);
+  assert.match(profitRows[0].display,/収支 [+＋]1,200円/);
+  assert.match(profitRows[0].receipts,/2,200円/);
+  assert.match(profitRows[1].display,/収支 [+＋]?0円/);
+  assert.match(profitRows[1].receipts,/500円/);
+  assert.match(profitRows[2].display,/収支 [-−]300円/);
+  assert.match(profitRows[2].receipts,/0円/);
   await page.evaluate(()=>location.hash='quick-result/u241-a');await page.waitForSelector('#quickResultForm');
   assert.equal(await page.locator('#quickResultPayout').inputValue(),'2200','settled deeplink reveals recorded payout');
   for(const width of [320,390,440]){

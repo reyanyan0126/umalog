@@ -54,6 +54,7 @@ on:
       - work/v2.3.0-ux7-compact-daily
       - work/v2.4.0-compact-release
       - work/v2.4.1-fast-results-and-history
+      - work/v2.4.2-readable-history-profit
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
