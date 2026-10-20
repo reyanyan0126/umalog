@@ -175,7 +175,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false,resultFlow=false){
  const editingRow=id?(data.simpleEntries||[]).find(e=>e.id===id):null;
  check(!id||editingRow,'簡易記録が見つかりません。');
  const old=editingRow||{date:contextDate||jstToday(),stake:'',venue:null,number:null,type:null,name:'',memo:'',status:'pending',payout:0,refund:0};
- const backHash=fromDay?'#day/'+(contextDate||old.date):'#history';
+ const backHash=resultFlow?'#history-pending':fromDay?'#day/'+(contextDate||old.date):'#history';
  const templates=id?[]:recentSimpleTemplates(data.simpleEntries||[]);
  const templatePanel=templates.length?`<div class="simple-recent" aria-label="最近の支出を再利用"><h3>前回の条件を使う</h3><p class="help">金額・競馬場・券種のみ引き継ぎます。</p><div class="simple-recent-list">${templates.map((t,i)=>`<button type="button" class="quiet simple-repeat-button" data-simple-template="${i}"><strong>${yen(t.stake)}</strong><small>${esc(t.venue||'競馬場未指定')} · ${esc(t.type||'券種未指定')} · ${esc(t.sourceDate)}</small><span>この条件を入力に使う →</span></button>`).join('')}</div></div>`:'';
 
@@ -218,7 +218,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false,resultFlow=false){
     status.value='settled';lastStatus='settled';resultTitle();
    }
   });
-  requestAnimationFrame(()=>$('#simplePayout')?.focus({preventScroll:true}));
+  requestAnimationFrame(()=>{const input=$('#simplePayout');input?.scrollIntoView({block:'center',behavior:'auto'});input?.focus({preventScroll:true});});
  }
  $('#simpleEntryForm').oninput=markDirty;
  $('#simpleEntryForm').onchange=markDirty;
@@ -528,7 +528,7 @@ function history(pendingOnly=false){
   $('#historyList').innerHTML=combinedRows.slice(0,shown).map(row=>row.kind==='race'
    ?renderRace(row.item)
    :`<article class="simple-history-row simple-history-compact" data-history-kind="quick" data-history-date="${esc(row.date)}"><div class="simple-history-content"><small>${esc(row.date)} · ${esc(row.item.venue||'競馬場未指定')} ${row.item.number?row.item.number+'R':''} ${esc(row.item.type||'券種未指定')}</small><div class="simple-history-amount"><strong>${yen(row.item.stake)}</strong><span class="${row.item.status==='pending'?'pending':'settled'}">${row.item.status==='pending'?'結果待ち':`払戻・返還 ${yen(row.item.payout+row.item.refund)}`}</span></div>${row.item.name||row.item.memo?`<small class="simple-history-note">${esc(row.item.name||row.item.memo)}</small>`:''}</div><div class="simple-history-actions">${row.item.status==='pending'?`<a class="button accent quick-result-link" href="#quick-result/${encodeURIComponent(row.item.id)}">結果入力</a>`:''}<a href="#quick-edit/${encodeURIComponent(row.item.id)}" class="quiet button">編集</a></div></article>`
-  ).join('')||'<p class="empty">該当する記録がありません。</p>';
+  ).join('')||(status==='pending'?'<p class="empty">結果待ちの記録はありません。</p>':'<p class="empty">該当する記録がありません。</p>');
   $('#historyMore').hidden=combinedRows.length<=shown;$('#historyMore').textContent=`さらに表示（残り${Math.max(0,combinedRows.length-shown)}件）`;  bindDetails();$('#historyList').querySelectorAll('[data-stake-edit]').forEach(button=>button.onclick=()=>location.hash='edit-stakes/'+button.dataset.stakeEdit);bindQuickEdits(()=>history());
  };
  $('#historyMore').onclick=()=>{shown+=20;update();}; ['vf','tf','sf','historyFrom','historyTo'].forEach(id=>$('#'+id).onchange=()=>{shown=20;update();});
