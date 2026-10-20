@@ -56,6 +56,7 @@ on:
       - work/v2.4.1-fast-results-and-history
       - work/v2.4.2-readable-history-profit
       - work/v2.4.3-readability-accessibility
+      - work/v2.4.4-calendar-clarity
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'

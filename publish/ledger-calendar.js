@@ -61,10 +61,20 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  const detail=elem('section','ledger-detail');
  detail.id='ledgerDayDetail';
  detail.setAttribute('aria-live','polite');
+ const closeDay=()=>{
+  detail.hidden=true;
+  selectedDate=null;
+  for(const button of buttons){button.setAttribute('aria-pressed','false');button.setAttribute('aria-expanded','false');}
+  options.onState?.({date:null,view});
+ };
  function openDay(row){
   detail.hidden=false;
   selectedDate=row.date;options.onState?.({date:selectedDate,view});
-  for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.date===row.date));
+  for(const button of buttons){
+   const selected=button.dataset.date===row.date;
+   button.setAttribute('aria-pressed',String(selected));
+   button.setAttribute('aria-expanded',String(selected));
+  }
   for(const item of listItems)item.classList.toggle('is-selected',item.dataset.listDate===row.date);
   detail.replaceChildren();
   detail.append(elem('h3',null,(row.date===today?'今日 · ':'')+row.date+(row.holiday?' · '+row.holiday:'')+' の記録'));if(options.home){const quick=elem('a','button accent ledger-day-record','＋ この日を記録');quick.href='#quick-date/'+row.date;detail.append(quick);const daily=elem('a','quiet button','この日の記録を見る');daily.href='#day/'+row.date;detail.append(daily);const register=elem('a','quiet ledger-advanced-link','買い目まで詳しく入力');register.href='#entry-date/'+row.date;detail.append(register);}else{const register=elem('a','quiet button','この日で馬券を登録');register.href='#entry-date/'+row.date;detail.append(register);const daily=elem('a','quiet button','この日のログ全体を見る →');daily.href='#day/'+row.date;detail.append(daily);}
@@ -101,14 +111,21 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
  for(const row of model.days){
   const button=elem('button','ledger-day');
   button.type='button';button.dataset.date=row.date;
+  button.setAttribute('aria-controls','ledgerDayDetail');
+  button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-pressed','false');
   const s=row.summary;
   if(metric==='profit'&&s?.settledCount)button.classList.add(s.profit>0?'ledger-win':s.profit<0?'ledger-loss':'ledger-even');
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday&&row.date!==today)button.append(elem('span','ledger-holiday-mark','祝'));
   const v=valueFor(s);if(v!==null)button.append(elem('span','ledger-money',smallMoney(v)));
+  if(s?.pendingCount){const waiting=elem('span','ledger-pending-mark','待');waiting.setAttribute('aria-hidden','true');button.append(waiting);}
   if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
-  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
-  button.onclick=()=>openDay(row);
+  button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(s?.pendingCount?' 結果待ち '+s.pendingCount+'点・件':'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
+  button.onclick=()=>{
+   if(options.home&&!detail.hidden&&selectedDate===row.date){closeDay();return;}
+   openDay(row);
+  };
   grid.append(button);buttons.push(button);
  }
  const dayList=elem('div','ledger-list');dayList.id='ledgerList';
