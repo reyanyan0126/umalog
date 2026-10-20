@@ -929,3 +929,26 @@ nav a{width:min(25%,220px)}
  .home-calendar-section .home-calendar-navigation button{min-width:40px}
 }
 @media(prefers-reduced-motion:reduce){.home-calendar-section *,#simpleEntryForm *,#historyList *{scroll-behavior:auto!important;transition-duration:0s!important}}
+
+/* v2.4.1: result-first, single-purpose settlement screen. */
+.quick-result-head{margin:5px 0 10px}
+.quick-result-head>a{display:inline-block;min-height:44px;padding:9px 1px;color:var(--green);font-size:.85rem}
+.quick-result-head h1{margin:4px 0 10px}
+.quick-result-overview{padding:13px 15px;margin-bottom:10px}
+.quick-result-overview small{font-size:.76rem}
+.quick-result-summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:7px}
+.quick-result-summary span{font-size:.86rem;color:var(--muted)}
+.quick-result-summary strong{font-size:clamp(1.2rem,6vw,1.65rem);font-variant-numeric:tabular-nums}
+.quick-result-form{display:grid;gap:8px;padding:16px;margin-bottom:7px}
+.quick-result-form label{margin:0;font-size:.95rem}
+.quick-result-form #quickResultPayout{font-size:1.4rem;font-weight:750;height:60px;font-variant-numeric:tabular-nums}
+.quick-result-form details>summary{padding:9px 0;min-height:44px;color:var(--green);font-size:.82rem}
+.quick-result-form details label{padding:3px 0 7px}
+.quick-result-form #quickResultNet{border-radius:10px;margin:0;padding:9px 10px;background:#f1f5ed;font-weight:650;line-height:1.45;font-variant-numeric:tabular-nums}
+.quick-result-form button{min-height:48px}
+.quick-result-more{margin:4px 0 14px;font-size:.82rem;text-align:center}
+.quick-result-more a{display:inline-flex;align-items:center;min-height:44px;color:var(--green)}
+.history-search-clear{font-size:.8rem;min-height:44px;padding:8px 12px;margin:-4px 0 6px}
+.history-search-clear[hidden]{display:none}
+.history-race-pending{min-height:44px;font-size:.82rem;margin:5px 0 7px;padding:8px 12px;max-width:100%;white-space:normal}
+@media(max-width:360px){.quick-result-form{padding:11px 12px}.quick-result-overview{padding:11px 12px}}
