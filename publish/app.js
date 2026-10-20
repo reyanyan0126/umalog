@@ -94,7 +94,7 @@ function home(){
  app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1>
  <section class="card hero home-minimal" id="homeSummary">
   <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
-  <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="今月の確定収支">${summary.settledCount?signed(summary.profit):'—'}</div>
+  <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="今月の確定収支：${summary.settledCount?signed(summary.profit):'未確定'}">${summary.settledCount?signed(summary.profit):'—'}</div>
   <p class="home-minimal-note">${summary.settledCount?'結果が確定した記録の収支':'今月はまだ結果が確定していません'}</p>
   <div class="home-minimal-totals home-simple-totals">${metric('確定した購入額',yen(summary.settledPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
   ${summary.pendingCount?`<p class="help home-pending-note">結果待ち ${summary.pendingCount}点・件（${yen(summary.pendingStake)}）は確定収支に含めていません。 <a href="#history-pending">結果を入力 →</a></p>`:''}
@@ -270,8 +270,8 @@ function quickResult(id){
  check(current,'結果を入力する記録が見つかりません。');
  const pending=current.status==='pending';
  const label=[current.date,current.venue||'',current.number?current.number+'R':'',current.type||''].filter(Boolean).join(' · ');
- app.innerHTML=`<div class="quick-result-head"><a href="#history-pending">← 結果待ち一覧へ</a><h1>${pending?'結果を入力':'結果を修正'}</h1></div>
- <section class="card quick-result-overview"><small>${esc(label)}</small><div class="quick-result-summary"><span>購入額</span><strong>${yen(current.stake)}</strong></div></section>
+ app.innerHTML=`<div class="quick-result-head"><a href="${pending?'#history-pending':'#history'}">← ${pending?'結果待ち一覧へ':'購入履歴へ'}</a><h1>${pending?'結果を入力':'結果を修正'}</h1></div>
+ <section class="card quick-result-overview"><small>${esc(label)}</small><div class="quick-result-summary"><span>購入額（変更なし）</span><strong>${yen(current.stake)}</strong></div></section>
  <form id="quickResultForm" class="card quick-result-form">
   <label for="quickResultPayout">払戻金（円）<input id="quickResultPayout" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" enterkeyhint="done" required placeholder="例：2,500" value="${pending?'':current.payout}"></label>
   <details id="quickResultRefundDetails" ${current.refund?'open':''}><summary>返還金を追加（任意）</summary><label for="quickResultRefund">返還金（円）<input id="quickResultRefund" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${current.refund}"></label></details>
@@ -283,15 +283,21 @@ function quickResult(id){
  const payout=$('#quickResultPayout'),refund=$('#quickResultRefund'),net=$('#quickResultNet');
  const preview=()=>{const valid=payout.value.trim()!==''&&payout.validity.valid&&refund.validity.valid;
   net.textContent=valid?'確定収支 '+signed(Number(payout.value)+Number(refund.value||0)-current.stake):'払戻金を入力してください。';
+  net.classList.toggle('quick-result-net-positive',valid&&Number(payout.value)+Number(refund.value||0)-current.stake>0);
+  net.classList.toggle('quick-result-net-negative',valid&&Number(payout.value)+Number(refund.value||0)-current.stake<0);
  };
  const mark=()=>{dirty=true;preview();};
  payout.oninput=mark;refund.oninput=mark;
+ let saving=false;
  const persist=guard(async ({money,returned})=>{
+  if(saving)return;
   const next=clone(data),index=next.simpleEntries.findIndex(e=>e.id===id);
   check(index>=0,'編集中の記録が見つかりません。');
   check(Number.isInteger(money)&&money>=0&&Number.isInteger(returned)&&returned>=0,'払戻金と返還金は0円以上の整数で入力してください。');
   next.simpleEntries[index]=makeSimpleEntry({...next.simpleEntries[index],status:'settled',payout:money,refund:returned},id);
-  await commit(next);notify('結果を保存しました。');location.hash='#history-pending';
+  saving=true;$('#quickResultMiss').disabled=true;
+  try{await commit(next);notify('結果を保存しました。');location.hash= pending?'#history-pending':'#history';}
+  finally{saving=false;const button=$('#quickResultMiss');if(button)button.disabled=false;}
  });
  $('#quickResultForm').onsubmit=async event=>{event.preventDefault();if(!event.currentTarget.reportValidity())return;
   await persist({money:Number(payout.value),returned:Number(refund.value||0)});
