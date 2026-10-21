@@ -6,6 +6,9 @@
  const status=document.getElementById('launchUpdateStatus');
  button.addEventListener('click',async()=>{
   button.disabled=true;
+  // Keep the title visible after an update reload, but reset any previous Settings route.
+  try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
+  if(location.hash!=='#home')location.hash='home';
   status.textContent='更新を確認しています…';
   try{
    if(!('serviceWorker' in navigator)){status.textContent='更新機能に対応していません。';return;}
@@ -31,7 +34,8 @@
  const splash=document.getElementById('launchScreen');
  function showTitle(){
    try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
-   if(location.hash==='#home')history.replaceState(null,'',location.pathname+location.search);
+   // Reset the underlying route before showing the overlay: Start must always land on Home.
+   if(location.hash!=='#home')location.hash='home';
    splash.hidden=false;
    splash.style.display='grid';
    window.scrollTo(0,0);
@@ -52,4 +56,4 @@
  if(app)new MutationObserver(ensureButton).observe(app,{childList:true,subtree:true});
  ensureButton();
 })();
-</script><script type="module" src="./app.js?v=2520"></script></body></html>
+</script><script type="module" src="./app.js?v=2521"></script></body></html>
