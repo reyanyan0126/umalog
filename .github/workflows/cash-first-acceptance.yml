@@ -43,3 +43,11 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs
       - name: Cash-first browser acceptance (published PWA)
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs
+      - name: Navigation and update lifecycle (Chromium)
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
+      - name: Navigation and update lifecycle (published PWA)
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Navigation and update lifecycle (WebKit)
+        run: BROWSER=webkit node tests/navigation-e2e.cjs
