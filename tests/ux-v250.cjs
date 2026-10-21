@@ -9,7 +9,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
   browser=await chromium.launch({headless:true,executablePath:await adapter.executablePath(),args:adapter.args.filter(x=>x!=='--disable-web-security'&&x!=='--allow-running-insecure-content')});
   const ctx=await browser.newContext({viewport:{width:390,height:844}}),page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());page.setDefaultTimeout(20000);
-  await page.goto('http://127.0.0.1:8250'+prefix);await page.waitForSelector('#homeQuickEntry');
+  await page.goto('http://127.0.0.1:8250'+prefix);await page.locator('#launchStart').click();await page.waitForSelector('#homeQuickEntry');
   const original=await page.evaluate(async()=>{
    const db=await import('./db.js'),{makeSimpleEntry}=await import('./simple-ledger.js'),d=await db.load();
    d.simpleEntries=[

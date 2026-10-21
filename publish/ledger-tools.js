@@ -63,7 +63,7 @@ export function ledgerCSV(data){
 export function monthReview(data,month){
  const detailed=aggregate(data,r=>r.date.startsWith(month));
  const combined=cashFinance(data,{prefix:month});
- const totals={...detailed,purchase:combined.settledPurchase,payout:combined.payout,refund:combined.refund,profit:combined.profit,pendingCount:combined.pendingCount,pendingStake:combined.pendingStake,settledCount:combined.settledCount};
+ const totals={...detailed,purchase:combined.settledPurchase,payout:combined.payout,refund:combined.refund,profit:combined.profit,returnRate:combined.returnRate,pendingCount:combined.pendingCount,pendingStake:combined.pendingStake,settledCount:combined.settledCount};
  const races=data.races.filter(r=>r.date.startsWith(month)), budget=budgetStatus(data,month);
  const settled=totals.settledCount,units=totals.lineCount;
  const days=new Set([...races.map(r=>r.date),...(data.simpleEntries||[]).filter(e=>e.date.startsWith(month)).map(e=>e.date)]).size;
