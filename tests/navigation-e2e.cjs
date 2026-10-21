@@ -14,7 +14,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
   if(process.env.CHROMIUM_MODULE){const adapter=require(process.env.CHROMIUM_MODULE);options={...options,executablePath:await adapter.executablePath(),args:adapter.args};}
   browser=await pw[process.env.BROWSER||'chromium'].launch(options);
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
-  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(15000);
+  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('crash',()=>console.error('BROWSER PAGE CRASH'));page.on('close',()=>console.log('Browser page closed'));page.setDefaultTimeout(15000);
   const url='http://127.0.0.1:'+server.address().port+prefix;
   const title=async()=>{await page.locator('#launchScreen').waitFor({state:'visible'});};
   const home=async()=>{await page.locator('#launchScreen').waitFor({state:'hidden'});await page.locator('#homeQuickEntry').waitFor();assert.equal(await page.locator('#settingsForm').count(),0);};
