@@ -86,3 +86,18 @@ export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type='
  for(const e of quick){add(dimension==='date'?e.date:e[dimension],e.stake,e.payout,e.refund,e.status==='pending');}
  return [...buckets.values()].map(b=>({...b,profit:b.receipts-b.settledPurchase})).sort((a,b)=>b.recordedPurchase-a.recordedPurchase||a.label.localeCompare(b.label,'ja'));
 }
+
+/* v2.5 cash-flow view. Legacy status fields remain valid for old backups;
+   all recorded stakes are expenses immediately, and only recorded receipts are income. */
+export function cashFinance(data,options={}){
+ const s=combinedFinance(data,options);
+ const recorded=s.recordedPurchase,receipts=s.receipts;
+ return {...s,settledPurchase:recorded,profit:receipts-recorded,
+  returnRate:recorded?receipts/recorded*100:null,pendingStake:0,pendingCount:0,
+  settledCount:s.detailCount+s.simpleCount,tentativeNet:receipts-recorded};
+}
+export function cashQuickBreakdown(data,options={}){
+ return quickBreakdown(data,options).map(x=>({...x,
+  settledPurchase:x.recordedPurchase,profit:x.receipts-x.recordedPurchase,
+  pendingCount:0,pendingStake:0,settledCount:x.count}));
+}

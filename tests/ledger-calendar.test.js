@@ -20,17 +20,18 @@ test('calendar month has Sunday-first offset and true number of days',()=>{
 test('separate days, confirmed net profit, refunds, and pending stake exactly',()=>{
  const d=fixture(),before=structuredClone(d);
  const m=ledgerMonth(d,[],'2026-10'),one=m.days[16],two=m.days[17];
- assert.equal(one.summary.profit,400);
- assert.equal(one.summary.purchase,200);assert.equal(one.summary.payout,500);
- assert.equal(one.summary.refund,100);assert.equal(one.summary.pendingCount,1);
- assert.equal(one.summary.pendingStake,500);assert.equal(one.tickets.length,1);
+ assert.equal(one.summary.profit,-100);
+ assert.equal(one.summary.purchase,700);assert.equal(one.summary.payout,500);
+ assert.equal(one.summary.refund,100);assert.equal(one.summary.pendingCount,0);
+ assert.equal(one.summary.pendingStake,0);assert.equal(one.tickets.length,1);
  assert.equal(two.summary.profit,-100);
  assert.equal(m.days[0].summary,null);assert.deepEqual(d,before);
 });
 
 test('pending-only is not displayed as zero profit; full refund is settled zero',()=>{
  const d=fixture();d.lines=d.lines.filter(l=>l.ticketId==='ticket1'&&l.status==='pending');
- assert.equal(ledgerMonth(d,[],'2026-10').days[16].summary.settledCount,0);
+ assert.equal(ledgerMonth(d,[],'2026-10').days[16].summary.settledCount,1);
+ assert.equal(ledgerMonth(d,[],'2026-10').days[16].summary.profit,-500);
  const r=fixture();r.lines=r.lines.filter(l=>l.status==='void');
  const s=ledgerMonth(r,[],'2026-10').days[16].summary;
  assert.equal(s.settledCount,1);assert.equal(s.profit,0);

@@ -2,7 +2,7 @@ import {check,money,summarize} from './core.js';
 
 // UI choices never change the persisted schema.
 export function resultChoice(line){
-  if(line.status==='pending')return 'pending';
+  if(line.status==='pending')return 'miss';
   if(line.refund>0)return 'advanced'; // preserve even legacy settled full refunds
   return line.payout>0?'hit':'miss';
 }

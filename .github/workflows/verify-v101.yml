@@ -57,6 +57,7 @@ on:
       - work/v2.4.2-readable-history-profit
       - work/v2.4.3-readability-accessibility
       - work/v2.4.4-calendar-clarity
+      - work/v2.5.0-no-pending-cash
     paths:
       - '.github/workflows/verify-v101.yml'
       - '**/*.js'
@@ -268,6 +269,10 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v243.cjs || { echo "ux-v243.cjs source" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: v2.4.3 visual accessibility publish
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v243.cjs || { echo "ux-v243.cjs publish" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.5.0 cash-first source acceptance
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs || { echo "ux-v250.cjs source" >> "$RUNNER_TEMP/umalog-failed-tests"; }
+      - name: v2.5.0 cash-first publish acceptance
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs || { echo "ux-v250.cjs publish" >> "$RUNNER_TEMP/umalog-failed-tests"; }
       - name: Summarize browser regression failures
         if: always()
         run: |

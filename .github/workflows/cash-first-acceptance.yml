@@ -1,0 +1,45 @@
+name: v2.5.0 Cash-first release acceptance
+on:
+  push:
+    branches:
+      - work/v2.5.0-no-pending-cash
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    name: Cash-first accounting and PWA acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check source and publish parity
+        run: python tools/check_publish.py
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check publish/app.js
+          node --check core.js
+          node --check publish/core.js
+          node --check simple-ledger.js
+          node --check publish/simple-ledger.js
+          node --check ledger-calendar.js
+          node --check publish/ledger-calendar.js
+      - name: Run all domain unit tests, including cash-flow migration
+        run: npm test
+      - name: Install browser dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+          cat > tests/ci-chromium.cjs <<'EOF'
+          module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
+          EOF
+      - name: Cash-first browser acceptance (development)
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs
+      - name: Cash-first browser acceptance (published PWA)
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs
