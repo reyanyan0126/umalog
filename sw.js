@@ -1,5 +1,5 @@
 // Increment VERSION whenever any app asset changes. Never touch IndexedDB here.
-const VERSION='2.5.26';
+const VERSION='2.5.27';
 const PREFIX='umalog-'+self.registration.scope+'-';
 const CACHE=PREFIX+VERSION;
 const ASSETS=['./','./index.html','./style.css','./app.js','./navigation.js','./updates.js','./core.js','./db.js','./manifest.webmanifest','./assets/umalog-title-logo.png','./assets/umalog-app-icon-512.png','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable.png',...Array.from({length:5},(_,i)=>`./assets/stage-${i}.svg`)];
