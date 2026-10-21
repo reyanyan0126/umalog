@@ -829,13 +829,29 @@ const updates=createUpdates({serviceWorker:navigator.serviceWorker,
  onOffer:()=>{
   $('#update').hidden=false;
   $('#update').innerHTML='<span>新しいバージョンがあります。</span> <button id="applyUpdate">保存してから更新</button>';
-  $('#applyUpdate').onclick=()=>updates.apply();
+  $('#applyUpdate').onclick=()=>{lockUpdateGestures(true);if(!updates.apply())lockUpdateGestures(false);};
  }
 });
+// Prevent double-tap zoom while an update is downloading or being applied.
+let updateBusy=false;
+const lockUpdateGestures=busy=>{
+ updateBusy=busy;
+ document.documentElement.classList.toggle('update-gesture-lock',busy);
+ $('#launchUpdate').disabled=busy;
+};
+const updateStatus=$('#launchUpdateStatus');
+const statusObserver=new MutationObserver(()=>{
+ const status=updateStatus.textContent||'';
+ if(/新しいバージョンを適用しています/.test(status))lockUpdateGestures(true);
+});
+statusObserver.observe(updateStatus,{childList:true,characterData:true,subtree:true});
 $('#launchUpdate').onclick=async()=>{
- $('#launchUpdate').disabled=true;
- try{await updates.check();}finally{$('#launchUpdate').disabled=false;}
+ if(updateBusy)return;
+ lockUpdateGestures(true);
+ try{await updates.check();}finally{
+  if(!/新しいバージョンを適用しています/.test(updateStatus.textContent||''))lockUpdateGestures(false);
+ }
 };
 try{const snapshot=await loadWithRevision();data=snapshot.data;ledgerRevision=snapshot.revision;const next=recalculate(grow(migrateGrowth(data)));
  if(JSON.stringify(next)!==JSON.stringify(data)){try{data=await save(next,{expectedRevision:ledgerRevision});ledgerRevision++;}catch(error){if(error.code!=='STALE_LEDGER')throw error;const fresh=await loadWithRevision();data=fresh.data;ledgerRevision=fresh.revision;}}
- try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().then(()=>updates.check()).catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}
+ try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().then(async()=>{lockUpdateGestures(true);try{await updates.check();}finally{if(!/新しいバージョンを適用しています/.test(updateStatus.textContent||''))lockUpdateGestures(false);}}).catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}
