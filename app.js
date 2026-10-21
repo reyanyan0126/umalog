@@ -799,6 +799,33 @@ function setupMobileKeyboard(){
  sync();
 }
 setupMobileKeyboard();
+/* Horizontal swipes navigate the four dock tabs. Never intercept form controls,
+   horizontal carousels, browser edge gestures, or unsaved edits. */
+function setupDockSwipe(){
+ const pages=['home','quick','history','analysis'];
+ let start=null;
+ const blocked=el=>el?.closest('input,textarea,select,button,a,label,summary,[contenteditable],.carousel,[data-no-swipe],[role="slider"]');
+ app.addEventListener('touchstart',event=>{
+  start=null;
+  if(event.touches.length!==1||dirty||calendarDirty||document.body.classList.contains('mobile-keyboard-open'))return;
+  const route=(location.hash.slice(1)||'home').split('/')[0];
+  if(!pages.includes(route)||blocked(event.target))return;
+  const touch=event.touches[0];
+  if(touch.clientX<28||touch.clientX>innerWidth-28)return;
+  start={x:touch.clientX,y:touch.clientY,route,at:Date.now(),target:event.target};
+ },{passive:true});
+ app.addEventListener('touchend',event=>{
+  if(!start||event.changedTouches.length!==1)return;
+  const from=start;start=null;
+  if(dirty||calendarDirty||location.hash!=='#'+from.route||blocked(from.target))return;
+  const touch=event.changedTouches[0],dx=touch.clientX-from.x,dy=touch.clientY-from.y;
+  if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-from.at>900)return;
+  const index=pages.indexOf(from.route),next=index+(dx<0?1:-1);
+  if(next>=0&&next<pages.length)location.hash='#'+pages[next];
+ },{passive:true});
+ app.addEventListener('touchcancel',()=>{start=null;},{passive:true});
+}
+setupDockSwipe();
 const navigation=createNavigation({window,onError:error=>notify(error.message),render:hash=>{
  const title=hash==='#title';
  $('#launchScreen').hidden=!title;
