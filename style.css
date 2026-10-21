@@ -1101,7 +1101,7 @@ nav a{width:min(25%,220px)}
 .launch-fallback{font-size:clamp(25px,7vw,36px)}
 
 /* Native navigation fallback: even when JS or stale cached script fails, Start opens Home. */
-body:has(#home:target) .launch-screen{display:none!important}
+
 a.launch-start{display:inline-flex;align-items:center;justify-content:center;background:var(--green);color:#fff;padding:12px 28px;text-decoration:none;font-weight:700}
 
 .launch-update{min-height:42px;background:transparent;border:1px solid #769f89;color:#285a46;border-radius:999px;font-size:13px;padding:8px 18px}
