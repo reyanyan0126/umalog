@@ -1094,3 +1094,8 @@ nav a{width:min(25%,220px)}
 @media(max-width:420px){header{padding:8px 16px}.brand img{width:88px!important;height:66px!important}}
 
 .launch-fallback{font-size:clamp(30px,9vw,46px);font-weight:900;letter-spacing:-.04em;color:#173f31}.launch-fallback span{font-size:.45em;letter-spacing:0}.brand{display:flex;align-items:center;gap:6px}.brand img{flex-shrink:0}
+
+/* Avoid magnifying the low-resolution supplied raster; blend its white backing into the title. */
+.launch-logo{width:min(58vw,240px);max-height:190px;mix-blend-mode:multiply;filter:none}
+.launch-content{gap:18px}
+.launch-fallback{font-size:clamp(25px,7vw,36px)}
