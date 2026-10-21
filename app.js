@@ -217,10 +217,20 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  <label>購入日<input id="simpleDate" type="date" required min="2000-01-01" max="2199-12-31" value="${esc(old.date)}"></label>
  <label>購入額 <span class="required-mark">必須</span><input id="simpleStake" type="number" min="100" max="1000000000000" step="100" required inputmode="numeric" value="${old.stake}" placeholder="例：1,000"></label>
  <details id="simpleAssists" class="simple-entry-assists"><summary>金額の候補・前回の記録を使う</summary><div class="stake-shortcuts" role="group" aria-label="支出金額の候補">${[100,500,1000,2000,5000].map(n=>`<button type="button" class="quiet" data-simple-amount="${n}">${n.toLocaleString('ja-JP')}円</button>`).join('')}</div>${templatePanel}</details>
+ <details class="simple-graded"><summary>重賞からレースを選ぶ（任意）</summary><div id="simpleGradedPicker"></div></details>
  <details class="simple-optional" ${old.venue||old.number||old.type||old.name||old.memo?'open':''}><summary>競馬場・券種・メモ（任意）</summary><div class="simple-optional-fields"><label>競馬場<select id="simpleVenue"><option value="">未指定</option>${opts(VENUES,old.venue)}</select></label><label>レース番号<select id="simpleNumber"><option value="">未指定</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${old.number===i+1?'selected':''}>${i+1}R</option>`).join('')}</select></label><label>券種<select id="simpleType"><option value="">未指定</option>${opts(TYPES,old.type)}</select></label><label>レース名（任意）<input id="simpleName" maxlength="100" value="${esc(old.name)}"></label><label class="simple-optional-full">メモ（任意）<textarea id="simpleMemo" maxlength="4000">${esc(old.memo)}</textarea></label></div></details>
  <details id="simpleResultSection" class="simple-settlement" ${old.payout||old.refund?'open':''}><summary id="simpleResultSummary">払戻・返還を入力する（任意）</summary><div id="simplePayoutFields"><label>払戻金（円）<input id="simplePayout" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.payout||0}"></label><label>返還金（円）<input id="simpleRefund" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.refund||0}"></label></div></details>
  <div id="simpleReview" class="simple-review-compact" role="status" aria-live="polite"></div><p id="simpleUnsaved" class="simple-edit-state" hidden>編集中（未保存）</p>
  <button id="simpleSave" type="submit" class="accent full">${id?'この記録を更新':'この支出を保存'}</button></form><p class="simple-advanced-link"><a href="#entry">買い目まで詳しく入力する →</a></p>${id?'<button id="simpleDelete" type="button" class="danger full">この記録を削除する</button>':''}`;
+ const simpleEvents=gradedEvents(withMaster(calendarState.calendar));
+ mountGradedPicker($('#simpleGradedPicker'),simpleEvents,r=>{
+  check(selectable(r),'この重賞は変更・中止の確認が必要です。');
+  $('#simpleDate').value=r.date;$('#simpleVenue').value=r.venue;$('#simpleNumber').value=r.number??'';$('#simpleName').value=r.name;
+  app.querySelector('.simple-optional').open=true;
+  $('#simpleGradedPicker #gradedSelection').textContent=eventLabel(r);
+  dirty=true;$('#simpleUnsaved').hidden=false;
+  $('#simpleEntryForm').dispatchEvent(new Event('change',{bubbles:true}));
+ });
  const values=()=>makeSimpleEntry({date:$('#simpleDate').value,stake:$('#simpleStake').value,venue:$('#simpleVenue').value,number:$('#simpleNumber').value,type:$('#simpleType').value,name:$('#simpleName').value,memo:$('#simpleMemo').value,status:'settled',payout:$('#simplePayout').value||0,refund:$('#simpleRefund').value||0},id||'preview');
  const refresh=()=>{try{const e=values();$('#simpleReview').innerHTML=`<span>購入 <strong>${yen(e.stake)}</strong></span><span>払戻・返還 ${yen(e.payout+e.refund)} ／ 収支 <strong>${signed(e.payout+e.refund-e.stake)}</strong></span>`;}catch(err){$('#simpleReview').textContent=$('#simpleStake').value.trim()?'入力内容を確認してください。':'購入額を入力してください。';}};
  const mark=()=>{dirty=true;$('#simpleUnsaved').hidden=false;refresh();};
