@@ -99,13 +99,21 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   }
   if(row.events.length){
    detail.append(elem('h4',null,'登録済み重賞'));
-   const list=elem('ul','ledger-detail-list');
+   const list=elem('ul','ledger-graded-cards');
    for(const event of row.events){
-    const item=elem('li');
-    const label=event.name+'（'+event.grade+'）'+(event.approval==='pending'?'・認可前':'')+(event.gradeStatus==='pending'?'・格付け申請中':'')+(event.status==='cancelled'?'・中止':event.status==='changed'?'・変更確認':'');
-    if(selectable(event)){const link=elem('a',null,label);link.href='#entry/'+encodeURIComponent(event.key);item.append(link);}
-    else item.append(elem('span',null,label));
-    list.append(item);
+    const item=elem('li','ledger-graded-item');
+    const active=selectable(event);
+    const card=elem(active?'a':'div','ledger-graded-card');
+    if(active)card.href='#entry/'+encodeURIComponent(event.key);
+    else card.classList.add('is-unavailable');
+    const grade=elem('span','ledger-grade-badge',event.grade||'重賞');
+    const title=elem('span','ledger-graded-name',event.name);
+    const text=elem('span','ledger-graded-main');text.append(grade,title);
+    card.append(text);
+    const status=[event.approval==='pending'?'認可前':'',event.gradeStatus==='pending'?'格付け申請中':'',event.status==='cancelled'?'中止':event.status==='changed'?'変更確認':''].filter(Boolean);
+    if(status.length)card.append(elem('small','ledger-graded-status',status.join(' · ')));
+    if(active)card.append(elem('span','ledger-graded-arrow','›'));
+    item.append(card);list.append(item);
    }
    detail.append(list);
   }
