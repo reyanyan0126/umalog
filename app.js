@@ -679,8 +679,8 @@ function analysis(){
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
  $('#analysisAllTime').onclick=()=>{analysisRange='all';analysis();};
  $('#analysisRange').onchange=e=>{analysisRange=e.target.value;analysis();};
- $('#analysisYear').onchange=e=>{if(/^(20\\d\\d|21\\d\\d)$/.test(e.target.value)){analysisYear=e.target.value;analysis();}};
- $('#analysisMonth').onchange=e=>{if(/^\\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value)){analysisMonth=e.target.value;analysis();}};
+ $('#analysisYear').onchange=e=>{if(/^(20\d\d|21\d\d)$/.test(e.target.value)){analysisYear=e.target.value;analysis();}};
+ $('#analysisMonth').onchange=e=>{if(/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value)){analysisMonth=e.target.value;analysis();}};
  $('#analysisVenue').onchange=e=>{analysisVenue=e.target.value;analysis();};
  $('#analysisType').onchange=e=>{analysisType=e.target.value;analysis();};
 }
