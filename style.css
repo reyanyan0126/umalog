@@ -1060,20 +1060,7 @@ nav a{width:min(25%,220px)}
   line-height:1.35;
   white-space:normal;
 }
-.ledger-day .ledger-pending-mark{
-  position:absolute;
-  right:2px;
-  bottom:2px;
-  padding:1px 3px;
-  border-radius:4px;
-  background:#fff0ce;
-  color:#805017;
-  border:1px solid #c89034;
-  font-size:.57rem;
-  font-weight:850;
-  line-height:1.15;
-  pointer-events:none;
-}
+
 .ledger-day:focus-visible{
   outline:3px solid #a06117;
   outline-offset:2px;
@@ -1086,5 +1073,12 @@ nav a{width:min(25%,220px)}
 .home-calendar-section .ledger-detail[hidden]{display:none}
 @media(max-width:359px){
   .home-calendar-explain{font-size:.68rem}
-  .ledger-day .ledger-pending-mark{right:1px;bottom:1px;padding:0 2px}
+  
 }
+
+/* v2.5.0: no waiting marker, purchases contribute to the cash ledger immediately. */
+.home-minimal-note{font-size:.8rem;line-height:1.5}
+.simple-history-row.simple-history-compact .simple-history-actions a.button{min-height:44px}
+.home-calendar-section .ledger-pending-mark{display:none!important}
+#simpleResultSection>summary{min-height:44px}
+@media(max-width:359px){.simple-history-compact .simple-history-actions{gap:3px}.simple-history-row.simple-history-compact .simple-history-actions a.button{font-size:.72rem;padding:8px 5px}}
