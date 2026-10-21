@@ -6,6 +6,7 @@ export function createNavigation({window:win, render, beforeLeave=async()=>true,
  function navigate(hash,{replace=false}={}) {
   const target=normalize(hash);
   const task=queue.then(async()=>{
+   if(target===current)return true;
    let allowed=true;
    try{if(target!==current)allowed=await beforeLeave();}catch(error){win.history.replaceState(null,'',current);throw error;}
    if(!allowed) {

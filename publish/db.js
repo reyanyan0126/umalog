@@ -4,7 +4,7 @@ import {emptyData,validateData,recalculate} from './core.js';
 import {validateCatalog} from './race-info.js';
 const DB='umalog',VERSION=1,STORE='state';
 let connection;
-export function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別のタブを閉じて再試行してください。'));req.onsuccess=()=>{connection=req.result;connection.onversionchange=()=>connection.close();resolve(connection);};});}
+export function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別のタブを閉じて再試行してください。'));req.onsuccess=()=>{connection=req.result;connection.onversionchange=()=>{req.result.close();if(connection===req.result)connection=null;};connection.onclose=()=>{if(connection===req.result)connection=null;};resolve(connection);};});}
 export async function load(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get('main');r.onsuccess=()=>{try{resolve(r.result?migrateGrowth(validateData(r.result),new Date(),r.result.character.exp):migrateGrowth(emptyData()));}catch(e){reject(e);}};r.onerror=()=>reject(r.error);});}
 // One atomic write: failed validation/transaction leaves the old snapshot intact.
 export async function loadWithRevision(){
@@ -34,7 +34,7 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
    }else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
-  }catch(error){problem=error;if(tx.readyState==='active')tx.abort();}};
+  }catch(error){problem=error;tx.abort();}};
   tx.oncomplete=()=>resolve(data);
   tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));
   tx.onabort=()=>reject(problem||tx.error||new Error('保存が中止されました。入力内容を保持しています。'));

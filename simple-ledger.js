@@ -49,7 +49,6 @@ export function recentSimpleTemplates(entries,limit=3){
  }
  return templates;
 }
-const match=(date,month,venue,type)=> (!month||date.startsWith(month))&&(!venue||venue===true||venue===undefined);
 export function combinedFinance(data,{prefix='',venue='',type=''}={}){
  check(typeof prefix==='string'&&/^(?:|\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2})$/.test(prefix),'集計対象期間が不正です。');
  check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');

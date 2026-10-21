@@ -44,7 +44,7 @@ test('v1.8 bounded paging for 50+ records and strict input checks',()=>{
  assert.equal(filterRaceAudit(a,{limit:80}).hasMore,false);
  assert.equal(filterRaceAudit(a,{status:'all',venue:'札幌'}).total,0);
  assert.equal(filterRaceAudit(a,{status:'attention',query:'対象50'}).total,1);
- for(const params of [{status:'official'},{venue:'門別'},{limit:0},{limit:30001},{query:'x'.repeat(201)}]){
+ for(const params of [{status:'official'},{venue:'存在しない競馬場'},{limit:0},{limit:30001},{query:'x'.repeat(201)}]){
   assert.throws(()=>filterRaceAudit(a,params));
  }
  assert.equal(raceAudit(emptyCalendar()).counts.all,0);

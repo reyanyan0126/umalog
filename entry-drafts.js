@@ -26,21 +26,21 @@ export function validateEntryDraft(value){
  return value;
 }
 
-export function createEntryDraftAutosaver({key,capture,onSaved,onError,delay=350}){
- let timer=null,writing=Promise.resolve(),enabled=false,stopped=false;
+export function createEntryDraftAutosaver({key,capture,onSaved,onError,delay=350,persist=saveEntryDraft}){
+ let timer=null,writing=Promise.resolve(),enabled=false,stopped=false,failure=null;
  function write(){
   clearTimeout(timer);timer=null;
   if(!enabled||stopped)return writing;
   try{
    const snapshot=validateEntryDraft(capture());
-   writing=writing.catch(()=>{}).then(()=>saveEntryDraft(key,snapshot)).then(()=>onSaved(snapshot),onError);
-  }catch(error){onError(error);}
+   writing=writing.catch(()=>{}).then(()=>persist(key,snapshot)).then(()=>{failure=null;onSaved(snapshot);},error=>{failure=error;onError(error);});
+  }catch(error){failure=error;onError(error);}
   return writing;
  }
  return {
   start(){if(stopped)return;enabled=true;},
   schedule(){if(!enabled||stopped)return;clearTimeout(timer);timer=setTimeout(write,delay);},
-  flush(){if(timer){clearTimeout(timer);timer=null;return write();}return writing;},
+  async flush(){if(timer||failure)await write();else await writing;if(failure)throw failure;},
   async pauseForCommit(){enabled=false;clearTimeout(timer);timer=null;await writing;},
   resume(){if(!stopped)enabled=true;},
   stop(){enabled=false;stopped=true;clearTimeout(timer);timer=null;return writing;}

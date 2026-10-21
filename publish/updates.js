@@ -2,6 +2,7 @@
 export function createUpdates({serviceWorker, onOffer, onStatus, canReload, reload, isOnline=()=>globalThis.navigator?.onLine!==false}) {
  let registration, registering, refreshing=false;
  let controlled=!!serviceWorker?.controller;
+ let checking=false;
  serviceWorker?.addEventListener('controllerchange',()=>{
   if(!controlled){controlled=true;return;}
   if(refreshing)return;
@@ -30,6 +31,8 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
   return true;
  }
  async function check(){
+  if(checking)return;
+  checking=true;
   onStatus('更新を確認しています…');
   try{
    if(!isOnline())throw new Error('offline');
@@ -47,8 +50,9 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
     worker.addEventListener('statechange',changed);changed();
    });
    if(reg.waiting)apply();
-   else onStatus('最新版の確認が完了しました。');
+   else onStatus('確認が完了しました。配信中の最新版です。');
   }catch{onStatus('更新を確認できませんでした。通信状態を確認してください。');}
+  finally{checking=false;}
  }
  return {register,check,apply};
 }
