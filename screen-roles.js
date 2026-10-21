@@ -44,6 +44,6 @@ export function calendarMetricValue(summary,metric='profit'){
  if(!summary)return null;
  if(metric==='purchase')return summary.purchase+summary.pendingStake;
  if(metric==='receipt')return summary.payout+summary.refund;
- if(metric==='profit')return summary.settledCount?summary.profit:null;
+ if(metric==='profit')return summary.settledCount||summary.pendingCount?summary.payout+summary.refund-summary.purchase-summary.pendingStake:null;
  throw new Error('表示指標が不正です。');
 }
