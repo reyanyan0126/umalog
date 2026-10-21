@@ -121,13 +121,15 @@ function ticketCard(t){const {r,ls,s}=ticketInfo(t);const status=s.pendingCount?
 function bindDetails(){document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{location.hash='detail/'+b.dataset.detail;});}
 function catalogPanel(){const stamp=v=>v?new Date(v).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}):'未実施';return `<section class="card" id="raceInfoPanel"><details><summary>自動取得の状況</summary><h2>レース情報</h2><p id="raceInfoStatus" role="status">${catalogUpdating?'取得中…':!RACE_PROVIDER?'提供元未設定・自動取得は未提供':catalog.error?'更新失敗（取得済み情報は保持）':'取得済み情報を利用できます'}</p><p class="help">最終成功：${esc(stamp(catalog.lastSuccess))}（日本時間）<br>最終試行：${esc(stamp(catalog.lastAttempt))}<br>保存済み ${catalog.records.length}件 / 前回成功時の取得 ${catalog.lastCount}件</p>${catalogWarning||catalog.error?`<p role="alert" class="help negative">${esc(catalogWarning||catalog.error)}</p>`:''}<button id="refreshRaces" class="quiet full" ${!RACE_PROVIDER||catalogUpdating?'disabled':''} aria-describedby="raceInfoHelp">直近レース情報を更新する</button><p id="raceInfoHelp" class="help">${!RACE_PROVIDER?'正規のデータ提供元・利用条件が未確定のため更新できません。条件は「情報未取得」と表示し、収支登録は通常どおり利用できます。':'通信で取得します。失敗時も保存済み情報と収支は保持します。取得済み情報はオフラインでも利用できます。'}</p><p class="help muted">レース情報は収支と別のキャッシュです。JSONバックアップには含まれません。</p></details></section>`;}
 function bindCatalog(){const button=$('#refreshRaces');if(!button)return;button.onclick=guard(async()=>{if(catalogUpdating||!RACE_PROVIDER)return;catalogUpdating=true;button.disabled=true;$('#raceInfoStatus').textContent='取得中…';try{const result=await refreshCatalog(catalog);if(result.status!=='unconfigured'){await saveCatalog(result.catalog);catalog=result.catalog;catalogWarning='';}}finally{catalogUpdating=false;if($('#raceInfoPanel')){const panel=$('#raceInfoPanel');panel.outerHTML=catalogPanel();bindCatalog();}}});}
+let homeSummaryPeriod='year';
 function home(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return homeClassic();
- const currentMonth=jstToday().slice(0,7),summary=combinedFinance(data,{prefix:currentMonth});
+ const currentMonth=jstToday().slice(0,7),currentYear=currentMonth.slice(0,4);
+ const summary=combinedFinance(data,{prefix:homeSummaryPeriod==='year'?currentYear:currentMonth});
  app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1>
  <section class="card hero home-minimal" id="homeSummary">
-  <div class="row"><h2>今月の収支</h2><small>${currentMonth.replace('-','年')}月</small></div>
-  <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="今月の収支：${summary.recordedPurchase?signed(summary.profit):'0円'}">${signed(summary.profit)}</div>
+  <div class="row"><h2 id="homeSummaryTitle">${homeSummaryPeriod==='year'?'年間の収支':'今月の収支'}</h2><label><span class="visually-hidden">収支の集計期間</span><select id="homeSummaryPeriod" aria-label="収支の集計期間"><option value="year" ${homeSummaryPeriod==='year'?'selected':''}>今年</option><option value="month" ${homeSummaryPeriod==='month'?'selected':''}>今月</option></select></label></div>
+  <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="${homeSummaryPeriod==='year'?'年間':'今月'}の収支：${signed(summary.profit)}">${signed(summary.profit)}</div>
   <p class="home-minimal-note">購入額はすぐ支出に反映。払戻・返還は入力した金額を加算します。</p>
   <div class="home-minimal-totals home-simple-totals">${metric('購入額',yen(summary.recordedPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
  </section>
@@ -138,6 +140,7 @@ function home(){
   <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
   <div id="ledgerCalendarHost"></div>
  </section>`;
+ $('#homeSummaryPeriod').onchange=e=>{homeSummaryPeriod=e.target.value;home();};
  mountHomeCalendar();
  loadEntryDraft('new').then(saved=>{
   if(!$('#homeEntry')||!saved)return;
