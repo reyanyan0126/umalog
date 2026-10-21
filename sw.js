@@ -1,5 +1,5 @@
 // Increment VERSION whenever any app asset changes. Never touch IndexedDB here.
-const VERSION='2.5.17';
+const VERSION='2.5.18';
 const PREFIX='umalog-'+self.registration.scope+'-';
 const CACHE=PREFIX+VERSION;
 const ASSETS=['./','./index.html','./style.css','./app.js','./core.js','./db.js','./manifest.webmanifest','./assets/logo-official.png','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable.png',...Array.from({length:5},(_,i)=>`./assets/stage-${i}.svg`)];
@@ -12,15 +12,16 @@ self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);
  if(!url.href.startsWith(self.registration.scope))return;
  const isDocument=event.request.mode==='navigate'||url.pathname.endsWith('/index.html');
+ const isCode=url.pathname.endsWith('.js')||url.pathname.endsWith('.css')||url.pathname.endsWith('.webmanifest');
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
-  if(isDocument){
+  if(isDocument||isCode){
    try{
     const response=await fetch(event.request,{cache:'no-store'});
-    if(response.ok)await cache.put('./index.html',response.clone());
+    if(response.ok)await cache.put(isDocument?'./index.html':event.request,response.clone());
     return response;
    }catch(error){
-    const cached=await cache.match('./index.html');
+    const cached=await cache.match(isDocument?'./index.html':event.request,{ignoreSearch:true});
     if(cached)return cached;
     throw error;
    }
