@@ -8,7 +8,8 @@
   button.disabled=true;
   // Keep the title visible after an update reload, but reset any previous Settings route.
   try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
-  if(location.hash!=='#home')location.hash='home';
+  if(location.hash!=='#home')history.replaceState(null,'',location.pathname+location.search+'#home');
+  window.dispatchEvent(new Event('hashchange'));
   status.textContent='更新を確認しています…';
   try{
    if(!('serviceWorker' in navigator)){status.textContent='更新機能に対応していません。';return;}
