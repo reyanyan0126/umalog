@@ -8,8 +8,7 @@
   button.disabled=true;
   // Keep the title visible after an update reload, but reset any previous Settings route.
   try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
-  if(location.hash!=='#home')history.replaceState(null,'',location.pathname+location.search+'#home');
-  window.dispatchEvent(new Event('hashchange'));
+  // Checking updates must not navigate away from the title screen.
   status.textContent='更新を確認しています…';
   try{
    if(!('serviceWorker' in navigator)){status.textContent='更新機能に対応していません。';return;}
@@ -19,7 +18,7 @@
    if(reg.waiting){
     status.textContent='新しいバージョンを適用しています…';
     let switched=false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!switched){switched=true;location.reload();}},{once:true});
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!switched){switched=true;history.replaceState(null,'',location.pathname+location.search+'#home');location.reload();}},{once:true});
     reg.waiting.postMessage({type:'SKIP_WAITING'});
    }else{
     status.textContent='最新版の確認が完了しました。';
@@ -36,7 +35,6 @@
    try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
    // Reset the underlying route before showing the overlay: Start must always land on Home.
    if(location.hash!=='#home')history.replaceState(null,'',location.pathname+location.search+'#home');
-   window.dispatchEvent(new Event('hashchange'));
    splash.hidden=false;
    splash.style.display='grid';
    window.scrollTo(0,0);
