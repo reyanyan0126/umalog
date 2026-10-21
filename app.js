@@ -834,6 +834,9 @@ const updates=createUpdates({serviceWorker:navigator.serviceWorker,
 });
 // Prevent double-tap zoom while an update is downloading or being applied.
 let updateBusy=false;
+const updateTouchStyle=document.createElement('style');
+updateTouchStyle.textContent='html.update-gesture-lock,html.update-gesture-lock body,html.update-gesture-lock button,html.update-gesture-lock a{touch-action:manipulation}';
+document.head.appendChild(updateTouchStyle);
 const lockUpdateGestures=busy=>{
  updateBusy=busy;
  document.documentElement.classList.toggle('update-gesture-lock',busy);
