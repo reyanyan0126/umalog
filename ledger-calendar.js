@@ -129,7 +129,22 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
   if(row.date===today)button.classList.add('ledger-today');if(row.holiday)button.classList.add('holiday');
   const weekday=new Date(row.date+'T00:00:00Z').getUTCDay();if(weekday===0)button.classList.add('sunday');if(weekday===6)button.classList.add('saturday');if(row.date===today)button.setAttribute('aria-current','date');button.append(elem('span','ledger-number',String(row.day)));if(row.holiday&&row.date!==today)button.append(elem('span','ledger-holiday-mark','祝'));
   const v=valueFor(s);if(v!==null)button.append(elem('span','ledger-money',smallMoney(v)));
-  if(row.events.length)button.append(elem('span','ledger-event','⚐'+(row.events.length>1?row.events.length:'')));
+  if(row.events.length){
+   const grades=[...new Set(row.events.map(e=>String(e.grade||'').trim()).filter(Boolean))];
+   const gradeOrder=['GⅠ','GI','G1','GⅡ','GII','G2','GⅢ','GIII','G3'];
+   grades.sort((a,b)=>{const rank=x=>{const i=gradeOrder.indexOf(x);return i<0?99:i;};return rank(a)-rank(b);});
+   const badges=elem('span','ledger-event-grades');
+   for(const grade of grades.slice(0,2)){
+    const badge=elem('span','ledger-event-grade',grade);
+    if(['GⅠ','GI','G1'].includes(grade))badge.classList.add('grade-g1');
+    else if(['GⅡ','GII','G2'].includes(grade))badge.classList.add('grade-g2');
+    else if(['GⅢ','GIII','G3'].includes(grade))badge.classList.add('grade-g3');
+    badges.append(badge);
+   }
+   if(!grades.length)badges.append(elem('span','ledger-event-grade','重賞'));
+   if(grades.length>2)badges.append(elem('span','ledger-event-more','+'));
+   button.append(badges);
+  }
   button.setAttribute('aria-label',(row.date===today?'今日 ':'')+row.date+(row.holiday?' '+row.holiday:'')+(v!==null?' '+measureName+' '+exactMoney(v):'')+(row.events.length?' 重賞：'+row.events.map(e=>e.name).join('、'):''));
   button.onclick=()=>{
    if(options.home&&!detail.hidden&&selectedDate===row.date){closeDay();return;}
