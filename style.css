@@ -1092,3 +1092,5 @@ nav a{width:min(25%,220px)}
 .launch-start{min-width:210px;min-height:54px;border-radius:999px;font-size:17px;box-shadow:0 6px 16px rgba(25,93,64,.18)}
 .brand img{width:100px!important;height:75px!important;object-fit:contain}
 @media(max-width:420px){header{padding:8px 16px}.brand img{width:88px!important;height:66px!important}}
+
+.launch-fallback{font-size:clamp(30px,9vw,46px);font-weight:900;letter-spacing:-.04em;color:#173f31}.launch-fallback span{font-size:.45em;letter-spacing:0}.brand{display:flex;align-items:center;gap:6px}.brand img{flex-shrink:0}
