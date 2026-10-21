@@ -11,7 +11,7 @@ export function uid(){ const a=new Uint32Array(4); crypto.getRandomValues(a); re
 export function emptyData(){return {schemaVersion:SCHEMA_VERSION,races:[],tickets:[],lines:[],reviews:[],settings:{name:'うまたま',motion:true},character:{exp:0,level:1,stage:0},growth:[]};}
 export function check(ok,message){if(!ok)throw new Error(message);}
 export function money(n,purchase=false){check(Number.isSafeInteger(n)&&n>=0&&n<=MAX_MONEY&&(!purchase||(n>0&&n%100===0)),purchase?'購入額は100円単位の正の整数にしてください。':'金額は0以上の整数にしてください。');return n;}
-export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number(s.slice(0,4))>=2000&&Number(s.slice(0,4))<=2199&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;}
+export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number(s.slice(0,4))>=2000&&Number(s.slice(0,4))<=2199&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;}
 export function jstToday(now=new Date()){return new Date(now.getTime()+9*3600000).toISOString().slice(0,10);}
 export function weekOf(date){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);}
 export function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}

@@ -1,3 +1,4 @@
+import {mountDockSwipe} from './dock-swipe.js';
 import {createNavigation} from './navigation.js';
 import {createUpdates} from './updates.js';
 import {withMaster} from './graded-master.js';
@@ -8,7 +9,7 @@ import {emptyCalendar,validateCalendar,calendarRecords} from './calendar.js';
 import {calendarHome,mountCandidates,mountCalendarManager} from './calendar-view.js';
 let calendarState={revision:0,importedAt:null,calendar:emptyCalendar()},calendarWarning='',calendarDirty=false;
 const effectiveCatalog=()=>({...catalog,records:calendarRecords(withMaster(calendarState.calendar),catalog.records)});
-import {VENUES,TYPES,STAGE_NAMES,STAGES,uid,check,validDate,money,combination,box,validatePodium,aggregate as oldAggregate,summarize as oldSummarize,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey,backupFreshness,backupFileName} from './core.js';
+import {VENUES,TYPES,STAGE_NAMES,STAGES,uid,check,validDate,money,combination,box,validatePodium,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey,backupFreshness,backupFileName} from './core.js';
 import {load,loadWithRevision,save,loadCatalog,saveCatalog,loadCalendar,loadEntryDraft,discardEntryDraft,loadMainSaveTime,loadBackupConfirmation,confirmBackupStored} from './db.js';
 import {validateEntryDraft,createEntryDraftAutosaver} from './entry-drafts.js';
 import {styleView} from './style-view.js';
@@ -25,8 +26,6 @@ import {dayLedger,existingPurchaseDuplicates,periodInsights} from './day-ledger.
 import {growthRewards} from './growth-rewards.js';
 import {companionState,companionAlbum,THEME_NAMES,OUTFIT_NAMES,OUTFIT_ICONS,stageArtwork} from './growth-companion.js';
 import {ledgerInsights} from './ledger-trends.js';
-import {analysisCoverage as oldAnalysisCoverage,inclusiveMonthlyRows as oldInclusiveMonthlyRows} from './analysis-quality.js';
-import {compareCategories as oldCompareCategories} from './category-compare.js';
 import {periodComparison} from './analysis-compare.js';
 import {mountRaceBatch} from './batch-ui.js';
 import {openTips} from './tips.js';
@@ -43,36 +42,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const yen=n=>`${n.toLocaleString('ja-JP')}円`,signed=n=>(n>0?'+':'')+yen(n),rate=n=>n===null?'—':n.toFixed(1)+'％';
 const opts=(list,current)=>list.map(v=>`<option value="${esc(v)}" ${String(v)===String(current)?'selected':''}>${esc(v)}</option>`).join('');
 const clone=d=>JSON.parse(JSON.stringify(d));
-// Cash-flow projections: old pending records remain readable, but no cost is excluded.
-const summarize=(lines,races=[],tickets=[])=>{
- const x=oldSummarize(lines,races,tickets);
- const purchase=x.purchase+x.pendingStake,receipts=x.payout+x.refund;
- const effective=x.lineCount+x.pendingCount;
- return {...x,purchase,profit:receipts-purchase,returnRate:purchase?receipts/purchase*100:null,
-  lineCount:effective,lineRate:effective?x.lineHits/effective*100:null,
-  pendingCount:0,pendingStake:0,settledCount:lines.length};
-};
-const aggregate=(ledger,predicate=()=>true)=>{
- const races=ledger.races.filter(predicate),ids=new Set(races.map(r=>r.id));
- const tickets=ledger.tickets.filter(t=>ids.has(t.raceId)),tids=new Set(tickets.map(t=>t.id));
- return summarize(ledger.lines.filter(l=>tids.has(l.ticketId)),races,tickets);
-};
-const analysisCoverage=(ledger,opts={})=>{
- const x=oldAnalysisCoverage(ledger,opts),finance=combinedFinance(ledger,opts);
- return {...x,finance,pendingCount:0,pendingStake:0,settledCount:x.total,settledCountShare:x.total?100:null,settledShare:finance.recordedPurchase?100:null};
-};
-const inclusiveMonthlyRows=(ledger,opts={})=>oldInclusiveMonthlyRows(ledger,opts).map(row=>{
- const c=combinedFinance(ledger,{prefix:row.month,venue:opts.venue||'',type:opts.type||''});
- return {...row,...c,settledShare:c.recordedPurchase?100:null};
-});
-const compareCategories=(ledger,opts={})=>{
- const out=oldCompareCategories(ledger,opts);
- const convert=r=>({...r,settledPurchase:r.recordedPurchase,profit:r.receipts-r.recordedPurchase,
-   returnRate:r.recordedPurchase?r.receipts/r.recordedPurchase*100:null,pendingCount:0,pendingStake:0,
-   settledCount:r.count,incomplete:false});
- return {...out,rows:out.rows.map(convert).sort((a,b)=>opts.sort==='profit'?b.profit-a.profit:opts.sort==='returnRate'?(b.returnRate??-Infinity)-(a.returnRate??-Infinity):b.count-a.count),
-  unknown:out.unknown?{...out.unknown,pendingCount:0}:null};
-};
+import {summarize,aggregate,analysisCoverage,inclusiveMonthlyRows,compareCategories} from './finance-view.js';
 
 let stakeSelectedIds=new Set(),stakeUndoHistory=[],draftVisible=150,reviewVisible=50,reviewSignature='',entryResultsEditor=null,fastResultsEditor=null,entrySheetController=null,entryDraftSession=null,entryDraftKey=null,existingApprovalSignature='';
 const scheduleEntryDraft=()=>entryDraftSession?.schedule();
@@ -716,7 +686,7 @@ function growthScreen(){data=recalculate(data);const c=data.character,g=data.gro
   });
  document.querySelectorAll('[data-learn]').forEach(b=>b.onclick=guard(async()=>{await commit(grow(data,'learn',b.dataset.learn));growthScreen();$('#book').open=true;}));
  const reviewLoad=()=>{const v=$('#reviewWeek').value;if(!v)return;$('#reviewWeek').value=weekOf(v);const found=data.reviews.find(r=>r.week===$('#reviewWeek').value);$('#reviewText').value=found?.text||'';$('#reviewStatus').textContent=found?'記録済み。文章を訂正できます（EXPの追加付与なし）。':'未記録の週です。';};$('#reviewWeek').onchange=reviewLoad;reviewLoad();$('#reviewForm').oninput=()=>dirty=true;$('#reviewForm').onsubmit=guard(async e=>{e.preventDefault();const week=weekOf($('#reviewWeek').value),text=$('#reviewText').value.trim();check(week<w,'今週の終了後に記録できます。');check(text,'振り返りを入力してください。');const next=clone(data),r=next.reviews.find(r=>r.week===week);if(r)r.text=text;else next.reviews.push({id:uid(),week,text});await commit(grow(next,'review',week));growthScreen();$('#reviewDetails').open=true;notify('振り返りを保存しました。');});}
-function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section class="card"><h2>育成</h2><a class="button quiet full" href="#growth">育成画面を開く →</a></section><section class="card"><h2>同梱重賞</h2><p>2026年 32件 / 2027年 6件</p><p class="help">2026年10月17日以降の重賞を年末まで掲載。2027年は一部予定のみで、未発表のレース番号は自動入力しません。個人取り込みデータの削除後も同梱情報は残ります。</p></section><div id="calendarManager"></div>${catalogPanel()}<section class="card"><button type="button" class="quiet full" id="returnToTitle">タイトル画面に戻る</button><form id="settingsForm"><label class="checklabel"><input id="motion" type="checkbox" ${data.settings.motion?'checked':''}>画面の動きを有効にする</label><button type="submit">設定を保存</button></form></section><section class="card" id="budgetSettings"><h2>月間購入予算（任意）</h2><p class="help">買った馬券の金額を月単位で確認するための設定です。払戻や育成には影響しません。</p><form id="budgetForm"><label>対象月<input id="budgetMonth" type="month" required min="2000-01" max="2199-12" value="${jstToday().slice(0,7)}"></label><label>購入予算（円）<input id="budgetAmount" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${data.settings.monthlyBudgets?.[jstToday().slice(0,7)]||0}"></label><p class="help" id="budgetCurrent"></p><button class="quiet full" type="submit">この月の予算を保存（0円で解除）</button></form></section><section class="card"><h2>バックアップ</h2><div id="backupSummary" class="backup-summary"><div class="day-metrics">${metric('レース',String(data.races.length)+'件')}${metric('購入記録',String(data.tickets.length+(data.simpleEntries||[]).length)+'件')}${metric('買い目',String(data.lines.length)+'点')}</div><p id="lastLocalSave" class="help">端末内の保存日時を確認中</p><p id="lastBackupConfirmed" class="help" role="status">外部バックアップの確認状況を読み込み中</p><button id="backupConfirmed" type="button" class="quiet full">保存先でJSONファイルを確認済みにする</button></div><p class="help">データはこのブラウザ・端末内に保存されます。ブラウザデータの消去や端末故障に備えて、JSONファイルを定期的に保存してください。端末間の自動同期はありません。</p><button id="export" class="full">収支・育成を書き出す（JSON）</button><button id="exportCsv" class="quiet full" type="button">買い目の明細をCSVで出力</button><p class="help">CSVは表計算ソフトで確認するためのものです。復元にはJSONバックアップを使ってください。</p><p id="storageInfo" class="help muted"></p><button id="persist" class="quiet">永続ストレージをリクエスト</button></section><section class="card"><h2>バックアップから復元</h2><p class="help">全件置換です。先に現在のデータを書き出してください。読み込み後に内容を確認し、もう一度確認してから置換します。</p><label>JSONファイル<input type="file" id="import" accept=".json,application/json"></label><div id="restorePreview"></div></section><section class="card"><h2>このアプリについて</h2><p class="help">うまログ（シンプル入力・収支管理・カレンダー・詳細分析）<br>対象：JRA中央競馬10場・8券種。レース情報や結果の自動取得なし。記録は自己申告で、購入の証明にはなりません。<br>同時編集では古い画面の保存を拒否します。競合が出た場合はデータを確認してから再読込してください。保存は最後に保存した画面の内容が優先されます。</p></section>`;
+function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section class="card"><h2>育成</h2><a class="button quiet full" href="#growth">育成画面を開く →</a></section><section class="card"><h2>同梱重賞</h2><p>2026年 32件 / 2027年 6件</p><p class="help">2026年10月17日以降の重賞を年末まで掲載。2027年は一部予定のみで、未発表のレース番号は自動入力しません。個人取り込みデータの削除後も同梱情報は残ります。</p></section><div id="calendarManager"></div>${catalogPanel()}<section class="card"><button type="button" class="quiet full" id="returnToTitle">タイトル画面に戻る</button><form id="settingsForm"><label class="checklabel"><input id="motion" type="checkbox" ${data.settings.motion?'checked':''}>画面の動きを有効にする</label><button type="submit">設定を保存</button></form></section><section class="card" id="budgetSettings"><h2>月間購入予算（任意）</h2><p class="help">買った馬券の金額を月単位で確認するための設定です。払戻や育成には影響しません。</p><form id="budgetForm"><label>対象月<input id="budgetMonth" type="month" required min="2000-01" max="2199-12" value="${jstToday().slice(0,7)}"></label><label>購入予算（円）<input id="budgetAmount" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${data.settings.monthlyBudgets?.[jstToday().slice(0,7)]||0}"></label><p class="help" id="budgetCurrent"></p><button class="quiet full" type="submit">この月の予算を保存（0円で解除）</button></form></section><section class="card"><h2>バックアップ</h2><div id="backupSummary" class="backup-summary"><div class="day-metrics">${metric('レース',String(data.races.length)+'件')}${metric('購入記録',String(data.tickets.length+(data.simpleEntries||[]).length)+'件')}${metric('買い目',String(data.lines.length)+'点')}</div><p id="lastLocalSave" class="help">端末内の保存日時を確認中</p><p id="lastBackupConfirmed" class="help" role="status">外部バックアップの確認状況を読み込み中</p><button id="backupConfirmed" type="button" class="quiet full">保存先でJSONファイルを確認済みにする</button></div><p class="help">データはこのブラウザ・端末内に保存されます。ブラウザデータの消去や端末故障に備えて、JSONファイルを定期的に保存してください。端末間の自動同期はありません。</p><button id="export" class="full">収支・育成を書き出す（JSON）</button><button id="exportCsv" class="quiet full" type="button">買い目の明細をCSVで出力</button><p class="help">CSVは表計算ソフトで確認するためのものです。復元にはJSONバックアップを使ってください。</p><p id="storageInfo" class="help muted"></p><button id="persist" class="quiet">永続ストレージをリクエスト</button></section><section class="card"><h2>バックアップから復元</h2><p class="help">全件置換です。先に現在のデータを書き出してください。読み込み後に内容を確認し、もう一度確認してから置換します。</p><label>JSONファイル<input type="file" id="import" accept=".json,application/json"></label><div id="restorePreview"></div></section><section class="card"><h2>このアプリについて</h2><p class="help">うまログ（シンプル入力・収支管理・カレンダー・詳細分析）<br>対象：JRA中央・地方競馬25場・8券種。レース情報や結果の自動取得なし。記録は自己申告で、購入の証明にはなりません。<br>同時編集では古い画面の保存を拒否します。競合が出た場合はデータを確認してから再読込してください。競合した入力は自動で上書きしません。</p></section>`;
  // dev29: put frequently used safety settings first; leave every legacy control reachable.
  const originalInfo=app.querySelector('.card'),motionCard=$('#settingsForm').closest('.card'),backupCard=$('#backupSummary').closest('.card'),restoreCard=$('#restorePreview').closest('.card'),budgetCard=$('#budgetSettings');
  for(const card of [motionCard,backupCard,restoreCard,budgetCard])app.insertBefore(card,originalInfo);
@@ -765,7 +735,7 @@ function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section cla
  });
  $('#persist').onclick=guard(async()=>{if(!navigator.storage?.persist){notify('このブラウザは永続化リクエストに対応していません。');return;}notify(await navigator.storage.persist()?'永続ストレージが許可されました。':'永続化は許可されませんでした。バックアップを続けてください。');});
  if(navigator.storage?.persisted)navigator.storage.persisted().then(v=>{if($('#storageInfo'))$('#storageInfo').textContent=v?'永続化：許可済み（バックアップは引き続き必要です）':'永続化：未許可 / ブラウザの空き容量によって消去される可能性があります。';}).catch(()=>{});
- $('#import').onchange=guard(async e=>{restoreCandidate=null;$('#restorePreview').textContent='';const f=e.target.files[0];if(!f)return;check(f.size<=30*1024*1024,'バックアップは30MB以下にしてください。');const parsed=JSON.parse(await f.text());restoreCandidate=recalculate(migrateGrowth(validateData(parsed),new Date(),parsed.character.exp));const s=aggregate(restoreCandidate),current=aggregate(data);$('#restorePreview').innerHTML=`<div class="line"><h3>復元内容の確認</h3><p>${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目<br>確定済み購入 ${yen(s.purchase)}<br>収支 ${signed(s.profit)}<br>振り返り ${restoreCandidate.reviews.length}週 / ${restoreCandidate.character.exp} EXP</p><p class="help negative">現在：${data.races.length}レース / ${data.tickets.length}記録 / ${data.lines.length}買い目 / 収支 ${signed(current.profit)}<br>復元後：${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目 / 収支 ${signed(s.profit)}<br>現在のデータをすべて置換します。</p><label class="checklabel"><input type="checkbox" id="restoreAgree">現在のデータのバックアップを確認しました</label><button id="restore" class="danger full">このバックアップで全件置換</button></div>`;$('#restore').onclick=guard(async()=>{check($('#restoreAgree').checked,'バックアップ確認にチェックしてください。');if(!confirm('現在のデータを削除して、選択したバックアップで全件置換します。実行しますか？'))return;await commit(restoreCandidate,{clearAllDrafts:true});restoreCandidate=null;notify('復元が完了しました。');location.hash='home';});});}
+ $('#import').onchange=guard(async e=>{restoreCandidate=null;$('#restorePreview').textContent='';const f=e.target.files[0];if(!f)return;check(f.size<=30*1024*1024,'バックアップは30MB以下にしてください。');const parsed=JSON.parse(await f.text());restoreCandidate=recalculate(migrateGrowth(validateData(parsed),new Date(),parsed.character.exp));const s=combinedFinance(restoreCandidate),current=combinedFinance(data);$('#restorePreview').innerHTML=`<div class="line"><h3>復元内容の確認</h3><p>${restoreCandidate.simpleEntries?.length||0}件の簡易記録 / ${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目<br>購入総額 ${yen(s.recordedPurchase)}<br>収支 ${signed(s.profit)}<br>振り返り ${restoreCandidate.reviews.length}週 / ${restoreCandidate.character.exp} EXP</p><p class="help negative">現在：簡易${data.simpleEntries?.length||0}件 / ${data.races.length}レース / ${data.tickets.length}記録 / ${data.lines.length}買い目 / 収支 ${signed(current.profit)}<br>復元後：${restoreCandidate.simpleEntries?.length||0}件の簡易記録 / ${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目 / 収支 ${signed(s.profit)}<br>現在のデータをすべて置換します。</p><label class="checklabel"><input type="checkbox" id="restoreAgree">現在のデータのバックアップを確認しました</label><button id="restore" class="danger full">このバックアップで全件置換</button></div>`;$('#restore').onclick=guard(async()=>{check($('#restoreAgree').checked,'バックアップ確認にチェックしてください。');if(!confirm('現在のデータを削除して、選択したバックアップで全件置換します。実行しますか？'))return;await commit(restoreCandidate,{clearAllDrafts:true});restoreCandidate=null;notify('復元が完了しました。');location.hash='home';});});}
 function render(hash=location.hash||'#home'){try{document.body.classList.remove('entry-sheet-open');document.body.style.overflow='';data=recalculate(data);document.body.classList.toggle('no-motion',!data.settings.motion);const [route,id,venueParam]=(hash.slice(1)||'home').split('/');updateDock(route==='history-pending'?'history':route==='quick-result'?'quick':route);if(route==='entry')entry(null,id?decodeURIComponent(id):null);else if(route==='entry-next'){check(validDate(id)&&VENUES.includes(decodeURIComponent(venueParam||'')),'引き継ぐ日付と競馬場が不正です。');entry();$('#date').value=id;$('#venue').value=decodeURIComponent(venueParam);$('#number').value='';$('#raceName').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='day')dayScreen(id);else if(route==='entry-date'){check(/^\d{4}-\d\d-\d\d$/.test(id||''),'日付が不正です。');entry();$('#date').value=id;$('#number').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='quick')simpleEntry();else if(route==='quick-date'){check(validDate(id),'購入日が不正です。');simpleEntry(null,id,true);}else if(route==='quick-edit')simpleEntry(id,null,venueParam==='day');else if(route==='quick-result')quickResult(decodeURIComponent(id||''));else if(route==='edit')entry(id);else if(route==='edit-stakes'){entry(id);$('#openAmountEditor')?.click();}else if(route==='detail')detail(id);else if(route==='history')history();else if(route==='history-pending')history();else if(route==='calendar')calendarScreen();else if(route==='analysis')analysis();else if(route==='growth')growthScreen();else if(route==='settings')settings();else home();window.scrollTo(0,0);}catch(e){app.innerHTML=`<div class="error">${esc(e.message)} <a href="#home">ホームへ</a></div>`;}}
 
 /* Mobile Safari: keep the permanent bottom dock out of the keyboard's way.
@@ -799,33 +769,6 @@ function setupMobileKeyboard(){
  sync();
 }
 setupMobileKeyboard();
-/* Horizontal swipes navigate the four dock tabs. Never intercept form controls,
-   horizontal carousels, browser edge gestures, or unsaved edits. */
-function setupDockSwipe(){
- const pages=['home','quick','history','analysis'];
- let start=null;
- const blocked=el=>el?.closest('input,textarea,select,button,a,label,summary,[contenteditable],.carousel,[data-no-swipe],[role="slider"]');
- app.addEventListener('touchstart',event=>{
-  start=null;
-  if(event.touches.length!==1||(dirty&&location.hash.startsWith('#quick'))||calendarDirty||document.body.classList.contains('mobile-keyboard-open'))return;
-  const route=(location.hash.slice(1)||'home').split('/')[0];
-  if(!pages.includes(route)||blocked(event.target))return;
-  const touch=event.touches[0];
-  if(touch.clientX<28||touch.clientX>innerWidth-28)return;
-  start={x:touch.clientX,y:touch.clientY,route,at:Date.now(),target:event.target};
- },{passive:true});
- app.addEventListener('touchend',event=>{
-  if(!start||event.changedTouches.length!==1)return;
-  const from=start;start=null;
-  if((dirty&&from.route==='quick')||calendarDirty||(location.hash.slice(1)||'home').split('/')[0]!==from.route||blocked(from.target))return;
-  const touch=event.changedTouches[0],dx=touch.clientX-from.x,dy=touch.clientY-from.y;
-  if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-from.at>900)return;
-  const index=pages.indexOf(from.route),next=index+(dx<0?1:-1);
-  if(next>=0&&next<pages.length)location.hash='#'+pages[next];
- },{passive:true});
- app.addEventListener('touchcancel',()=>{start=null;},{passive:true});
-}
-setupDockSwipe();
 const navigation=createNavigation({window,onError:error=>notify(error.message),render:hash=>{
  const title=hash==='#title';
  $('#launchScreen').hidden=!title;
@@ -833,6 +776,7 @@ const navigation=createNavigation({window,onError:error=>notify(error.message),r
  try{if(title)sessionStorage.removeItem('umalog-title-seen');else sessionStorage.setItem('umalog-title-seen','1');}catch{}
  render(title?'#home':hash);
 },beforeLeave:async()=>{
+ if(busy){notify('保存が終わるまでお待ちください。');return false;}
  if((dirty||calendarDirty)&&!confirm(entryDraftSession?'編集中の内容を下書きに保存して移動しますか？（確定済み収支には反映しません）':'未保存の入力を破棄して移動しますか？'))return false;
  const session=entryDraftSession;
  if(session){await session.flush();await session.stop();entryDraftSession=null;}
@@ -840,20 +784,21 @@ const navigation=createNavigation({window,onError:error=>notify(error.message),r
  return true;
 }});
 const navigate=hash=>navigation.navigate(hash).catch(error=>notify(error.message));
+mountDockSwipe({element:app,window,getRoute:()=>location.hash,canNavigate:()=>!dirty&&!calendarDirty&&!busy&&!document.body.classList.contains('mobile-keyboard-open'),navigate});
 document.addEventListener('click',event=>{
  const link=event.target.closest('a[href^="#"]');
  if(!link||event.defaultPrevented||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
  event.preventDefault();navigate(link.getAttribute('href'));
 });
-window.addEventListener('pagehide',()=>{entryDraftSession?.flush();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')entryDraftSession?.flush();});
-window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSession?.flush();e.preventDefault();e.returnValue='';}});
+window.addEventListener('pagehide',()=>{entryDraftSession?.flush().catch(error=>notify(error.message));});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')entryDraftSession?.flush().catch(error=>notify(error.message));});
+window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSession?.flush().catch(error=>notify(error.message));e.preventDefault();e.returnValue='';}});
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- canReload:()=>!dirty&&!calendarDirty,
+ canReload:()=>!busy&&!dirty&&!calendarDirty,
  reload:()=>location.reload(),
- onStatus:message=>{ $('#launchUpdateStatus').textContent=message;if($('#launchScreen').hidden)notify(message); },
+ onStatus:message=>{ lockUpdateGestures(message==='新しいバージョンを適用しています…');$('#launchUpdateStatus').textContent=message;if($('#launchScreen').hidden)notify(message); },
  onOffer:()=>{
   $('#update').hidden=false;
   $('#update').innerHTML='<span>新しいバージョンがあります。</span> <button id="applyUpdate">保存してから更新</button>';
@@ -871,11 +816,6 @@ const lockUpdateGestures=busy=>{
  $('#launchUpdate').disabled=busy;
 };
 const updateStatus=$('#launchUpdateStatus');
-const statusObserver=new MutationObserver(()=>{
- const status=updateStatus.textContent||'';
- if(/新しいバージョンを適用しています/.test(status))lockUpdateGestures(true);
-});
-statusObserver.observe(updateStatus,{childList:true,characterData:true,subtree:true});
 $('#launchUpdate').onclick=async()=>{
  if(updateBusy)return;
  lockUpdateGestures(true);

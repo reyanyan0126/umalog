@@ -2,7 +2,7 @@ import {growthTotal,validateGrowthV2} from './growth-v2.js';
 import {validateSimpleEntries} from './simple-ledger.js';
 // Pure domain functions; no DOM, network or database dependency.
 export const SCHEMA_VERSION = 1;
-export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
+export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉','帯広','門別','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
 export const TYPES = ['単勝','複勝','枠連','馬連','馬単','ワイド','三連複','三連単'];
 export const STAGES = [0,40,180,400,700];
 export const STAGE_NAMES = ['たまご','なぞの丸い生物','馬の気配','馬らしき生物','ちいさな馬'];
@@ -11,7 +11,7 @@ export function uid(){ const a=new Uint32Array(4); crypto.getRandomValues(a); re
 export function emptyData(){return {schemaVersion:SCHEMA_VERSION,races:[],tickets:[],lines:[],reviews:[],settings:{name:'うまたま',motion:true},character:{exp:0,level:1,stage:0},growth:[]};}
 export function check(ok,message){if(!ok)throw new Error(message);}
 export function money(n,purchase=false){check(Number.isSafeInteger(n)&&n>=0&&n<=MAX_MONEY&&(!purchase||(n>0&&n%100===0)),purchase?'購入額は100円単位の正の整数にしてください。':'金額は0以上の整数にしてください。');return n;}
-export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number(s.slice(0,4))>=2000&&Number(s.slice(0,4))<=2199&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;}
+export function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number(s.slice(0,4))>=2000&&Number(s.slice(0,4))<=2199&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;}
 export function jstToday(now=new Date()){return new Date(now.getTime()+9*3600000).toISOString().slice(0,10);}
 export function weekOf(date){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10);}
 export function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}

@@ -50,7 +50,7 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
     worker.addEventListener('statechange',changed);changed();
    });
    if(reg.waiting)apply();
-   else onStatus('最新版です。更新が見つかった場合は自動で適用します。');
+   else onStatus('確認が完了しました。配信中の最新版です。');
   }catch{onStatus('更新を確認できませんでした。通信状態を確認してください。');}
   finally{checking=false;}
  }
