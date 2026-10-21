@@ -35,6 +35,9 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
    if(!isOnline())throw new Error('offline');
    const reg=await deadline(register());
    if(!reg){onStatus('更新機能に対応していません。');return;}
+   // A fully installed waiting worker is already the update to apply.
+   // Do not start another update job while that worker awaits activation.
+   if(reg.waiting){apply();return;}
    await deadline(reg.update());
    const worker=reg.installing;
    if(worker)await new Promise((resolve,reject)=>{

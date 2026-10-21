@@ -60,7 +60,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.evaluate(async()=>{await(await navigator.serviceWorker.getRegistration()).update();});
   await page.waitForFunction(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting);
   let reloads=0;const count=request=>{if(request.isNavigationRequest()&&request.frame()===page.mainFrame())reloads++;};page.on('request',count);
-  await Promise.all([page.waitForEvent('load'),page.locator('#launchUpdate').click()]);
+  try{await Promise.all([page.waitForEvent('load'),page.locator('#launchUpdate').click()]);}catch(error){console.error('Update diagnostics',await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();return {status:document.querySelector('#launchUpdateStatus').textContent,online:navigator.onLine,hash:location.hash,controller:navigator.serviceWorker.controller?.state,waiting:r?.waiting?.state,installing:r?.installing?.state,active:r?.active?.state};}));throw error;}
   await page.waitForFunction(async()=>{const keys=await caches.keys();return keys.some(k=>k.endsWith('2.5.25-test-update'))&&!document.querySelector('#launchStart').disabled;});
   await title();await page.locator('#launchStart').click();await home();
   page.off('request',count);assert.equal(reloads,1);
