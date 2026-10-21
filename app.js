@@ -134,8 +134,6 @@ function home(){
   <p class="home-minimal-note">購入額 − 払戻・返還を集計。結果未入力の購入も支出に含みます。</p>
   <div class="home-minimal-totals home-simple-totals">${metric('購入額',yen(summary.recordedPurchase))}${metric('払戻・返還',yen(summary.receipts))}${metric('回収率',recovery===null?'—':recovery.toFixed(1)+'％')}</div>
  </section>
- <a class="button accent full home-entry-cta" id="homeQuickEntry" href="#quick">＋ 記録する</a>
- <div class="home-secondary-actions"><a id="homeEntry" href="#entry">買い目まで詳しく入力</a></div>
  <section class="home-calendar-section" id="homeCalendar" aria-label="収支カレンダー">
   <div class="home-calendar-heading"><h2>カレンダー</h2><small class="home-calendar-explain" id="homeCalendarMetricLabel">数字：収支</small><div class="home-calendar-navigation" role="group" aria-label="カレンダー表示月"><button id="monthPrev" class="quiet" type="button" aria-label="前月">‹</button><label><span class="visually-hidden">表示月</span><input type="month" id="month" aria-label="表示月" min="2000-01" max="2199-12" value="${calendarMonth}"></label><button id="monthNext" class="quiet" type="button" aria-label="翌月">›</button><button id="monthToday" class="quiet" type="button" ${calendarMonth===currentMonth?'hidden':''}>今月</button></div></div>
   <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
