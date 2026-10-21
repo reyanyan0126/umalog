@@ -107,6 +107,9 @@ export function mountLedgerCalendar(host,data,events,month,options={}){
     if(active)card.href='#entry/'+encodeURIComponent(event.key);
     else card.classList.add('is-unavailable');
     const grade=elem('span','ledger-grade-badge',event.grade||'重賞');
+    if(['GⅠ','GI','G1'].includes(event.grade))grade.classList.add('grade-g1');
+    else if(['GⅡ','GII','G2'].includes(event.grade))grade.classList.add('grade-g2');
+    else if(['GⅢ','GIII','G3'].includes(event.grade))grade.classList.add('grade-g3');
     const title=elem('span','ledger-graded-name',event.name);
     const text=elem('span','ledger-graded-main');text.append(grade,title);
     card.append(text);
