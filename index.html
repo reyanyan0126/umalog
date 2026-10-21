@@ -25,4 +25,31 @@
   finally{button.disabled=false;}
  });
 })();
-</script><script type="module" src="./app.js"></script></body></html>
+</script><script>
+(function(){
+ const app=document.getElementById('app');
+ const splash=document.getElementById('launchScreen');
+ function showTitle(){
+   try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
+   if(location.hash==='#home')history.replaceState(null,'',location.pathname+location.search);
+   splash.hidden=false;
+   splash.style.display='grid';
+   window.scrollTo(0,0);
+ }
+ function ensureButton(){
+   if(!app||!app.querySelector('#settingsForm')||app.querySelector('#returnToTitle'))return;
+   const card=app.querySelector('#settingsForm').closest('.card');
+   if(!card)return;
+   const btn=document.createElement('button');
+   btn.id='returnToTitle';btn.type='button';btn.className='quiet full';
+   btn.textContent='タイトル画面に戻る';
+   btn.style.marginBottom='12px';
+   card.prepend(btn);
+ }
+ document.addEventListener('click',event=>{
+   if(event.target.closest('#returnToTitle')){event.preventDefault();showTitle();}
+ });
+ if(app)new MutationObserver(ensureButton).observe(app,{childList:true,subtree:true});
+ ensureButton();
+})();
+</script><script type="module" src="./app.js?v=2520"></script></body></html>
