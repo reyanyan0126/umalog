@@ -128,7 +128,7 @@ function home(){
  const summary=combinedFinance(data,{prefix:homeSummaryPeriod==='year'?currentYear:currentMonth});
  app.innerHTML=`<h1 class="home-minimal-title">ホーム</h1>
  <section class="card hero home-minimal" id="homeSummary">
-  <div class="row"><h2 id="homeSummaryTitle">${homeSummaryPeriod==='year'?'年間の収支':'今月の収支'}</h2><label><span class="visually-hidden">収支の集計期間</span><select id="homeSummaryPeriod" aria-label="収支の集計期間"><option value="year" ${homeSummaryPeriod==='year'?'selected':''}>今年</option><option value="month" ${homeSummaryPeriod==='month'?'selected':''}>今月</option></select></label></div>
+  <div class="row"><h2 id="homeSummaryTitle">${homeSummaryPeriod==='year'?'年間の収支':'今月の収支'}</h2><button id="homeSummaryPeriod" class="quiet" type="button" aria-label="収支を${homeSummaryPeriod==='year'?'今月':'今年'}に切り替え" style="font-size:12px;padding:5px 9px;min-height:30px;white-space:nowrap">${homeSummaryPeriod==='year'?'今月へ ›':'今年へ ›'}</button></div>
   <div class="home-profit ${summary.profit<0?'negative':'positive'}" aria-label="${homeSummaryPeriod==='year'?'年間':'今月'}の収支：${signed(summary.profit)}">${signed(summary.profit)}</div>
   <p class="home-minimal-note">購入額はすぐ支出に反映。払戻・返還は入力した金額を加算します。</p>
   <div class="home-minimal-totals home-simple-totals">${metric('購入額',yen(summary.recordedPurchase))}${metric('払戻・返還',yen(summary.receipts))}</div>
@@ -140,7 +140,7 @@ function home(){
   <details class="home-calendar-options" id="homeCalendarOptions"><summary>カレンダーの表示設定</summary><div class="calendar-metric"><label>日付の金額<select id="calendarMetric"><option value="profit">収支</option><option value="purchase">購入額</option><option value="receipt">払戻・返還</option></select></label></div></details>
   <div id="ledgerCalendarHost"></div>
  </section>`;
- $('#homeSummaryPeriod').onchange=e=>{homeSummaryPeriod=e.target.value;home();};
+ $('#homeSummaryPeriod').onclick=()=>{homeSummaryPeriod=homeSummaryPeriod==='year'?'month':'year';home();};
  mountHomeCalendar();
  loadEntryDraft('new').then(saved=>{
   if(!$('#homeEntry')||!saved)return;
