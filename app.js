@@ -807,7 +807,7 @@ function setupDockSwipe(){
  const blocked=el=>el?.closest('input,textarea,select,button,a,label,summary,[contenteditable],.carousel,[data-no-swipe],[role="slider"]');
  app.addEventListener('touchstart',event=>{
   start=null;
-  if(event.touches.length!==1||dirty||calendarDirty||document.body.classList.contains('mobile-keyboard-open'))return;
+  if(event.touches.length!==1||(dirty&&location.hash.startsWith('#quick'))||calendarDirty||document.body.classList.contains('mobile-keyboard-open'))return;
   const route=(location.hash.slice(1)||'home').split('/')[0];
   if(!pages.includes(route)||blocked(event.target))return;
   const touch=event.touches[0];
@@ -817,7 +817,7 @@ function setupDockSwipe(){
  app.addEventListener('touchend',event=>{
   if(!start||event.changedTouches.length!==1)return;
   const from=start;start=null;
-  if(dirty||calendarDirty||location.hash!=='#'+from.route||blocked(from.target))return;
+  if((dirty&&from.route==='quick')||calendarDirty||(location.hash.slice(1)||'home').split('/')[0]!==from.route||blocked(from.target))return;
   const touch=event.changedTouches[0],dx=touch.clientX-from.x,dy=touch.clientY-from.y;
   if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-from.at>900)return;
   const index=pages.indexOf(from.route),next=index+(dx<0?1:-1);
