@@ -1150,3 +1150,6 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
 
 /* Graded race indicators inside compact calendar cells. */
 .ledger-event-grades{display:flex;align-items:center;flex-wrap:wrap;gap:2px;max-width:100%;margin-top:1px}.ledger-event-grade{display:inline-flex;align-items:center;justify-content:center;padding:1px 3px;border-radius:4px;background:#e7ece6;color:#41604c;font-size:clamp(9px,2.5vw,12px);font-weight:850;line-height:1.25;letter-spacing:-.04em;white-space:nowrap}.ledger-event-grade.grade-g1{background:#f5dfac;color:#76500f}.ledger-event-grade.grade-g2{background:#dfe7f1;color:#355b7b}.ledger-event-grade.grade-g3{background:#e9dfd1;color:#70533c}.ledger-event-more{font-size:10px;font-weight:800;color:#506956}
+
+/* v2.5.47: unified grade colors and compact analytics. */
+.ledger-grade-badge.grade-g1{background:#f5dfac;color:#76500f}.ledger-grade-badge.grade-g2{background:#dfe7f1;color:#355b7b}.ledger-grade-badge.grade-g3{background:#e9dfd1;color:#70533c}.analysis-best-month{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;margin:4px 0 12px;color:var(--muted);font-size:.78rem}.analysis-best-month strong{font-size:.88rem;color:var(--green)}
