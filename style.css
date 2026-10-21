@@ -1153,3 +1153,7 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
 
 /* v2.5.47: unified grade colors and compact analytics. */
 .ledger-grade-badge.grade-g1{background:#f5dfac;color:#76500f}.ledger-grade-badge.grade-g2{background:#dfe7f1;color:#355b7b}.ledger-grade-badge.grade-g3{background:#e9dfd1;color:#70533c}.analysis-best-month{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;margin:4px 0 12px;color:var(--muted);font-size:.78rem}.analysis-best-month strong{font-size:.88rem;color:var(--green)}
+
+/* v2.5.51: improve touch clarity without changing layout or saved data. */
+@media (pointer:coarse){nav a, .history-search-clear, .simple-repeat-button{touch-action:manipulation}}
+@media (prefers-reduced-motion:reduce){.analysis-month-track i,.analysis-diverge i{transition:none!important}}
