@@ -30,13 +30,13 @@ function harness(){
  vm.runInNewContext(updateScript,context);
  return {handlers,location,status,splash,reg,context,get reloads(){return reloads},get changes(){return changes}};
 }
-test('update check from Settings route resets Home without reload when current',async()=>{
+test('update check stays on title without navigating or reloading when current',async()=>{
  const h=harness();
  await h.handlers.click();
- assert.equal(h.location.hash,'#home');
+ assert.equal(h.location.hash,'#settings');
  assert.equal(h.reloads,0);
  assert.match(h.status.textContent,/確認が完了/);
- assert.ok(h.changes>=1);
+ assert.equal(h.changes,0);
 });
 test('title return clears Settings route and shows overlay',()=>{
  const h=harness();
