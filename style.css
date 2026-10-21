@@ -1082,3 +1082,13 @@ nav a{width:min(25%,220px)}
 .home-calendar-section .ledger-pending-mark{display:none!important}
 #simpleResultSection>summary{min-height:44px}
 @media(max-width:359px){.simple-history-compact .simple-history-actions{gap:3px}.simple-history-row.simple-history-compact .simple-history-actions a.button{font-size:.72rem;padding:8px 5px}}
+
+/* First-visit title screen: dismissible and never covers the ledger after Start. */
+.launch-screen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:linear-gradient(155deg,#f8fbf5 0%,#e7f4e7 65%,#d2eadb 100%);padding:24px env(safe-area-inset-right) 24px env(safe-area-inset-left);text-align:center}
+.launch-screen[hidden]{display:none!important}
+.launch-content{width:min(100%,420px);display:flex;flex-direction:column;align-items:center;gap:22px}
+.launch-logo{display:block;width:min(78vw,320px);max-height:320px;object-fit:contain;filter:drop-shadow(0 10px 16px rgba(18,79,54,.13))}
+.launch-subtitle{font-size:15px;color:#285a46;margin:0;letter-spacing:.03em}
+.launch-start{min-width:210px;min-height:54px;border-radius:999px;font-size:17px;box-shadow:0 6px 16px rgba(25,93,64,.18)}
+.brand img{width:100px!important;height:75px!important;object-fit:contain}
+@media(max-width:420px){header{padding:8px 16px}.brand img{width:88px!important;height:66px!important}}
