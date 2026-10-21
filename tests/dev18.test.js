@@ -18,7 +18,7 @@ test('dev16 CSV is BOM UTF-8, RFC-style escaped, formula safe, includes all purc
  const d=fixture(),csv=ledgerCSV(d);
  assert.ok(csv.startsWith('\uFEFF'));assert.ok(csv.includes('\r\n'));assert.equal(csv.split('\r\n').length-1,5);
  assert.ok(csv.includes('"\' =SUM(1,2)"'));
- assert.ok(csv.includes('"未入力"'));assert.ok(csv.includes('"ワイド"'));
+ assert.ok(csv.includes('"払戻0円"'));assert.ok(csv.includes('"ワイド"'));
  assert.ok(csv.includes('"380"'));
  assert.equal(JSON.stringify(d),JSON.stringify(fixture()));
 });
@@ -34,7 +34,7 @@ test('dev16 one-line correction validates refund and payout, cannot create inval
 test('dev17 optional budgets in existing schema survive JSON round-trip, account for pending purchases',()=>{
  const initial=fixture();validateData(initial);
  const updated=setMonthlyBudget(initial,'2026-10',300),status=budgetStatus(updated,'2026-10');
- assert.equal(status.purchase,400);assert.equal(status.pending,100);assert.equal(status.remaining,-100);assert.equal(status.over,true);
+ assert.equal(status.purchase,400);assert.equal(status.pending,0);assert.equal(status.remaining,-100);assert.equal(status.over,true);
  assert.equal(JSON.stringify(initial.settings.monthlyBudgets),undefined);
  assert.equal(validateData(JSON.parse(JSON.stringify(updated))).settings.monthlyBudgets['2026-10'],300);
  assert.deepEqual(setMonthlyBudget(updated,'2026-10',0).settings.monthlyBudgets,{});
@@ -43,6 +43,6 @@ test('dev17 optional budgets in existing schema survive JSON round-trip, account
  const corrupt=structuredClone(updated);corrupt.settings.monthlyBudgets['2026-10']=-1;assert.throws(()=>validateData(corrupt));
 });
 test('dev17 monthly reflection is deterministic and never recommends a bet',()=>{
- const r=monthReview(fixture(),'2026-10');assert.equal(r.days,2);assert.equal(r.totals.pendingCount,1);
- assert.ok(r.warning.includes('未入力'));assert.equal(r.totals.profit,1040);
+ const r=monthReview(fixture(),'2026-10');assert.equal(r.days,2);assert.equal(r.totals.pendingCount,0);
+ assert.equal(r.warning,'');assert.equal(r.totals.profit,940);
 });

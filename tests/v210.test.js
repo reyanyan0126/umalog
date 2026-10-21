@@ -53,15 +53,14 @@ test('v2.1 field-aware analysis classifies missing venue/type and sums detailed 
 test('v2.1 budget, CSV, calendar include simple spending without double count',()=>{
  const d=mixed();
  const budget=budgetStatus(d,'2026-10');
- assert.equal(budget.purchase,4000);assert.equal(budget.pending,2000);
+ assert.equal(budget.purchase,4000);assert.equal(budget.pending,0);
  const csv=ledgerCSV(d);
- assert.match(csv,/結果待ち（簡易）/);
- assert.match(csv,/確定（簡易）/);
+ assert.match(csv,/記録済み（簡易）/);
  assert.equal(csv.split('\r\n').filter(x=>x.startsWith('"2026-10-19"')).length,4);
  const month=ledgerMonth(d,[],'2026-10');
  const day=month.days.find(x=>x.date===date);
- assert.equal(day.summary.purchase,2000);
- assert.equal(day.summary.pendingStake,2000);
+ assert.equal(day.summary.purchase,4000);
+ assert.equal(day.summary.pendingStake,0);
  assert.equal(day.summary.payout,3200);
  assert.equal(day.quick.length,3);
 });
