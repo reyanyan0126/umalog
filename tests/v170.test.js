@@ -31,7 +31,7 @@ test('v1.7 rejects duplicates, cancelled/changed meeting, malicious sources and 
   assert.throws(()=>planManualRace(invalid,{...input,number:6},at),/中止・変更/);
  }
  const mods=[
-  {date:'2028-02-30'},{number:'13'},{number:'3.5'},{venue:'門別'},
+  {date:'2028-02-30'},{number:'13'},{number:'3.5'},{venue:'存在しない競馬場'},
   {name:'x'.repeat(101)},{surface:'砂'},{distance:'-1'},{distance:'0'},
   {sourceURL:'http://example.org'},{sourceURL:'javascript:alert(1)'},
   {sourceURL:'https://test:pass@example.org/r'},{sourceURL:'https://example.org/#fragment'},{sourceURL:''}

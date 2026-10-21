@@ -1,8 +1,9 @@
-name: v2.5.0 Cash-first release acceptance
+name: Umalog release acceptance
 on:
   push:
     branches:
-      - work/v2.5.0-no-pending-cash
+      - main
+      - fix/quality-audit-20261022
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -34,7 +35,7 @@ jobs:
         run: npm test
       - name: Install browser dependencies
         run: |
-          npm install --no-save --package-lock=false playwright@1.64.1
+          npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
           cat > tests/ci-chromium.cjs <<'EOF'
           module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
@@ -51,3 +52,9 @@ jobs:
         run: npx playwright install --with-deps webkit
       - name: Navigation and update lifecycle (WebKit)
         run: DEBUG=pw:browser BROWSER=webkit node tests/navigation-e2e.cjs
+      - name: Storage, gestures and all-screen audit (Chromium)
+        run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/audit-e2e.cjs
+      - name: Storage, gestures and all-screen audit (published PWA)
+        run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/audit-e2e.cjs
+      - name: Storage, gestures and all-screen audit (WebKit)
+        run: BROWSER=webkit node tests/audit-e2e.cjs
