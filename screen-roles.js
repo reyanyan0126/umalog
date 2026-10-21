@@ -5,7 +5,7 @@ const money=n=>n.toLocaleString('ja-JP')+'円';
 export function homeSummary(data,month){
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw new Error('表示する月が不正です。');
  const s=aggregate(data,r=>r.date.startsWith(month));
- return {month,purchase:s.purchase,payout:s.payout,refund:s.refund,profit:s.profit,settledCount:s.settledCount,pendingCount:s.pendingCount,pendingStake:s.pendingStake};
+ return {month,purchase:s.purchase+s.pendingStake,payout:s.payout,refund:s.refund,profit:s.payout+s.refund-s.purchase-s.pendingStake,settledCount:s.settledCount+s.pendingCount,pendingCount:0,pendingStake:0};
 }
 export function ticketIndex(data){
  const ticketsByRace=new Map(),linesByTicket=new Map();
