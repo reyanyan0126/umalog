@@ -21,8 +21,7 @@
     navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!switched){switched=true;location.reload();}},{once:true});
     reg.waiting.postMessage({type:'SKIP_WAITING'});
    }else{
-    status.textContent='更新確認が完了しました。画面を再読み込みします。';
-    location.reload();
+    status.textContent='最新版の確認が完了しました。';
    }
   }catch(error){status.textContent='更新を確認できませんでした。通信状態を確認してください。';}
   finally{button.disabled=false;}
@@ -35,7 +34,8 @@
  function showTitle(){
    try{sessionStorage.removeItem('umalog-title-seen')}catch(e){}
    // Reset the underlying route before showing the overlay: Start must always land on Home.
-   if(location.hash!=='#home')location.hash='home';
+   if(location.hash!=='#home')history.replaceState(null,'',location.pathname+location.search+'#home');
+   window.dispatchEvent(new Event('hashchange'));
    splash.hidden=false;
    splash.style.display='grid';
    window.scrollTo(0,0);
@@ -56,4 +56,4 @@
  if(app)new MutationObserver(ensureButton).observe(app,{childList:true,subtree:true});
  ensureButton();
 })();
-</script><script type="module" src="./app.js?v=2521"></script></body></html>
+</script><script type="module" src="./app.js?v=2522"></script></body></html>
