@@ -1,5 +1,5 @@
 // Registration, update checks and controller changes share one lifecycle.
-export function createUpdates({serviceWorker, onOffer, onStatus, canReload, reload, isOnline=()=>globalThis.navigator?.onLine!==false}) {
+export function createUpdates({serviceWorker, onOffer, onStatus, canReload, reload, isOnline=()=>globalThis.navigator?.onLine!==false, currentVersion=null, getPublishedVersion=null}) {
  let registration, registering, refreshing=false;
  let controlled=!!serviceWorker?.controller;
  let checking=false;
@@ -50,9 +50,18 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
     worker.addEventListener('statechange',changed);changed();
    });
    if(reg.waiting)apply();
-   else onStatus('最新版です。更新が見つかった場合は自動で適用します。');
+   else onStatus(await currentReleaseStatus());
   }catch{onStatus('更新を確認できませんでした。通信状態を確認してください。');}
   finally{checking=false;}
+ }
+ async function currentReleaseStatus(){
+  if(!getPublishedVersion||!currentVersion)return '更新は見つかりませんでした。';
+  try{
+   const published=await deadline(getPublishedVersion());
+   if(published&&published!==currentVersion)return '公開版 '+published+' を確認しました。アプリの更新を再確認してください（使用中：'+currentVersion+'）。';
+   if(published===currentVersion)return '最新版です（v'+currentVersion+'）。';
+  }catch{}
+  return '更新は見つかりませんでした（使用中：v'+currentVersion+'）。公開版の照合はできませんでした。';
  }
  return {register,check,apply};
 }
