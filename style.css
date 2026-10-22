@@ -1165,3 +1165,7 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
  #app button:focus-visible,#app a:focus-visible,nav a:focus-visible{outline:3px solid #3c805e;outline-offset:2px}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
+
+/* v2.7.0: consistent narrow-screen controls and readable focus. */
+@media(max-width:480px){#app input,#app select,#app textarea{box-sizing:border-box;min-width:0;max-width:100%}#app .card{overflow-wrap:anywhere}}
+@media(pointer:coarse){#app button,#app a,nav a{touch-action:manipulation}}
