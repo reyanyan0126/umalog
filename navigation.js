@@ -27,6 +27,7 @@ export function createNavigation({window:win, render, beforeLeave=async()=>true,
   // declines to leave an edited screen, navigate() restores the prior hash.
   navigate(win.location.hash,{replace:true}).catch(onError);
  });
+ win.addEventListener('popstate',()=>{navigate(win.location.hash,{replace:true}).catch(onError);});
  // pushState/replaceState are intentionally used by navigate() to avoid a
  // second hashchange render and duplicate beforeLeave confirmation.
  return {
