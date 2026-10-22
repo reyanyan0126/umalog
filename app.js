@@ -1,4 +1,5 @@
 import {createNavigation} from './navigation.js';
+import {swipeDirection} from './swipe.js';
 import {createUpdates} from './updates.js';
 import {withMaster} from './graded-master.js';
 import {mountLedgerCalendar} from './ledger-calendar.js';
@@ -819,8 +820,9 @@ function setupDockSwipe(){
   const from=start;start=null;
   if(dirty||calendarDirty||(location.hash.slice(1)||'home').split('/')[0]!==from.route||blocked(from.target))return;
   const touch=event.changedTouches[0],dx=touch.clientX-from.x,dy=touch.clientY-from.y;
-  if(Math.abs(dx)<75||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-from.at>1200)return;
-  const index=pages.indexOf(from.route),next=index+(dx<0?1:-1);
+  const direction=swipeDirection(dx,dy,Date.now()-from.at);
+  if(!direction)return;
+  const index=pages.indexOf(from.route),next=index+direction;
   if(next>=0&&next<pages.length){
    const destination='#'+pages[next];
    navigate(destination);

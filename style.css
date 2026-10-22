@@ -1157,3 +1157,11 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
 /* v2.5.51: improve touch clarity without changing layout or saved data. */
 @media (pointer:coarse){nav a, .history-search-clear, .simple-repeat-button{touch-action:manipulation}}
 @media (prefers-reduced-motion:reduce){.analysis-month-track i,.analysis-diverge i{transition:none!important}}
+
+/* v2.6.0: consistent keyboard and touch affordances across main views. */
+@media (max-width:720px){
+ #app input[type="search"],#app input[type="number"],#app input[type="date"],#app select,#app textarea{max-width:100%;min-width:0}
+ #app .card{min-width:0}
+ #app button:focus-visible,#app a:focus-visible,nav a:focus-visible{outline:3px solid #3c805e;outline-offset:2px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
