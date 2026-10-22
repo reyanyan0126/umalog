@@ -40,7 +40,7 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
    if(!reg){onStatus('更新機能に対応していません。');return;}
    // A fully installed waiting worker is already the update to apply.
    // Do not start another update job while that worker awaits activation.
-   if(reg.waiting){apply();return;}
+   if(reg.waiting){if(!apply())onStatus('更新を保留しています。入力内容を保存してから適用してください。');return;}
    await deadline(reg.update());
    const worker=reg.installing;
    if(worker)await new Promise((resolve,reject)=>{
@@ -49,7 +49,7 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
     function changed(){if(worker.state==='redundant')finish(new Error('update failed'));else if(['installed','activated'].includes(worker.state))finish();}
     worker.addEventListener('statechange',changed);changed();
    });
-   if(reg.waiting)apply();
+   if(reg.waiting){if(!apply())onStatus('更新を保留しています。入力内容を保存してから適用してください。');}
    else onStatus(await currentReleaseStatus());
   }catch{onStatus('更新を確認できませんでした。通信状態を確認してください。');}
   finally{checking=false;}
