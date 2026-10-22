@@ -66,7 +66,7 @@ test('data protection: schema remains v1 and main writes use revision checks',()
 test('PWA cache release and entry point versions agree',()=>{
  const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- const version=sw.match(/const VERSION='(\\d+)\\.(\\d+)\\.(\\d+)'/);
+ const version=sw.match(/const VERSION='(\d+)\.(\d+)\.(\d+)'/);
  assert.ok(version,'PWA version should be declared');
  assert.ok(html.includes('app.js?v='+version[1]+version[2]+version[3]));
 });
