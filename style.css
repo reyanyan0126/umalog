@@ -1169,3 +1169,8 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
 /* v2.7.0: consistent narrow-screen controls and readable focus. */
 @media(max-width:480px){#app input,#app select,#app textarea{box-sizing:border-box;min-width:0;max-width:100%}#app .card{overflow-wrap:anywhere}}
 @media(pointer:coarse){#app button,#app a,nav a{touch-action:manipulation}}
+
+/* v2.8.0: shared spacing and touch accessibility for all app cards. */
+:root{--umalog-control-min-height:44px;--umalog-card-gap:12px}
+@media(max-width:600px){#app .card{max-width:100%;min-width:0}#app .card button{max-width:100%}#app input,#app select,#app textarea{font-size:16px}}
+@media(pointer:coarse){#app button,#app select,nav button{min-height:var(--umalog-control-min-height)}}
