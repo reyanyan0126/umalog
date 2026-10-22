@@ -70,3 +70,21 @@ test('PWA cache release and entry point versions agree',()=>{
  assert.ok(version,'PWA version should be declared');
  assert.ok(html.includes('app.js?v='+version[1]+version[2]+version[3]));
 });
+
+
+test('published release manifest matches PWA cache and entry point',()=>{
+ const manifest=JSON.parse(readFileSync(new URL('../release.json',import.meta.url),'utf8'));
+ const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.equal(manifest.version,'2.7.0');
+ assert.ok(sw.includes("const VERSION='"+manifest.version+"'"));
+ assert.ok(html.includes('app.js?v=270'));
+});
+
+test('release metadata is fetched fresh and excluded from offline precache',()=>{
+ const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+ assert.match(app,/release\.json\?check=/);
+ assert.match(app,/cache:'no-store'/);
+ assert.ok(!sw.includes("'./release.json'"));
+});
