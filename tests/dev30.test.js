@@ -29,7 +29,7 @@ test('calendar shows cash-flow profit, all purchases and actual receipts',()=>{
 });
 test('dev27 matrix groups venue × ticket type without inventing missing data',()=>{
  const d=fixture(),before=JSON.stringify(d),rows=typeVenueMatrix(d);
- assert.equal(rows.length,10);const tokyo=rows.find(r=>r.venue==='東京');
+ assert.equal(rows.length,25);const tokyo=rows.find(r=>r.venue==='東京');
  assert.equal(tokyo.types.length,8);const wide=tokyo.types.find(x=>x.type==='ワイド');
  assert.equal(wide.lines,2);assert.equal(wide.pending,0);assert.equal(wide.profit,250);
  const kyoto=rows.find(r=>r.venue==='京都').types.find(x=>x.type==='複勝');assert.equal(kyoto.profit,150);

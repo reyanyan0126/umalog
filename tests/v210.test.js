@@ -76,14 +76,14 @@ test('v2.1 distinguish unresolved from confirmed zero, preserve id on editing, r
  const d=emptyData();d.simpleEntries=[original,corrected];
  assert.throws(()=>validateData(d),/重複/);
  const errors=[
- ()=>make('x',0),()=>make('x',150),()=>make('x',100,{venue:'門別'}),
+ ()=>make('x',0),()=>make('x',150),()=>make('x',100,{venue:'架空競馬場'}),
  ()=>make('x',100,{number:13}),()=>make('x',100,{type:'WIN5'}),
  ()=>make('x',100,{status:'settled',refund:200}),
  ()=>make('x',100,{status:'settled',refund:100,payout:300}),
  ()=>validateSimpleEntries([{...original,status:'pending',payout:200}]),
  ()=>validateSimpleEntries([{...original}, {...original}]),
  ()=>validateSimpleEntries([{...original,createdAt:'secret'}]),
- ()=>combinedFinance(emptyData(),{venue:'門別'})
+ ()=>combinedFinance(emptyData(),{venue:'架空競馬場'})
  ];
  for(const f of errors)assert.throws(f);
 });
