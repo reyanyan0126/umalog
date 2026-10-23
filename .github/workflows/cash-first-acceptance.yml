@@ -1,8 +1,9 @@
-name: v2.5.0 Cash-first release acceptance
+name: Cash accounting and PWA release acceptance
 on:
   push:
     branches:
       - work/v2.5.0-no-pending-cash
+      - work/v2.8.1-internal-refactor
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -15,6 +16,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -51,3 +54,14 @@ jobs:
         run: npx playwright install --with-deps webkit
       - name: Navigation and update lifecycle (WebKit)
         run: DEBUG=pw:browser BROWSER=webkit node tests/navigation-e2e.cjs
+
+      - name: v2.8.0 differential rendering and data compatibility
+        run: |
+          git worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
+          BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
+      - name: Keep comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-rendering-comparison
+          path: ${{ runner.temp }}/umalog-comparison

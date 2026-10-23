@@ -76,9 +76,9 @@ test('published release manifest matches PWA cache and entry point',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../release.json',import.meta.url),'utf8'));
  const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.equal(manifest.version,'2.8.0');
+ assert.equal(manifest.version,JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version);
  assert.ok(sw.includes("const VERSION='"+manifest.version+"'"));
- assert.ok(html.includes('app.js?v=280'));
+ assert.ok(html.includes('app.js?v='+manifest.version.replaceAll('.','')));
 });
 
 test('release metadata is fetched fresh and excluded from offline precache',()=>{

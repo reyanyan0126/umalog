@@ -27,6 +27,18 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.reload();await home();
   const snapshot=()=>page.evaluate(async()=>JSON.stringify(await(await import('./db.js')).load()));
   const before=await snapshot();
+  const swipe=async(left)=>{
+   await page.evaluate(left=>{
+    const target=document.querySelector('#app h1');
+    const touch=x=>new Touch({identifier:1,target,clientX:x,clientY:160});
+    target.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[touch(left?280:100)]}));
+    target.dispatchEvent(new TouchEvent('touchend',{bubbles:true,changedTouches:[touch(left?100:280)]}));
+   },left);
+  };
+  await swipe(true);await page.locator('#simpleEntryForm').waitFor();
+  await swipe(false);await home();
+  console.log('PASS touch events navigate Home -> Record -> Home');
+
   if(process.env.BASELINE_DIR){
    served=root;
    // A complete new release waits, while the old installed release is still running.
