@@ -1,0 +1,30 @@
+// Cash-flow projections: old pending records remain readable, but no cost is excluded.
+const summarize=(lines,races=[],tickets=[])=>{
+ const x=oldSummarize(lines,races,tickets);
+ const purchase=x.purchase+x.pendingStake,receipts=x.payout+x.refund;
+ const effective=x.lineCount+x.pendingCount;
+ return {...x,purchase,profit:receipts-purchase,returnRate:purchase?receipts/purchase*100:null,
+  lineCount:effective,lineRate:effective?x.lineHits/effective*100:null,
+  pendingCount:0,pendingStake:0,settledCount:lines.length};
+};
+const aggregate=(ledger,predicate=()=>true)=>{
+ const races=ledger.races.filter(predicate),ids=new Set(races.map(r=>r.id));
+ const tickets=ledger.tickets.filter(t=>ids.has(t.raceId)),tids=new Set(tickets.map(t=>t.id));
+ return summarize(ledger.lines.filter(l=>tids.has(l.ticketId)),races,tickets);
+};
+const analysisCoverage=(ledger,opts={})=>{
+ const x=oldAnalysisCoverage(ledger,opts),finance=combinedFinance(ledger,opts);
+ return {...x,finance,pendingCount:0,pendingStake:0,settledCount:x.total,settledCountShare:x.total?100:null,settledShare:finance.recordedPurchase?100:null};
+};
+const inclusiveMonthlyRows=(ledger,opts={})=>oldInclusiveMonthlyRows(ledger,opts).map(row=>{
+ const c=combinedFinance(ledger,{prefix:row.month,venue:opts.venue||'',type:opts.type||''});
+ return {...row,...c,settledShare:c.recordedPurchase?100:null};
+});
+const compareCategories=(ledger,opts={})=>{
+ const out=oldCompareCategories(ledger,opts);
+ const convert=r=>({...r,settledPurchase:r.recordedPurchase,profit:r.receipts-r.recordedPurchase,
+   returnRate:r.recordedPurchase?r.receipts/r.recordedPurchase*100:null,pendingCount:0,pendingStake:0,
+   settledCount:r.count,incomplete:false});
+ return {...out,rows:out.rows.map(convert).sort((a,b)=>opts.sort==='profit'?b.profit-a.profit:opts.sort==='returnRate'?(b.returnRate??-Infinity)-(a.returnRate??-Infinity):b.count-a.count),
+  unknown:out.unknown?{...out.unknown,pendingCount:0}:null};
+};
