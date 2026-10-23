@@ -22,7 +22,14 @@ export function createNavigation({window:win, render, beforeLeave=async()=>true,
   queue=task.catch(()=>{});
   return task;
  }
- win.addEventListener('hashchange',()=>{navigate(win.location.hash,{replace:true}).catch(onError);});
+ win.addEventListener('hashchange',()=>{
+  // A browser Back/Forward action has already changed the URL. If the user
+  // declines to leave an edited screen, navigate() restores the prior hash.
+  navigate(win.location.hash,{replace:true}).catch(onError);
+ });
+ win.addEventListener('popstate',()=>{navigate(win.location.hash,{replace:true}).catch(onError);});
+ // pushState/replaceState are intentionally used by navigate() to avoid a
+ // second hashchange render and duplicate beforeLeave confirmation.
  return {
   navigate,
   start(){
