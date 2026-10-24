@@ -1,5 +1,4 @@
 import {growthTotal,validateGrowthV2} from './growth-v2.js';
-import {validateSimpleEntries} from './simple-ledger.js';
 // Pure domain functions; no DOM, network or database dependency.
 export const SCHEMA_VERSION = 1;
 export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉','帯広','門別','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
@@ -7,6 +6,31 @@ export const TYPES = ['単勝','複勝','枠連','馬連','馬単','ワイド','
 export const STAGES = [0,40,180,400,700];
 export const STAGE_NAMES = ['たまご','なぞの丸い生物','馬の気配','馬らしき生物','ちいさな馬'];
 export const MAX_MONEY = 1000000000000;
+const MAX_SIMPLE_ENTRIES=100000;
+const simpleEntryKeys=new Set(['id','date','stake','venue','number','type','name','memo','status','payout','refund']);
+const knownString=(v,max)=>typeof v==='string'&&v.length<=max;
+export function validateSimpleEntries(entries){
+ check(entries===undefined||Array.isArray(entries)&&entries.length<=MAX_SIMPLE_ENTRIES,'簡易収支記録の形式が不正です。');
+ const seen=new Set();
+ for(const e of entries||[]){
+  check(e&&typeof e==='object'&&!Array.isArray(e),'簡易収支記録の内容が不正です。');
+  check(Object.keys(e).every(k=>simpleEntryKeys.has(k)),'簡易記録に不明な項目があります。');
+  check(knownString(e.id,100)&&e.id.length>0&&!seen.has(e.id),'簡易記録のIDが欠落・重複しています。');seen.add(e.id);
+  check(validDate(e.date),'簡易記録の購入日が不正です。');
+  money(e.stake,true);
+  check(e.venue===null||VENUES.includes(e.venue),'簡易記録の競馬場が不正です。');
+  check(e.number===null||Number.isInteger(e.number)&&e.number>=1&&e.number<=12,'簡易記録のレース番号が不正です。');
+  check(e.type===null||TYPES.includes(e.type),'簡易記録の券種が不正です。');
+  check(knownString(e.name,100)&&knownString(e.memo,4000),'簡易記録のメモが不正です。');
+  check(['pending','settled'].includes(e.status),'簡易記録の結果入力状況が不正です。');
+  money(e.payout);money(e.refund);
+  check(e.refund<=e.stake,'返還金は購入額以下にしてください。');
+  check(!(e.refund===e.stake&&e.payout>0),'全額返還と払戻は同時に設定できません。');
+  check(e.status!=='pending'||e.payout===0&&e.refund===0,'結果未入力では払戻・返還金を保存できません。');
+ }
+ return entries||[];
+}
+
 export function uid(){ const a=new Uint32Array(4); crypto.getRandomValues(a); return [...a].map(n=>n.toString(16).padStart(8,'0')).join(''); }
 export function emptyData(){return {schemaVersion:SCHEMA_VERSION,races:[],tickets:[],lines:[],reviews:[],settings:{name:'うまたま',motion:true},character:{exp:0,level:1,stage:0},growth:[]};}
 export function check(ok,message){if(!ok)throw new Error(message);}
