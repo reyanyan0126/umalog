@@ -539,6 +539,33 @@ function horseInsights(source){
  }
  return {horses:[...horses.values()].sort((a,b)=>b.podium-a.podium||b.wins-a.wins),jockeys:[...jockeys.values()].sort((a,b)=>b.podium-a.podium||b.wins-a.wins),raceRows};
 }
+
+function jockeyContribution(source){
+ const insights=horseInsights(source),byJockey=new Map(),byHorse=new Map();
+ const settled=line=>line.status==='hit'&&Number(line.payout)>0;
+ for(const row of insights.raceRows){
+  const byNumber=new Map(row.podium.filter(h=>h.jockey).map(h=>[h.number,h]));
+  for(const {ticket,lines} of row.tickets){
+   for(const line of lines){
+    if(!settled(line)||!Array.isArray(line.numbers))continue;
+    const unique=new Set(line.numbers.map(Number));
+    const matched=[...unique].map(n=>byNumber.get(n)).filter(Boolean);
+    for(const h of matched){
+     const item=byJockey.get(h.jockey)||{name:h.jockey,hits:0,payout:0,stake:0,races:new Set()};
+     item.hits++;item.payout+=line.payout;item.stake+=line.stake;item.races.add(raceKey(row.race));byJockey.set(h.jockey,item);
+     const horse=byHorse.get(h.name)||{name:h.name,hits:0,payout:0};horse.hits++;horse.payout+=line.payout;byHorse.set(h.name,horse);
+    }
+   }
+  }
+ }
+ return {jockeys:[...byJockey.values()].sort((a,b)=>b.hits-a.hits||b.payout-a.payout||a.name.localeCompare(b.name)),horses:[...byHorse.values()].sort((a,b)=>b.hits-a.hits||b.payout-a.payout),totalHits:insights.raceRows.reduce((n,row)=>n+row.tickets.reduce((s,t)=>s+t.lines.filter(settled).length,0),0)};
+}
+function jockeyContributionPanel(source){
+ const stats=jockeyContribution(source);
+ const rows=stats.jockeys.slice(0,30).map((j,i)=>'<div class="day-edit-row"><span><strong>'+(i+1)+'位 '+esc(j.name)+'</strong><small> 的中に貢献 '+j.hits+'点 · '+j.races.size+'レース</small></span><span><strong>'+yen(j.payout)+'</strong><small> 関連払戻額</small></span></div>').join('');
+ return '<section class="card" id="analysisJockeyContribution"><h2>的中貢献騎手ランキング</h2><p class="help">あなたが的中させた買い目に含まれる馬の騎手だけを集計。期間・競馬場・券種の絞り込みに対応します。</p>'+(stats.jockeys.length?'<p class="help">騎手名が確認できる的中買い目から集計。騎手別に的中点数・関連払戻額を表示します。</p>'+rows:'<p class="help">騎手名と的中結果の両方が登録された買い目はまだありません。</p>')+'<details><summary>集計方法・注意点</summary><p class="help">的中1点に関与した騎手をそれぞれ1回として数えます。同じ騎手が同じ買い目に複数回登場しても1回です。払戻額は関与した各騎手に全額を関連付けるため、騎手別の金額を合算すると実際の払戻総額と一致しません。騎手の実際の獲得賞金・個人別利益ではありません。馬券内騎手の登録がない場合は集計されません。</p></details></section>';
+}
+
 function horseInsightsPanel(source){
  const insights=horseInsights(source);
  const podium=insights.raceRows.filter(r=>r.podium.length);
@@ -722,6 +749,7 @@ function analysis(){
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
+ ${jockeyContributionPanel(analysisLedger())}
  ${horseInsightsPanel(analysisLedger())}
  <details class="card analysis-advanced"><summary>絞り込み</summary><div class="analysis-controls"><label>期間<select id="analysisRange"><option value="all" ${analysisRange==='all'?'selected':''}>全期間</option><option value="year" ${analysisRange==='year'?'selected':''}>年間</option><option value="month" ${analysisRange==='month'?'selected':''}>月間</option></select></label><label>対象年<input id="analysisYear" type="number" min="2000" max="2199" value="${analysisYear}"></label><label>対象月<input id="analysisMonth" type="month" value="${analysisMonth}"></label><label>競馬場<select id="analysisVenue"><option value="">すべて</option>${opts(VENUES,analysisVenue)}</select></label><label>券種<select id="analysisType"><option value="">すべて</option>${opts(TYPES,analysisType)}</select></label></div></details>`;
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
@@ -902,7 +930,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.9.6',
+ currentVersion:'2.9.7',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
