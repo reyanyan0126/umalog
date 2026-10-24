@@ -541,14 +541,15 @@ function horseInsights(source){
 }
 function horseInsightsPanel(source){
  const insights=horseInsights(source);
- const ranking=(items,title)=>'<div class="analysis-compact-group"><h3>'+title+'</h3>'+(items.length?items.slice(0,15).map(x=>'<div class="day-edit-row"><span>'+esc(x.name)+'</span><strong>馬券内 '+x.podium+'回 · 1着 '+x.wins+'回</strong></div>').join(''):'<p class="help">該当する馬券内データはまだありません。</p>')+'</div>';
  const podium=insights.raceRows.filter(r=>r.podium.length);
- return '<section class="card" id="analysisHorseJockey"><h2>馬・騎手分析</h2><p class="help">登録済みの1〜3着結果から集計。騎手・馬は同じレースで券種を複数購入しても1回だけ数えます。出走機会全体の勝率や馬券回収率ではありません。期間・競馬場・券種の絞り込みを適用します。</p><details open><summary>馬券内騎手（'+insights.jockeys.length+'名）</summary>'+ranking(insights.jockeys,'騎手別 3着内・勝利回数')+'</details><details><summary>馬券内の馬（'+insights.horses.length+'頭）</summary>'+ranking(insights.horses,'馬別 3着内・勝利回数')+'</details><details><summary>レースごとの馬券内詳細（'+podium.length+'レース）</summary>'+podium.map(({race,podium,verified,source})=>'<div class="analysis-compact-group"><h3>'+esc(race.date+' '+race.venue+' '+race.number+'R')+'</h3>'+podium.map(h=>'<div class="day-edit-row"><span>'+h.place+'着 '+esc(h.number+'番 '+h.name)+'</span><small>'+esc([h.jockey&&'騎手 '+h.jockey,h.popularity&&h.popularity+'番人気',h.odds&&'単勝 '+h.odds,h.frame&&h.frame+'枠',h.weight&&'斤量 '+h.weight,h.sexAge].filter(Boolean).join(' · ')||'詳細未確認')+'</small></div>').join('')+'<small>'+esc(verified||'照合状況未確認')+'</small>'+(source?'<p><a href="'+esc(source)+'" target="_blank" rel="noopener noreferrer">情報源</a></p>':'')+'</div>').join('')+'</details></section>';
+ const tally=(type)=>{const map=new Map();for(const row of podium){for(const h of row.podium){const key=type==='jockey'?h.jockey:h.name;if(!key)continue;const counts=map.get(key)||{name:key,first:0,second:0,third:0};if(h.place===1)counts.first++;if(h.place===2)counts.second++;if(h.place===3)counts.third++;map.set(key,counts);}}return [...map.values()].sort((a,b)=>(b.first+b.second+b.third)-(a.first+a.second+a.third)||b.first-a.first);};
+ const ranking=(rows,empty)=>rows.length?rows.slice(0,20).map(x=>'<div class="day-edit-row"><span>'+esc(x.name)+'</span><strong>1着 '+x.first+' · 2着 '+x.second+' · 3着 '+x.third+'<small> 3着以内 '+(x.first+x.second+x.third)+'回</small></strong></div>').join(''):'<p class="help">'+empty+'</p>';
+ return '<section class="card" id="analysisHorseJockey"><h2>馬・騎手の着順分析</h2><p class="help">集計対象：結果が登録された'+podium.length+'レース。同じレースで複数の券種を買っても1レースとして集計します。出走数に対する勝率や購入馬券の回収率ではありません。</p><details open><summary>騎手別の1〜3着回数（'+tally('jockey').length+'名）</summary>'+ranking(tally('jockey'),'騎手情報を登録すると集計できます。')+'</details><details><summary>馬別の1〜3着回数（'+tally('horse').length+'頭）</summary>'+ranking(tally('horse'),'馬券内の馬情報を登録すると集計できます。')+'</details><details><summary>集計対象のレース結果（'+podium.length+'レース）</summary><p class="help">上の着順別回数の根拠となるレース結果です。分析値ではありません。</p>'+podium.map(({race,podium,verified,source})=>'<div class="analysis-compact-group"><h3>'+esc(race.date+' '+race.venue+' '+race.number+'R')+'</h3>'+podium.map(h=>'<div class="day-edit-row"><span>'+h.place+'着 '+esc(h.number+'番 '+h.name)+'</span><small>'+esc([h.jockey&&'騎手 '+h.jockey,h.popularity&&h.popularity+'番人気',h.odds&&'単勝 '+h.odds,h.frame&&h.frame+'枠',h.weight&&'斤量 '+h.weight,h.sexAge].filter(Boolean).join(' · ')||'詳細未確認')+'</small></div>').join('')+'<small>'+esc(verified||'照合状況未確認')+'</small>'+(source?'<p><a href="'+esc(source)+'" target="_blank" rel="noopener noreferrer">情報源</a></p>':'')+'</div>').join('')+'</details></section>';
 }
 function gradedHistoryLabel(race){
  const record=effectiveCatalog().records.find(r=>raceKey(r)===raceKey(race));
  const raw=(record?.grade||race.grade||'').normalize('NFKC').toUpperCase().replace(/[\s（）()・.]/g,'');
- const grade=/GIII|G3/.test(raw)?'G3':/GII|G2/.test(raw)?'G2':/GI|G1/.test(raw)?'G1':/LISTED|リステッド/.test(raw)?'L':'';
+ const grade=/GIII|G3/.test(raw)?'GⅢ':/GII|G2/.test(raw)?'GⅡ':/GI|G1/.test(raw)?'GⅠ':/LISTED|リステッド/.test(raw)?'L':'';
  return {grade,name:race.name||record?.name||''};
 }
 
@@ -901,7 +902,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.9.5',
+ currentVersion:'2.9.6',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
