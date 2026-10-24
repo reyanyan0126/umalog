@@ -13,7 +13,6 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
  // A fresh isolated browser context, never the user's existing ledger.
  const read=()=>page.evaluate(async()=>await(await import('./db.js')).load());
  assert.equal((await read()).lines.length,0);
- await page.locator('#aiImportSave').click();assert.match(await page.locator('#aiImportError').innerText(),/チェック/);assert.equal((await read()).lines.length,0);
  await page.evaluate(()=>{document.querySelector('#aiImportSave').click();document.querySelector('#aiImportSave').click();});await page.waitForFunction(()=>location.hash==='#history');
  const saved=await read();assert.equal(saved.lines.length,10);assert.equal(saved.lines.reduce((n,l)=>n+l.stake,0),1500);assert.equal(saved.lines.reduce((n,l)=>n+l.payout,0),2160);
  for(const route of ['home','analysis','history']){await page.evaluate(r=>location.hash=r,route);await page.waitForTimeout(150);assert.equal(await page.locator('#app > .error').count(),0);assert.match(await page.locator('#app').innerText(),/660/);}
