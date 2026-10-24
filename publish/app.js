@@ -1,4 +1,4 @@
-import {parseAiImport} from './ai-text-import.js';
+import {parseAiBatch,decodeImportLink,prepareAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
 import {swipeDirection} from './swipe.js';
@@ -178,43 +178,26 @@ function rewardPanel(source){return `<section class="card reward-panel"><h2>成�
 function sortedTickets(){return [...data.tickets].sort((a,b)=>data.races.find(r=>r.id===b.raceId).date.localeCompare(data.races.find(r=>r.id===a.raceId).date)||b.createdAt.localeCompare(a.createdAt));}
 
 function aiTextImportScreen(){
- app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIテキスト取込</h1></div>
- <section class="card"><p>ChatGPTで作成した「うまログ登録データ」を貼り付けてください。内容を確認してから保存します。</p>
- <label for="aiImportText">登録用テキスト</label><textarea id="aiImportText" rows="12" style="width:100%;max-width:100%;min-height:220px" placeholder="【うまログ登録データ】"></textarea>
- <div class="row"><button type="button" id="aiImportPreview">内容を確認</button></div><p id="aiImportError" role="alert"></p></section>
- <section id="aiImportReview" class="card" hidden></section>`;
- let candidate=null;
- const shared=location.hash.match(/^#ai-import\?text=(.*)$/s);
- if(shared){try{const text=decodeURIComponent(shared[1].replace(/\\+/g,'%20'));check(text.length<=120000,'取込データが大きすぎます。');$('#aiImportText').value=text;}catch(e){$('#aiImportError').textContent='共有リンクを読み込めませんでした。テキストを貼り付けてください。';}}
- $('#aiImportPreview').onclick=()=>{
-  const panel=$('#aiImportReview'),error=$('#aiImportError');panel.hidden=true;candidate=null;error.textContent='';
+ app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIインポート</h1></div><section class="card"><p class="help">リンクまたはファイルから購入データを確認して保存します。画像の解析・公式結果の検索はChatGPT側で行います。</p><label>登録用テキスト<textarea id="aiImportText" rows="8" style="width:100%;box-sizing:border-box"></textarea></label><label>テキストファイル<input id="aiImportFile" type="file" accept=".txt,text/plain"></label><button type="button" id="aiImportPreview">内容を確認</button><p id="aiImportError" role="alert"></p></section><section id="aiImportReview" class="card" hidden></section>`;
+ let candidate=null,saving=false;
+ const error=$('#aiImportError'),panel=$('#aiImportReview');
+ const preview=()=>{
+  panel.hidden=true;candidate=null;error.textContent='';
   try{
-   candidate=parseAiImport($('#aiImportText').value);
-   const c=candidate,existing=data.races.find(r=>raceKey(r)===raceKey(c));
-   const matching=existing?data.tickets.filter(t=>t.raceId===existing.id&&t.type===c.type):[];
-   const already=matching.some(t=>{const lines=data.lines.filter(l=>l.ticketId===t.id);return c.tickets.some(x=>lines.some(l=>JSON.stringify(l.numbers)===JSON.stringify(x.numbers)&&l.stake===x.stake));});
-   panel.innerHTML=`<h2>登録前の確認</h2><p><strong>${esc(c.date)} ${esc(c.venue)} ${c.number}R / ${esc(c.type)}</strong></p>
-   <p>${c.tickets.length}点　購入 ${yen(c.totalPurchase)}　払戻 ${yen(c.totalPayout)}　収支 ${signed(c.totalPayout-c.totalPurchase)}</p>
-   <div style="max-height:280px;overflow:auto"><table><thead><tr><th>買い目</th><th>購入</th><th>払戻</th></tr></thead><tbody>${c.tickets.map(t=>`<tr><td>${t.numbers.join('-')}</td><td>${yen(t.stake)}</td><td>${yen(t.payout)}</td></tr>`).join('')}</tbody></table></div>
-   ${already?'<p role="alert">同じレース・券種・買い目・金額の記録があります。重複登録に注意してください。</p>':''}
-   <label><input type="checkbox" id="aiImportConfirm"> 日付・券種・購入額・払戻額・重複を確認しました</label>
-   <button type="button" id="aiImportSave">確認して一括登録</button>`;
+   candidate=parseAiBatch($('#aiImportText').value);
+   const purchase=candidate.reduce((a,c)=>a+c.totalPurchase,0),refund=candidate.reduce((a,c)=>a+c.refund,0),pending=candidate.some(c=>c.totalPayout===null),payout=candidate.reduce((a,c)=>a+(c.totalPayout??0),0);
+   panel.innerHTML=`<h2>登録前の確認</h2><p><strong>購入 ${yen(purchase)} ／ 払戻 ${pending?'未確認':yen(payout)} ／ 返還 ${yen(refund)} ／ 収支 ${pending?'未確定':signed(payout+refund-purchase)}</strong></p>${candidate.map(c=>`<h3>${esc(c.date)} ${esc(c.venue)} ${c.number}R ${esc(c.type)}</h3><p>${c.tickets.length}点 · 受付 ${esc(c.receipt||'不明')} ${esc(c.receiptTime)}</p><div style="max-height:300px;overflow:auto"><table><thead><tr><th>買い目</th><th>購入</th><th>払戻</th><th>返還</th></tr></thead><tbody>${c.tickets.map(t=>`<tr><td>${t.numbers.join('-')}</td><td>${yen(t.stake)}</td><td>${t.status==='pending'?'未確定':yen(t.payout)}</td><td>${yen(t.refund)}</td></tr>`).join('')}</tbody></table></div><details><summary>レース情報・出典（外部提供情報）</summary><p>アプリでは公式照合を行っていません。</p>${Object.entries(c.metadata).filter(([,v])=>v).map(([k,v])=>`<p style="overflow-wrap:anywhere">${esc(k)}: ${esc(v)}</p>`).join('')||'<p>未確認</p>'}</details>`).join('')}<label><input type="checkbox" id="aiImportConfirm"> 購入内容・金額・未確認情報を確認しました</label><label><input type="checkbox" id="aiImportSeparate"> 同日の簡単記録がある場合、今回とは別の購入です</label><button type="button" id="aiImportSave">確認して一括登録</button><p class="help">同一購入を簡単記録で保存済みの場合は追加登録しないでください。</p>`;
    panel.hidden=false;
-   $('#aiImportSave').onclick=guard(async()=>{
-    check($('#aiImportConfirm').checked,'確認チェックを入れてください。');
-    const next=clone(data),c=candidate;
-    let race=next.races.find(r=>raceKey(r)===raceKey(c));
-    if(!race){race={id:uid(),date:c.date,venue:c.venue,number:c.number,name:c.name||''};next.races.push(race);}
-    if(c.podium&&!race.podium){race.podium=c.podium;}
-    const dup=next.tickets.filter(t=>t.raceId===race.id&&t.type===c.type).some(t=>next.lines.some(l=>l.ticketId===t.id&&c.tickets.some(x=>JSON.stringify(l.numbers)===JSON.stringify(x.numbers)&&l.stake===x.stake)));
-    check(!dup,'同じ買い目が登録済みです。二重登録を防ぐため保存を中止しました。');
-    const ticket={id:uid(),raceId:race.id,type:c.type,kind:'reported',memo:c.receipt?'AI取込・受付番号 '+c.receipt:'AIテキスト取込',createdAt:new Date().toISOString()};
-    next.tickets.push(ticket);
-    for(const line of c.tickets)next.lines.push({id:uid(),ticketId:ticket.id,numbers:line.numbers,stake:line.stake,payout:line.payout,refund:0,status:'settled'});
-    validateData(next);await commit(next);notify(c.tickets.length+'点を登録しました。');location.hash='history';
-   });
+   $('#aiImportSave').onclick=async()=>{
+    if(saving)return;const button=$('#aiImportSave');error.textContent='';
+    try{check($('#aiImportConfirm').checked,'内容確認にチェックを入れてください。');saving=true;button.disabled=true;const next=prepareAiImport(data,candidate,{separateSimple:$('#aiImportSeparate').checked});await commit(next);notify(candidate.reduce((n,c)=>n+c.tickets.length,0)+'点を登録しました。');await navigate('#history');}catch(e){error.textContent=e.message;}finally{saving=false;if(button.isConnected)button.disabled=false;}
+   };
   }catch(e){error.textContent=e.message||'解析に失敗しました。';}
  };
+ $('#aiImportText').oninput=()=>{candidate=null;panel.hidden=true;dirty=true;};
+ $('#aiImportPreview').onclick=preview;
+ $('#aiImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;check(f.size<=3000000,'ファイルは3MB以内にしてください。');$('#aiImportText').value=await f.text();dirty=true;preview();}catch(e){error.textContent=e.message;}};
+ if(location.hash.startsWith('#ai-import?')){try{$('#aiImportText').value=decodeImportLink(location.hash);preview();}catch(e){error.textContent=e.message;}}
 }
 
 function simpleEntry(id=null,contextDate=null,fromDay=false){
@@ -225,7 +208,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  const templates=id?[]:recentSimpleTemplates(data.simpleEntries||[]);
  const templatePanel=templates.length?`<div class="simple-recent"><h3>前回の条件を使う</h3><div class="simple-recent-list">${templates.map((t,i)=>`<button type="button" class="quiet simple-repeat-button" data-simple-template="${i}"><strong>${yen(t.stake)}</strong><small>${esc(t.venue||'競馬場未指定')} · ${esc(t.type||'券種未指定')} · ${esc(t.sourceDate)}</small></button>`).join('')}</div></div>`:'';
  app.innerHTML=`<div class="simple-entry-head"><a href="${backHash}">← ${fromDay?'この日の記録':'購入履歴'}に戻る</a><h1>${id?'記録を編集':'記録する'}</h1></div>
- <p><a class="button quiet" href="#ai-import">AIテキストを貼り付けて一括登録</a></p><form id="simpleEntryForm" class="card simple-entry-form">
+ <p data-ai-import-entry><a class="button quiet" href="#ai-import">AIインポート</a></p><form id="simpleEntryForm" class="card simple-entry-form">
  <label>購入日<input id="simpleDate" type="date" required min="2000-01-01" max="2199-12-31" value="${esc(old.date)}"></label>
  <label>購入額 <span class="required-mark">必須</span><input id="simpleStake" type="number" min="100" max="1000000000000" step="100" required inputmode="numeric" value="${old.stake}" placeholder="例：1,000"></label>
  <div id="simpleResultSection" class="simple-settlement simple-payout-inline"><div id="simplePayoutFields"><label>払戻金（円）<input id="simplePayout" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.payout||0}"></label><label>返還金（円）<input id="simpleRefund" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.refund||0}"></label></div></div>
@@ -867,7 +850,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.9.0',
+ currentVersion:'2.9.1',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),

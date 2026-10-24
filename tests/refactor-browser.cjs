@@ -22,6 +22,8 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
    for(const route of ['home','quick','history','analysis','growth','settings','calendar','entry','day/2026-10-24','quick-edit/fixture','quick-result/fixture','detail/t','edit/t','title']){
     await page.evaluate(r=>location.hash=r,route);await page.waitForTimeout(250);
     assert.equal(await page.locator('#app > .error').count(),0,variant+route);
+    // Hide only the new import entry, then compare the remaining form pixels.
+    if(variant==='candidate')await page.addStyleTag({content:'[data-ai-import-entry]{display:none!important}'});
     // Exclude only transient notices/status/version. Layout and all app content remain compared.
     await page.addStyleTag({content:'#notice{display:none!important}'});
     const mask=[page.locator('#launchUpdateStatus')];
@@ -44,7 +46,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
    }
    await ctx.close();
   }
-  for(const route of Object.keys(shots[0])){if(route==='quick'||route.startsWith('quick-edit/')){results.push({width,route,pixels:'intentional AI import link addition'});continue;}assert.ok(shots[0][route].equals(shots[1][route]),`pixel mismatch ${width} ${route}`);results.push({width,route,pixels:'identical'});}
+  for(const route of Object.keys(shots[0])){assert.ok(shots[0][route].equals(shots[1][route]),`pixel mismatch ${width} ${route}`);results.push({width,route,pixels:'identical'});}
   console.log('PASS',width,'14 route screenshots byte-identical');
  }
  fs.writeFileSync(path.join(output,'comparison.json'),JSON.stringify(results,null,2));
