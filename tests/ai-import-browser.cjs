@@ -27,7 +27,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
  // 816 unique three-horse combinations in one screen, with no horizontal overflow.
  const many=[];for(let a=1;a<=18;a++)for(let b=a+1;b<=18;b++)for(let c=b+1;c<=18;c++)many.push(`${a}-${b}-${c}：100円／払戻0円`);
  const large=raw.replace(/【購入情報】[\s\S]*?【収支】/,'【購入情報】\n'+many.join('\n')+'\n【収支】').replace('1,500円','81,600円').replace('払戻合計：2,160円','払戻合計：0円');
- await page.goto(base+'#ai-import');await page.locator('#aiImportText').fill(large);await page.locator('#aiImportPreview').click();assert.equal(await page.locator('#aiImportReview tbody tr').count(),816);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.goto(base+'#ai-import');assert.equal(await page.locator('#aiImportText').count(),0);assert.equal(await page.locator('#aiImportClipboard').count(),1);await page.locator('#aiImportFile').setInputFiles({name:'import.txt',mimeType:'text/plain',buffer:Buffer.from(large)});assert.equal(await page.locator('#aiImportReview tbody tr').count(),816);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  // HTML payload is shown as text, never executed.
  const hostile=raw.replace('レース名：2歳未勝利','レース名：<img src=x onerror=alert(1)>');await page.goto(base+'#ai-import?text='+encodeURIComponent(hostile));await page.locator('#aiImportReview:not([hidden])').waitFor();assert.equal(await page.locator('#aiImportReview img').count(),0);
  await page.goto(base+'#ai-import?text=%XX');await page.locator('#aiImportError').waitFor();assert.match(await page.locator('#aiImportError').innerText(),/文字コード/);
