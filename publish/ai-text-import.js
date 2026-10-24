@@ -33,7 +33,7 @@ export function parseAiImport(raw){
  const summary=section('収支'),totalPurchase=amount(value(summary,'購入合計'),'購入合計'),pending=tickets.some(t=>t.status==='pending'),p=value(summary,'払戻合計'),totalPayout=p==='未確認'?null:amount(p,'払戻合計'),refund=amount(value(summary,'返還合計')??'0','返還合計');
  check(totalPurchase===tickets.reduce((a,t)=>a+t.stake,0),'購入合計と買い目の金額が一致しません。');check(refund===tickets.reduce((a,t)=>a+t.refund,0),'返還合計と明細が一致しません。');
  check(pending?totalPayout===null:totalPayout===tickets.reduce((a,t)=>a+t.payout,0),'未確認行がある場合は払戻合計を「未確認」にしてください。確定済みの場合は明細払戻額と払戻合計の一致を確認してください。');
- const results=section('レース結果'),metadata={};for(const key of ['芝・ダート','距離','馬場状態','出走頭数','1着','2着','3着','4着','5着','人気順位','確定配当','出典','照合状況'])metadata[key]=optional(results,key,1000);
+ const results=section('レース結果'),metadata={};for(const key of ['芝・ダート','距離','馬場状態','出走頭数','1着','2着','3着','4着','5着','人気順位','出走馬','確定配当','出典','照合状況'])metadata[key]=optional(results,key,1000);
  if(metadata['出典'])check(/^https:\/\/\S+$/.test(metadata['出典']),'出典はhttpsのURLで指定してください。');
  return {date,venue,number,type,name:optional(header,'レース名',100),receipt,receiptTime,imageId,tickets,totalPurchase,totalPayout,refund,metadata,podium:null};
 }
