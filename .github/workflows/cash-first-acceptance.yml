@@ -1,8 +1,9 @@
-name: v2.5.0 Cash-first release acceptance
+name: Cash accounting and PWA release acceptance
 on:
   push:
     branches:
       - work/v2.5.0-no-pending-cash
+      - work/v2.8.1-internal-refactor
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,14 +13,18 @@ jobs:
   acceptance:
     name: Cash-first accounting and PWA acceptance
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Check source and publish parity
-        run: python tools/check_publish.py
+        run: python3 tools/check_publish.py
       - name: Check JavaScript syntax
         run: |
           node --check app.js
@@ -35,7 +40,6 @@ jobs:
       - name: Install browser dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.64.1
-          npx playwright install --with-deps chromium
           cat > tests/ci-chromium.cjs <<'EOF'
           module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
           EOF
@@ -47,7 +51,16 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
       - name: Navigation and update lifecycle (published PWA)
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
-      - name: Install WebKit
-        run: npx playwright install --with-deps webkit
       - name: Navigation and update lifecycle (WebKit)
         run: DEBUG=pw:browser BROWSER=webkit node tests/navigation-e2e.cjs
+
+      - name: v2.8.0 differential rendering and data compatibility
+        run: |
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
+          BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
+      - name: Keep comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-rendering-comparison
+          path: ${{ runner.temp }}/umalog-comparison

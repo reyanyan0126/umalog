@@ -2,7 +2,7 @@ import {growthTotal,validateGrowthV2} from './growth-v2.js';
 import {validateSimpleEntries} from './simple-ledger.js';
 // Pure domain functions; no DOM, network or database dependency.
 export const SCHEMA_VERSION = 1;
-export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉'];
+export const VENUES = ['札幌','函館','福島','新潟','東京','中山','中京','京都','阪神','小倉','帯広','門別','盛岡','水沢','浦和','船橋','大井','川崎','金沢','笠松','名古屋','園田','姫路','高知','佐賀'];
 export const TYPES = ['単勝','複勝','枠連','馬連','馬単','ワイド','三連複','三連単'];
 export const STAGES = [0,40,180,400,700];
 export const STAGE_NAMES = ['たまご','なぞの丸い生物','馬の気配','馬らしき生物','ちいさな馬'];

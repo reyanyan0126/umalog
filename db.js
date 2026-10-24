@@ -50,12 +50,20 @@ export async function loadCalendar(){const db=connection||await openDB();return 
 export async function saveCalendar(input,expectedRevision){const calendar=validateCalendar(input),db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),r=store.get('meetingCalendar');let result,error;r.onsuccess=()=>{if((r.result?.revision||0)!==expectedRevision){error=new Error('別の画面で更新されています。再読込して差分を確認してください。');tx.abort();return;}result={revision:expectedRevision+1,importedAt:new Date().toISOString(),calendar};store.put(result,'meetingCalendar');};tx.oncomplete=()=>resolve(result);tx.onabort=()=>reject(error||tx.error||new Error('保存を中止しました。旧データを保持しています。'));tx.onerror=()=>reject(tx.error);});}
 
 /* Entry drafts are isolated from main and JSON backups. Storage schema remains v1. */
+async function readOptionalValue(key){
+ const db=connection||await openDB();
+ return new Promise((resolve,reject)=>{
+  const req=db.transaction(STORE,'readonly').objectStore(STORE).get(key);
+  req.onsuccess=()=>resolve(req.result||null);
+  req.onerror=()=>reject(req.error);
+ });
+}
 const draftKey=key=>'entryDraft:'+key;
-export async function loadEntryDraft(key){const db=connection||await openDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).get(draftKey(key));req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+export async function loadEntryDraft(key){return readOptionalValue(draftKey(key));}
 export async function saveEntryDraft(key,value){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(value,draftKey(key));tx.oncomplete=()=>resolve(value);tx.onabort=()=>reject(tx.error||new Error('下書きを保存できませんでした。'));tx.onerror=()=>reject(tx.error);});}
 export async function discardEntryDraft(key){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(draftKey(key));tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error||new Error('下書きを破棄できませんでした。'));tx.onerror=()=>reject(tx.error);});}
-export async function loadMainSaveTime(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).get('lastMainSaveAt');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+export async function loadMainSaveTime(){return readOptionalValue('lastMainSaveAt');}
 
 /* User attestation only; a share/download dialog cannot prove a backup reached external storage. */
-export async function loadBackupConfirmation(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).get('lastBackupConfirmedAt');req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+export async function loadBackupConfirmation(){return readOptionalValue('lastBackupConfirmedAt');}
 export async function confirmBackupStored(){const at=new Date().toISOString(),db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(at,'lastBackupConfirmedAt');tx.oncomplete=()=>resolve(at);tx.onabort=()=>reject(tx.error||new Error('確認日時を保存できませんでした。'));tx.onerror=()=>reject(tx.error);});}

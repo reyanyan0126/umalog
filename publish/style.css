@@ -1107,3 +1107,70 @@ a.launch-start{display:inline-flex;align-items:center;justify-content:center;bac
 .launch-update{min-height:42px;background:transparent;border:1px solid #769f89;color:#285a46;border-radius:999px;font-size:13px;padding:8px 18px}
 .launch-update:disabled{opacity:.55}
 .launch-update-status{min-height:1.5em;margin:0;font-size:12px;color:#285a46}
+
+/* v2.5.29: compact home finance and touch-friendly entry */
+#homeSummary .home-simple-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#homeSummary .home-simple-totals>*{min-width:0;overflow-wrap:anywhere}
+#homeSummary .home-minimal-note{font-size:11px;line-height:1.4;margin:5px 0 9px}
+#homeSummaryPeriod{min-width:64px;touch-action:manipulation}
+#homeQuickEntry{min-height:46px;display:flex;align-items:center;justify-content:center}
+@media(max-width:380px){#homeSummary .home-simple-totals{gap:4px}#homeSummary .home-simple-totals>*{font-size:11px}}
+
+/* v2.5.33: keep global logo/settings header visible across all screens. */
+body{padding-top:0}
+body>header#home{position:sticky;top:0;z-index:110;max-width:none;width:100%;min-height:calc(66px + env(safe-area-inset-top));padding:calc(4px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 4px max(16px,env(safe-area-inset-left));background:rgba(247,245,239,.97);border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.045);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+body>header#home .brand{display:flex;align-items:center}
+body>header#home #settingsButton{flex-shrink:0}
+html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
+
+/* v2.5.34: prevent month navigation wrapping when Today button appears. */
+.home-calendar-heading .home-calendar-navigation{display:grid;grid-template-columns:40px minmax(0,1fr) 40px 54px;width:100%;gap:6px;align-items:center;flex:1 1 100%;min-width:0}
+.home-calendar-heading .home-calendar-navigation label{width:100%;min-width:0;display:block}
+.home-calendar-heading .home-calendar-navigation input{width:100%;min-width:0;max-width:100%;font-size:16px}
+.home-calendar-heading .home-calendar-navigation button{min-width:0;width:100%;padding:7px 3px;white-space:nowrap}
+.home-calendar-heading .home-calendar-navigation #monthToday[hidden]{display:none}
+@media(max-width:359px){.home-calendar-heading .home-calendar-navigation{grid-template-columns:36px minmax(0,1fr) 36px 48px;gap:4px}}
+
+/* v2.5.40: compact visual analysis dashboard */
+.analysis-cash-bars{display:grid;gap:12px;margin:16px 0}.analysis-cash-bars>div{display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:8px;font-size:.82rem}.analysis-cash-bars b{font-variant-numeric:tabular-nums;white-space:nowrap}.analysis-cash-track,.analysis-month-track{height:11px;border-radius:99px;background:var(--surface-2,#343a43);overflow:hidden;min-width:0}.analysis-cash-track i,.analysis-month-track i{display:block;height:100%;border-radius:inherit;background:#ed9b45}.analysis-cash-track i.receipts,.analysis-month-track i.gain{background:#47a887}.analysis-month-track i.loss{background:#d77b72}.analysis-simple-month,.analysis-favorite-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;margin:10px 0}.analysis-simple-month strong,.analysis-favorite-row strong{font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap}.analysis-favorite-row{grid-template-columns:65px minmax(0,1fr) 55px}.analysis-favorites h2{margin-bottom:12px}@media(max-width:359px){.analysis-cash-bars>div{grid-template-columns:68px minmax(0,1fr);gap:5px}.analysis-cash-bars b{grid-column:2;justify-self:end}.analysis-simple-month{gap:6px}}
+
+/* v2.5.41 unified compact analysis */
+.analysis-compact-group{margin-top:16px}.analysis-compact-group h3{font-size:.9rem;margin:0 0 8px}.analysis-favorite-row{grid-template-columns:minmax(76px,auto) minmax(0,1fr) 54px}.analysis-favorite-row>span:first-child{font-size:.82rem;white-space:nowrap}.analysis-compact-group+.analysis-compact-group{padding-top:12px;border-top:1px solid var(--border,rgba(128,128,128,.2))}.analysis-advanced .analysis-controls{padding-top:12px}.analysis-essential-monthly .analysis-simple-month{grid-template-columns:50px minmax(0,1fr) auto}.analysis-cash-bars .analysis-month-track{display:block}
+
+/* v2.5.42: visual-first compact analytics */
+.analysis-diverge{position:relative;display:flex;align-items:center;width:100%;height:16px;min-width:0}.analysis-diverge:after{content:"";position:absolute;left:50%;height:18px;width:1px;background:var(--text-muted,#888);opacity:.5}.analysis-diverge-negative{height:12px;margin-left:auto;background:#d77b72;border-radius:6px 0 0 6px}.analysis-diverge-positive{height:12px;margin-right:auto;background:#47a887;border-radius:0 6px 6px 0}.analysis-diverge-negative:empty{min-width:0}.analysis-diverge-positive:empty{min-width:0}.analysis-simple-month .analysis-diverge{display:grid;grid-template-columns:1fr 1fr;column-gap:0}.analysis-simple-month .analysis-diverge-negative{justify-self:end;margin:0}.analysis-simple-month .analysis-diverge-positive{justify-self:start;margin:0}.analysis-simple-month .analysis-diverge-negative,.analysis-simple-month .analysis-diverge-positive{width:100%;max-width:100%}.analysis-empty{opacity:.55;margin:4px 0}.analysis-favorites .analysis-compact-group{margin-top:12px}.analysis-favorites .analysis-favorite-row{margin:7px 0}
+
+/* iOS date input: align its native value and border with other simple-entry fields. */
+.simple-entry-form #simpleDate{display:block;box-sizing:border-box;width:100%;height:56px;min-height:56px;line-height:30px;padding:12px 14px;appearance:none;-webkit-appearance:none;border-radius:10px}
+.simple-entry-form #simpleDate::-webkit-date-and-time-value{display:block;min-height:30px;line-height:30px;text-align:left}
+.simple-entry-form #simpleDate::-webkit-datetime-edit{display:block;padding:0;line-height:30px}
+
+/* Calendar graded races: compact tappable cards instead of plain bullet links. */
+.ledger-graded-cards{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}.ledger-graded-item{list-style:none;margin:0;padding:0}.ledger-graded-card{display:flex;align-items:center;gap:10px;min-height:54px;padding:10px 12px;border:1px solid #d9e3d7;border-radius:12px;background:#fff;color:#294737;text-decoration:none;position:relative}.ledger-graded-card[href]:active{background:#eaf2e7}.ledger-graded-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0}.ledger-grade-badge{flex:none;min-width:38px;text-align:center;border-radius:7px;padding:5px 7px;background:#e8eee7;color:#315b44;font-size:.73rem;font-weight:800;white-space:nowrap}.ledger-graded-name{font-weight:750;font-size:.93rem;line-height:1.35;overflow-wrap:anywhere}.ledger-graded-arrow{font-size:1.6rem;line-height:1;color:#64816d}.ledger-graded-status{font-size:.73rem;color:#9a5d30}.ledger-graded-card.is-unavailable{opacity:.7}.ledger-graded-card:has(.ledger-graded-status){flex-wrap:wrap}.ledger-graded-card .ledger-graded-status{flex-basis:100%;padding-left:48px}
+
+/* Graded race indicators inside compact calendar cells. */
+.ledger-event-grades{display:flex;align-items:center;flex-wrap:wrap;gap:2px;max-width:100%;margin-top:1px}.ledger-event-grade{display:inline-flex;align-items:center;justify-content:center;padding:1px 3px;border-radius:4px;background:#e7ece6;color:#41604c;font-size:clamp(9px,2.5vw,12px);font-weight:850;line-height:1.25;letter-spacing:-.04em;white-space:nowrap}.ledger-event-grade.grade-g1{background:#f5dfac;color:#76500f}.ledger-event-grade.grade-g2{background:#dfe7f1;color:#355b7b}.ledger-event-grade.grade-g3{background:#e9dfd1;color:#70533c}.ledger-event-more{font-size:10px;font-weight:800;color:#506956}
+
+/* v2.5.47: unified grade colors and compact analytics. */
+.ledger-grade-badge.grade-g1{background:#f5dfac;color:#76500f}.ledger-grade-badge.grade-g2{background:#dfe7f1;color:#355b7b}.ledger-grade-badge.grade-g3{background:#e9dfd1;color:#70533c}.analysis-best-month{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px;margin:4px 0 12px;color:var(--muted);font-size:.78rem}.analysis-best-month strong{font-size:.88rem;color:var(--green)}
+
+/* v2.5.51: improve touch clarity without changing layout or saved data. */
+@media (pointer:coarse){nav a, .history-search-clear, .simple-repeat-button{touch-action:manipulation}}
+@media (prefers-reduced-motion:reduce){.analysis-month-track i,.analysis-diverge i{transition:none!important}}
+
+/* v2.6.0: consistent keyboard and touch affordances across main views. */
+@media (max-width:720px){
+ #app input[type="search"],#app input[type="number"],#app input[type="date"],#app select,#app textarea{max-width:100%;min-width:0}
+ #app .card{min-width:0}
+ #app button:focus-visible,#app a:focus-visible,nav a:focus-visible{outline:3px solid #3c805e;outline-offset:2px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}
+
+/* v2.7.0: consistent narrow-screen controls and readable focus. */
+@media(max-width:480px){#app input,#app select,#app textarea{box-sizing:border-box;min-width:0;max-width:100%}#app .card{overflow-wrap:anywhere}}
+@media(pointer:coarse){#app button,#app a,nav a{touch-action:manipulation}}
+
+/* v2.8.0: shared spacing and touch accessibility for all app cards. */
+:root{--umalog-control-min-height:44px;--umalog-card-gap:12px}
+@media(max-width:600px){#app .card{max-width:100%;min-width:0}#app .card button{max-width:100%}#app input,#app select,#app textarea{font-size:16px}}
+@media(pointer:coarse){#app button,#app select,nav button{min-height:var(--umalog-control-min-height)}}

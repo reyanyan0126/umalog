@@ -1,7 +1,8 @@
 // Registration, update checks and controller changes share one lifecycle.
-export function createUpdates({serviceWorker, onOffer, onStatus, canReload, reload, isOnline=()=>globalThis.navigator?.onLine!==false}) {
+export function createUpdates({serviceWorker, onOffer, onStatus, canReload, reload, isOnline=()=>globalThis.navigator?.onLine!==false, currentVersion=null, getPublishedVersion=null}) {
  let registration, registering, refreshing=false;
  let controlled=!!serviceWorker?.controller;
+ let checking=false;
  serviceWorker?.addEventListener('controllerchange',()=>{
   if(!controlled){controlled=true;return;}
   if(refreshing)return;
@@ -30,6 +31,8 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
   return true;
  }
  async function check(){
+  if(checking)return;
+  checking=true;
   onStatus('更新を確認しています…');
   try{
    if(!isOnline())throw new Error('offline');
@@ -37,7 +40,7 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
    if(!reg){onStatus('更新機能に対応していません。');return;}
    // A fully installed waiting worker is already the update to apply.
    // Do not start another update job while that worker awaits activation.
-   if(reg.waiting){apply();return;}
+   if(reg.waiting){if(!apply())onStatus('更新を保留しています。入力内容を保存してから適用してください。');return;}
    await deadline(reg.update());
    const worker=reg.installing;
    if(worker)await new Promise((resolve,reject)=>{
@@ -46,9 +49,19 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
     function changed(){if(worker.state==='redundant')finish(new Error('update failed'));else if(['installed','activated'].includes(worker.state))finish();}
     worker.addEventListener('statechange',changed);changed();
    });
-   if(reg.waiting)apply();
-   else onStatus('最新版の確認が完了しました。');
+   if(reg.waiting){if(!apply())onStatus('更新を保留しています。入力内容を保存してから適用してください。');}
+   else onStatus(await currentReleaseStatus());
   }catch{onStatus('更新を確認できませんでした。通信状態を確認してください。');}
+  finally{checking=false;}
+ }
+ async function currentReleaseStatus(){
+  if(!getPublishedVersion||!currentVersion)return '更新は見つかりませんでした。';
+  try{
+   const published=await deadline(getPublishedVersion());
+   if(published&&published!==currentVersion)return '公開版 '+published+' を確認しました。アプリの更新を再確認してください（使用中：'+currentVersion+'）。';
+   if(published===currentVersion)return '最新版です（v'+currentVersion+'）。';
+  }catch{}
+  return '更新は見つかりませんでした（使用中：v'+currentVersion+'）。公開版の照合はできませんでした。';
  }
  return {register,check,apply};
 }

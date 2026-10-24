@@ -8,7 +8,7 @@ function harness({dirty=false,waiting=null,controller={}}={}){
  const updates=createUpdates({serviceWorker,onStatus:m=>messages.push(m),onOffer:()=>offers++,canReload:()=>!dirty,reload:()=>reloads++});
  return {updates,reg,events,messages,get reloads(){return reloads},get registrations(){return registrations}};
 }
-test('no-update check never reloads and registration is shared',async()=>{const h=harness();await Promise.all([h.updates.register(),h.updates.check()]);assert.equal(h.registrations,1);assert.equal(h.reloads,0);assert.match(h.messages.at(-1),/確認が完了/);});
+test('no-update check never reloads and registration is shared',async()=>{const h=harness();await Promise.all([h.updates.register(),h.updates.check()]);assert.equal(h.registrations,1);assert.equal(h.reloads,0);assert.match(h.messages.at(-1),/更新は見つかりませんでした/);});
 test('apply and duplicate controllerchange reload exactly once',async()=>{let applied=0;const h=harness({waiting:{postMessage:()=>applied++}});await h.updates.check();assert.equal(applied,1);h.events.controllerchange();h.events.controllerchange();assert.equal(h.reloads,1);});
 test('dirty input blocks apply and automatic reload',async()=>{let applied=0;const h=harness({dirty:true,waiting:{postMessage:()=>applied++}});await h.updates.check();h.events.controllerchange();assert.equal(applied,0);assert.equal(h.reloads,0);});
 test('initial worker claim does not reload',async()=>{const h=harness({controller:null});await h.updates.register();h.events.controllerchange();assert.equal(h.reloads,0);});

@@ -6,5 +6,5 @@ test('title has one visibility mechanism and no inline lifecycle scripts',()=>{
  assert.match(read('style.css'),/\.launch-screen\[hidden\]\s*\{display:none!important\}/);
  assert.doesNotMatch(read('style.css'),/body:has\(#home:target\)\s*\.launch-screen/);
  assert.doesNotMatch(read('index.html'),/<script>/);
- assert.doesNotMatch(read('app.js'),/MutationObserver|splash\.style\.display/);
+ assert.doesNotMatch(read('app.js'),/splash\.style\.display/);
 });

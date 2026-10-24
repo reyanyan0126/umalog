@@ -1,18 +1,19 @@
+import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
 import {swipeDirection} from './swipe.js';
 import {createUpdates} from './updates.js';
 import {withMaster} from './graded-master.js';
 import {mountLedgerCalendar} from './ledger-calendar.js';
-import {gradedEvents,isGraded,mountGradedHome,mountGradedPicker,eventLabel,selectable} from './graded-races.js';
+import {gradedEvents,mountGradedHome,mountGradedPicker,eventLabel,selectable} from './graded-races.js';
 import {migrateGrowth,grow,BOOK,companionProgress} from './growth-v2.js';
 import {emptyCalendar,validateCalendar,calendarRecords} from './calendar.js';
-import {calendarHome,mountCandidates,mountCalendarManager} from './calendar-view.js';
+import {mountCandidates,mountCalendarManager} from './calendar-view.js';
 let calendarState={revision:0,importedAt:null,calendar:emptyCalendar()},calendarWarning='',calendarDirty=false;
 const effectiveCatalog=()=>({...catalog,records:calendarRecords(withMaster(calendarState.calendar),catalog.records)});
-import {VENUES,TYPES,STAGE_NAMES,STAGES,uid,check,validDate,money,combination,box,validatePodium,aggregate as oldAggregate,summarize as oldSummarize,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey,backupFreshness,backupFileName} from './core.js';
-import {load,loadWithRevision,save,loadCatalog,saveCatalog,loadCalendar,loadEntryDraft,discardEntryDraft,loadMainSaveTime,loadBackupConfirmation,confirmBackupStored} from './db.js';
+import {VENUES,TYPES,STAGE_NAMES,uid,check,validDate,money,box,validatePodium,recalculate,validateData,removeTicket,jstToday,weekOf,addDays,raceKey,backupFreshness,backupFileName} from './core.js';
+import {loadWithRevision,save,loadCatalog,saveCatalog,loadCalendar,loadEntryDraft,discardEntryDraft,loadMainSaveTime,loadBackupConfirmation,confirmBackupStored} from './db.js';
 import {validateEntryDraft,createEntryDraftAutosaver} from './entry-drafts.js';
-import {styleView} from './style-view.js';
+
 import {RACE_PROVIDER,emptyCatalog,validateCatalog,refreshCatalog,raceDescription} from './race-info.js';
 let catalog=emptyCatalog(),catalogWarning='',catalogUpdating=false;
 import {mountResults} from './results.js';
@@ -20,15 +21,13 @@ import {mountEntryResults} from './entry-results.js';
 import {mountFastResults} from './fast-results.js';
 import {mountEntrySheets} from './entry-sheets.js';
 import {openLineCorrection} from './line-correction.js';
-import {raceHistory,ledgerCSV,budgetStatus,setMonthlyBudget,monthReview} from './ledger-tools.js';
-import {homeSummary,raceHistoryRows,ticketIndex,matchesRaceQuery,typeVenueMatrix} from './screen-roles.js';
-import {dayLedger,existingPurchaseDuplicates,periodInsights} from './day-ledger.js';
+import {ledgerCSV,budgetStatus,setMonthlyBudget,monthReview} from './ledger-tools.js';
+import {homeSummary,raceHistoryRows,ticketIndex,matchesRaceQuery} from './screen-roles.js';
+import {dayLedger,existingPurchaseDuplicates} from './day-ledger.js';
 import {growthRewards} from './growth-rewards.js';
 import {companionState,companionAlbum,THEME_NAMES,OUTFIT_NAMES,OUTFIT_ICONS,stageArtwork} from './growth-companion.js';
-import {ledgerInsights} from './ledger-trends.js';
-import {analysisCoverage as oldAnalysisCoverage,inclusiveMonthlyRows as oldInclusiveMonthlyRows} from './analysis-quality.js';
-import {compareCategories as oldCompareCategories} from './category-compare.js';
-import {periodComparison} from './analysis-compare.js';
+
+
 import {mountRaceBatch} from './batch-ui.js';
 import {openTips} from './tips.js';
 import {createDock} from './dock.js';
@@ -44,36 +43,6 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const yen=n=>`${n.toLocaleString('ja-JP')}円`,signed=n=>(n>0?'+':'')+yen(n),rate=n=>n===null?'—':n.toFixed(1)+'％';
 const opts=(list,current)=>list.map(v=>`<option value="${esc(v)}" ${String(v)===String(current)?'selected':''}>${esc(v)}</option>`).join('');
 const clone=d=>JSON.parse(JSON.stringify(d));
-// Cash-flow projections: old pending records remain readable, but no cost is excluded.
-const summarize=(lines,races=[],tickets=[])=>{
- const x=oldSummarize(lines,races,tickets);
- const purchase=x.purchase+x.pendingStake,receipts=x.payout+x.refund;
- const effective=x.lineCount+x.pendingCount;
- return {...x,purchase,profit:receipts-purchase,returnRate:purchase?receipts/purchase*100:null,
-  lineCount:effective,lineRate:effective?x.lineHits/effective*100:null,
-  pendingCount:0,pendingStake:0,settledCount:lines.length};
-};
-const aggregate=(ledger,predicate=()=>true)=>{
- const races=ledger.races.filter(predicate),ids=new Set(races.map(r=>r.id));
- const tickets=ledger.tickets.filter(t=>ids.has(t.raceId)),tids=new Set(tickets.map(t=>t.id));
- return summarize(ledger.lines.filter(l=>tids.has(l.ticketId)),races,tickets);
-};
-const analysisCoverage=(ledger,opts={})=>{
- const x=oldAnalysisCoverage(ledger,opts),finance=combinedFinance(ledger,opts);
- return {...x,finance,pendingCount:0,pendingStake:0,settledCount:x.total,settledCountShare:x.total?100:null,settledShare:finance.recordedPurchase?100:null};
-};
-const inclusiveMonthlyRows=(ledger,opts={})=>oldInclusiveMonthlyRows(ledger,opts).map(row=>{
- const c=combinedFinance(ledger,{prefix:row.month,venue:opts.venue||'',type:opts.type||''});
- return {...row,...c,settledShare:c.recordedPurchase?100:null};
-});
-const compareCategories=(ledger,opts={})=>{
- const out=oldCompareCategories(ledger,opts);
- const convert=r=>({...r,settledPurchase:r.recordedPurchase,profit:r.receipts-r.recordedPurchase,
-   returnRate:r.recordedPurchase?r.receipts/r.recordedPurchase*100:null,pendingCount:0,pendingStake:0,
-   settledCount:r.count,incomplete:false});
- return {...out,rows:out.rows.map(convert).sort((a,b)=>opts.sort==='profit'?b.profit-a.profit:opts.sort==='returnRate'?(b.returnRate??-Infinity)-(a.returnRate??-Infinity):b.count-a.count),
-  unknown:out.unknown?{...out.unknown,pendingCount:0}:null};
-};
 
 let stakeSelectedIds=new Set(),stakeUndoHistory=[],draftVisible=150,reviewVisible=50,reviewSignature='',entryResultsEditor=null,fastResultsEditor=null,entrySheetController=null,entryDraftSession=null,entryDraftKey=null,existingApprovalSignature='';
 const scheduleEntryDraft=()=>entryDraftSession?.schedule();
@@ -856,7 +825,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.8.0',
+ currentVersion:'2.8.1',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
