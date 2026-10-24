@@ -547,8 +547,8 @@ function horseInsightsPanel(source){
 }
 function gradedHistoryLabel(race){
  const record=effectiveCatalog().records.find(r=>raceKey(r)===raceKey(race));
- const raw=(record?.grade||race.grade||'').toUpperCase().replace(/[\s（）()]/g,'');
- const grade=/G[I1]|J.G[I1]|G1/.test(raw)?'G1':/G[II2]|J.G[II2]|G2/.test(raw)?'G2':/G[III3]|J.G[III3]|G3/.test(raw)?'G3':/LISTED|L|リステッド/.test(raw)?'L':'';
+ const raw=(record?.grade||race.grade||'').normalize('NFKC').toUpperCase().replace(/[\s（）()・.]/g,'');
+ const grade=/GIII|G3/.test(raw)?'G3':/GII|G2/.test(raw)?'G2':/GI|G1/.test(raw)?'G1':/LISTED|リステッド/.test(raw)?'L':'';
  return {grade,name:race.name||record?.name||''};
 }
 
