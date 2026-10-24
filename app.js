@@ -197,7 +197,7 @@ function aiTextImportScreen(){
  $('#aiImportText').oninput=()=>{candidate=null;panel.hidden=true;dirty=true;};
  $('#aiImportPreview').onclick=preview;
  $('#aiImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;check(f.size<=3000000,'ファイルは3MB以内にしてください。');$('#aiImportText').value=await f.text();dirty=true;preview();}catch(e){error.textContent=e.message;}};
- if(location.hash.startsWith('#ai-import?')){try{$('#aiImportText').value=decodeImportLink(location.hash);preview();}catch(e){error.textContent=e.message;}}
+ if(location.hash.startsWith('#ai-import?')){try{$('#aiImportText').value=decodeImportLink(location.hash);preview();if(candidate){const heading=panel.querySelector('h2');if(heading)heading.textContent='ChatGPTから受信した購入データ';const save=$('#aiImportSave');if(save)save.textContent='この内容を1回で登録する';}}catch(e){error.textContent=e.message;}}
 }
 
 function simpleEntry(id=null,contextDate=null,fromDay=false){
