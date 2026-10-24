@@ -184,7 +184,8 @@ function aiTextImportScreen(){
  <div class="row"><button type="button" id="aiImportPreview">内容を確認</button></div><p id="aiImportError" role="alert"></p></section>
  <section id="aiImportReview" class="card" hidden></section>`;
  let candidate=null;
- const shared=location.hash.match(/^#ai-import\\?text=(.*)$/s);\n if(shared){try{const text=decodeURIComponent(shared[1].replace(/\\+/g,'%20'));check(text.length<=120000,'取込データが大きすぎます。');$('#aiImportText').value=text;}catch(e){$('#aiImportError').textContent='共有リンクを読み込めませんでした。テキストを貼り付けてください。';}}\n $('#aiImportPreview').onclick=()=>{
+ const shared=location.hash.match(/^#ai-import\\?text=(.*)$/s);
+ if(shared){try{const text=decodeURIComponent(shared[1].replace(/\\+/g,'%20'));check(text.length<=120000,'取込データが大きすぎます。');$('#aiImportText').value=text;}catch(e){$('#aiImportError').textContent='共有リンクを読み込めませんでした。テキストを貼り付けてください。';}}\n $('#aiImportPreview').onclick=()=>{
   const panel=$('#aiImportReview'),error=$('#aiImportError');panel.hidden=true;candidate=null;error.textContent='';
   try{
    candidate=parseAiImport($('#aiImportText').value);
