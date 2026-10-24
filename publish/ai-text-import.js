@@ -1,5 +1,5 @@
 import {VENUES,TYPES,combination,validDate,MAX_MONEY} from './core.js';
-const normalize=s=>String(s||'').normalize('NFKC').replace(/\r/g,'').replace(/[：]/g,':').replace(/，/g,',').replace(/[－ー―–—]/g,'-');
+const normalize=s=>String(s||'').normalize('NFKC').replace(/\r/g,'').replace(/[：]/g,':').replace(/，/g,',').replace(/[－―–—]/g,'-');
 const amount=s=>{if(!s||/^(未確認|不明|なし|-)$/.test(s.trim()))return null;const n=Number(s.replace(/[,円\s]/g,''));return Number.isSafeInteger(n)&&n>=0&&n<=MAX_MONEY?n:null;};
 const value=(s,key)=>{const m=s.match(new RegExp('^'+key+'\\s*:\\s*(.*)$','m'));return m?m[1].trim():null;};
 export function parseAiImport(raw){
