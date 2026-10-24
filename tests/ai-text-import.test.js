@@ -26,3 +26,7 @@ test('rejects totals that do not reconcile',()=>assert.throws(()=>parseAiImport(
 test('rejects missing dates rather than guessing',()=>assert.throws(()=>parseAiImport(base.replace('2026-10-24','未確認')),/開催日/));
 test('rejects duplicate ticket lines',()=>assert.throws(()=>parseAiImport(base.replace('03-09-11','03-06-09')),/重複/));
 test('rejects unknown payout distribution',()=>assert.throws(()=>parseAiImport(base.replace('／不的中／払戻0円','').replace('／的中／払戻2,160円','')),/未確認行/));
+
+test('rejects pending results silently converted to zero payout',()=>{const pending=base.replace('／不的中／払戻0円','／未確定／払戻0円').replace('／的中／払戻2,160円','／未確定').replace('払戻合計：2,160円','払戻合計：未確認');assert.throws(()=>parseAiImport(pending),/未確定行/);});
+test('rejects settled losing line with omitted payout',()=>assert.throws(()=>parseAiImport(base.replace('／不的中／払戻0円','／不的中')),/払戻額/));
+test('accepts truly pending lines without inferred zero payout',()=>{const pending=base.replace('／不的中／払戻0円','／未確定').replace('／的中／払戻2,160円','／未確定').replace('払戻合計：2,160円','払戻合計：未確認');const parsed=parseAiImport(pending);assert.equal(parsed.totalPayout,null);assert(parsed.tickets.every(t=>t.status==='pending'&&t.payout===null));});

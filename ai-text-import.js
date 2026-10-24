@@ -21,6 +21,8 @@ export function parseAiImport(raw){
   for(const part of parts){const key=/^(的中|不的中|未確定|返還|発売取消)$/.test(part)?'状態':part.startsWith('払戻')?'払戻':part.startsWith('返還')?'返還':null;check(key&&!seen.has(key),'購入情報'+(i+1)+'行目の項目が不明または重複しています: '+part);seen.add(key);if(key==='状態')hit=part;else if(key==='払戻')payout=part.replace(/^払戻\s*/,'')==='未確認'?null:amount(part.replace(/^払戻\s*/,''),'払戻');else refund=amount(part.replace(/^返還\s*/,''),'返還');}
   check(refund<=stake,'返還額が購入額を超えています。');
   const status=hit==='未確定'||(payout===null&&!['返還','発売取消'].includes(hit))?'pending':['返還','発売取消'].includes(hit)?'void':'settled';
+  check(!(hit==='未確定'&&payout!==null),'未確定行に払戻額を指定しないでください。未確認を0円に置き換えないでください。');
+  check(!(['的中','不的中'].includes(hit)&&payout===null),'的中・不的中の確定行には払戻額を明記してください。');
   check(status!=='pending'||((payout===null||payout===0)&&refund===0),'未確定行に払戻・返還は指定できません。');
   check(status!=='void'||(refund===stake&&(payout===null||payout===0)),'返還・発売取消行は全額返還と払戻0円を指定してください。');
   check(!(hit==='的中'&&!(payout>0)),'的中行の払戻額を確認してください。');check(!(hit==='不的中'&&payout!==0),'不的中行は払戻0円を指定してください。');check(!(refund===stake&&payout>0),'全額返還行に払戻は指定できません。');
