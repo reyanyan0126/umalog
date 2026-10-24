@@ -88,3 +88,14 @@ test('release metadata is fetched fresh and excluded from offline precache',()=>
  assert.match(app,/cache:'no-store'/);
  assert.ok(!sw.includes("'./release.json'"));
 });
+
+test('podium analysis explains counts and grade labels use Roman numerals',()=>{
+ assert.match(app,/騎手別の1〜3着回数/);
+ assert.match(app,/馬別の1〜3着回数/);
+ assert.match(app,/集計対象のレース結果/);
+ assert.match(app,/出走数に対する勝率や購入馬券の回収率ではありません/);
+ assert.match(app,/GⅢ/);
+ assert.match(app,/GⅡ/);
+ assert.match(app,/GⅠ/);
+ assert.doesNotMatch(app,/レースごとの馬券内詳細/);
+});
