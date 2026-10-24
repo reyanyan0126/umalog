@@ -56,7 +56,7 @@ jobs:
 
       - name: v2.8.0 differential rendering and data compatibility
         run: |
-          git worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
           BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
       - name: Keep comparison evidence
         if: always()
