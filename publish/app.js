@@ -542,7 +542,7 @@ function horseInsights(source){
 
 function jockeyContribution(source){
  const insights=horseInsights(source),byJockey=new Map(),byHorse=new Map();
- const settled=line=>line.status==='hit'&&Number(line.payout)>0;
+ const settled=line=>line.status==='settled'&&Number(line.payout)>0;
  for(const row of insights.raceRows){
   const byNumber=new Map(row.podium.filter(h=>h.jockey).map(h=>[h.number,h]));
   for(const {ticket,lines} of row.tickets){
