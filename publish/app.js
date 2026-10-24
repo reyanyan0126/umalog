@@ -178,13 +178,13 @@ function rewardPanel(source){return `<section class="card reward-panel"><h2>成�
 function sortedTickets(){return [...data.tickets].sort((a,b)=>data.races.find(r=>r.id===b.raceId).date.localeCompare(data.races.find(r=>r.id===a.raceId).date)||b.createdAt.localeCompare(a.createdAt));}
 
 function aiTextImportScreen(){
- app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIインポート</h1></div><section class="card"><p class="help">リンクまたはファイルから購入データを確認して保存します。画像の解析・公式結果の検索はChatGPT側で行います。</p><label>登録用テキスト<textarea id="aiImportText" rows="8" style="width:100%;box-sizing:border-box"></textarea></label><label>テキストファイル<input id="aiImportFile" type="file" accept=".txt,text/plain"></label><button type="button" id="aiImportPreview">内容を確認</button><p id="aiImportError" role="alert"></p></section><section id="aiImportReview" class="card" hidden></section>`;
- let candidate=null,saving=false;
+ app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIインポート</h1></div><section class="card"><p class="help">ChatGPTで馬券画像を読み取って取込データをコピーし、このボタンを押してください。ChatGPTのアップロード画像を直接取得する機能ではありません。</p><button type="button" id="aiImportClipboard" class="accent full">ChatGPTから取り込む（コピーしたデータ）</button><details><summary>ファイルから取り込む</summary><label>取込ファイル<input id="aiImportFile" type="file" accept=".txt,text/plain"></label></details><p id="aiImportError" role="alert"></p></section><section id="aiImportReview" class="card" hidden></section>`;
+ let candidate=null,saving=false,importText='';
  const error=$('#aiImportError'),panel=$('#aiImportReview');
  const preview=()=>{
   panel.hidden=true;candidate=null;error.textContent='';
   try{
-   candidate=parseAiBatch($('#aiImportText').value);
+   candidate=parseAiBatch(importText);
    const purchase=candidate.reduce((a,c)=>a+c.totalPurchase,0),refund=candidate.reduce((a,c)=>a+c.refund,0),pending=candidate.some(c=>c.totalPayout===null),payout=candidate.reduce((a,c)=>a+(c.totalPayout??0),0);
    panel.innerHTML=`<h2>登録前の確認</h2><p><strong>購入 ${yen(purchase)} ／ 払戻 ${pending?'未確認':yen(payout)} ／ 返還 ${yen(refund)} ／ 収支 ${pending?'未確定':signed(payout+refund-purchase)}</strong></p>${candidate.map(c=>`<h3>${esc(c.date)} ${esc(c.venue)} ${c.number}R ${esc(c.type)}</h3><p>${c.tickets.length}点 · 受付 ${esc(c.receipt||'不明')} ${esc(c.receiptTime)}</p><div style="max-height:300px;overflow:auto"><table><thead><tr><th>買い目</th><th>購入</th><th>払戻</th><th>返還</th></tr></thead><tbody>${c.tickets.map(t=>`<tr><td>${t.numbers.join('-')}</td><td>${yen(t.stake)}</td><td>${t.status==='pending'?'未確定':yen(t.payout)}</td><td>${yen(t.refund)}</td></tr>`).join('')}</tbody></table></div><details><summary>レース情報・出典（外部提供情報）</summary><p>アプリでは公式照合を行っていません。</p>${Object.entries(c.metadata).filter(([,v])=>v).map(([k,v])=>`<p style="overflow-wrap:anywhere">${esc(k)}: ${esc(v)}</p>`).join('')||'<p>未確認</p>'}</details>`).join('')}<p class="help">購入内容・金額・未確認情報を確認し、登録ボタンを押すと保存されます。</p><label><input type="checkbox" id="aiImportSeparate"> 同日の簡単記録がある場合、今回とは別の購入です</label><button type="button" id="aiImportSave">この内容で登録する</button><p class="help">同一購入を簡単記録で保存済みの場合は追加登録しないでください。</p>`;
    panel.hidden=false;
@@ -194,10 +194,9 @@ function aiTextImportScreen(){
    };
   }catch(e){error.textContent=e.message||'解析に失敗しました。';}
  };
- $('#aiImportText').oninput=()=>{candidate=null;panel.hidden=true;dirty=true;};
- $('#aiImportPreview').onclick=preview;
- $('#aiImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;check(f.size<=3000000,'ファイルは3MB以内にしてください。');$('#aiImportText').value=await f.text();dirty=true;preview();}catch(e){error.textContent=e.message;}};
- if(location.hash.startsWith('#ai-import?')){try{$('#aiImportText').value=decodeImportLink(location.hash);preview();}catch(e){error.textContent=e.message;}}
+ $('#aiImportClipboard').onclick=async()=>{try{check(navigator.clipboard?.readText,'この環境ではクリップボードを読めません。ChatGPTから取込リンクを開くか、ファイルを選択してください。');importText=await navigator.clipboard.readText();dirty=true;preview();}catch(e){error.textContent=e.message||'クリップボードを読み取れませんでした。Safariの許可を確認してください。';}};
+ $('#aiImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;check(f.size<=3000000,'ファイルは3MB以内にしてください。');importText=await f.text();dirty=true;preview();}catch(e){error.textContent=e.message;}};
+ if(location.hash.startsWith('#ai-import?')){try{importText=decodeImportLink(location.hash);preview();}catch(e){error.textContent=e.message;}}
 }
 
 function simpleEntry(id=null,contextDate=null,fromDay=false){
