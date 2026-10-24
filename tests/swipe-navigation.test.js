@@ -99,3 +99,11 @@ test('podium analysis explains counts and grade labels use Roman numerals',()=>{
  assert.match(app,/GⅠ/);
  assert.doesNotMatch(app,/レースごとの馬券内詳細/);
 });
+
+test('jockey contribution counts only winning settled betting lines',()=>{
+ assert.match(app,/function jockeyContribution\(source\)/);
+ assert.match(app,/line\.status==='settled'&&Number\(line\.payout\)>0/);
+ assert.match(app,/new Set\(line\.numbers\.map\(Number\)\)/);
+ assert.match(app,/的中貢献騎手ランキング/);
+ assert.match(app,/騎手別の金額を合算すると実際の払戻総額と一致しません/);
+});
