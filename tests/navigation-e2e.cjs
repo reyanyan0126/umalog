@@ -30,9 +30,16 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
   const swipe=async(left)=>{
    await page.evaluate(left=>{
     const target=document.querySelector('#app h1');
-    const touch=x=>new Touch({identifier:1,target,clientX:x,clientY:160});
-    target.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[touch(left?280:100)]}));
-    target.dispatchEvent(new TouchEvent('touchend',{bubbles:true,changedTouches:[touch(left?100:280)]}));
+    // WebKit exposes Touch but rejects its constructor. Supply the same
+    // touch coordinates on synthetic DOM events in both engines.
+    const touch=x=>({identifier:1,target,clientX:x,clientY:160});
+    const dispatch=(type,key,point)=>{
+     const event=new Event(type,{bubbles:true});
+     Object.defineProperty(event,key,{value:[point]});
+     target.dispatchEvent(event);
+    };
+    dispatch('touchstart','touches',touch(left?280:100));
+    dispatch('touchend','changedTouches',touch(left?100:280));
    },left);
   };
   await swipe(true);await page.locator('#simpleEntryForm').waitFor();
