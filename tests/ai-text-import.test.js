@@ -32,3 +32,18 @@ test('rejects settled losing line with omitted payout',()=>assert.throws(()=>par
 test('accepts truly pending lines without inferred zero payout',()=>{const pending=base.replace('／不的中／払戻0円','／未確定').replace('／的中／払戻2,160円','／未確定').replace('払戻合計：2,160円','払戻合計：未確認');const parsed=parseAiImport(pending);assert.equal(parsed.totalPayout,null);assert(parsed.tickets.every(t=>t.status==='pending'&&t.payout===null));});
 
 test('imports structured horse details for later editing and analysis',()=>{const text=base.replace('【登録データ終了】','出走馬：03：ロードグレイル（騎手A／3番人気／1着）;09：アメリカンステラ（騎手B／1番人気／2着）;11：マーノマエストロ（騎手C／5番人気／3着）\n照合状況：公式結果照合済み\n【登録データ終了】');const result=parseAiImport(text);assert.match(result.metadata['出走馬'],/ロードグレイル/);assert.match(result.metadata['出走馬'],/アメリカンステラ/);assert.equal(result.metadata['照合状況'],'公式結果照合済み');});
+
+test('imports detailed jockey and podium attributes without fabricating unknown fields',()=>{
+ const extra=['1着騎手：騎手A','2着騎手：騎手B','3着騎手：騎手C','1着単勝人気：3','1着単勝オッズ：7.2','1着枠番：3','1着斤量：55.0','1着性齢：牡2'].join('\n');
+ const text=base.replace('【登録データ終了】',extra+'\n【登録データ終了】');
+ const result=parseAiImport(text);
+ assert.equal(result.metadata['1着騎手'],'騎手A');
+ assert.equal(result.metadata['2着騎手'],'騎手B');
+ assert.equal(result.metadata['3着騎手'],'騎手C');
+ assert.equal(result.metadata['1着単勝人気'],'3');
+ assert.equal(result.metadata['1着単勝オッズ'],'7.2');
+ assert.equal(result.metadata['1着枠番'],'3');
+ assert.equal(result.metadata['1着斤量'],'55.0');
+ assert.equal(result.metadata['1着性齢'],'牡2');
+ assert.equal(result.metadata['3着単勝オッズ'],'');
+});

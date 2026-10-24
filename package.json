@@ -1,6 +1,6 @@
 {
   "name": "umalog-mvp",
-  "version": "2.9.4",
+  "version": "2.9.5",
   "type": "module",
   "private": true,
   "scripts": {

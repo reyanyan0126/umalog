@@ -502,10 +502,59 @@ function renderDraft(){
  fastResultsEditor?.render(draft);
  updateDraftTotals();
 }
+
+function horseInsights(source){
+ const races=new Map(source.races.map(r=>[r.id,r])),linesByTicket=new Map(),entries=new Map();
+ for(const line of source.lines){const group=linesByTicket.get(line.ticketId)||[];group.push(line);linesByTicket.set(line.ticketId,group);}
+ for(const ticket of source.tickets){
+  const race=races.get(ticket.raceId);if(!race||!ticket.aiImport)continue;
+  const meta=ticket.aiImport.metadata||{},key=raceKey(race),record=entries.get(key)||{race,meta:{},tickets:[]};
+  for(const [field,value] of Object.entries(meta))if(value&&!record.meta[field])record.meta[field]=value;
+  record.tickets.push({ticket,lines:linesByTicket.get(ticket.id)||[]});entries.set(key,record);
+ }
+ const horses=new Map(),jockeys=new Map(),raceRows=[];
+ for(const {race,meta,tickets} of entries.values()){
+  const horseMap=new Map();
+  for(const row of (meta['出走馬']||'').split(/[\n;；]/)){
+   const match=row.trim().match(/^(\d{1,2})[：:、,\s]+(.+)$/);if(!match)continue;
+   const number=Number(match[1]),description=match[2],name=description.split(/[（(]/)[0].trim();
+   const detail=description.match(/[（(](.*)[）)]/)?.[1]||'';
+   const jockey=detail.match(/(?:騎手[：:\s]*)?([^／/、,()（）]+?)(?=\s*[／/、,]|$)/)?.[1]?.trim()||'';
+   horseMap.set(number,{name,jockey:jockey&&!/^\d+番人気$|^\d+着$|^\d+(\.\d+)?倍$/.test(jockey)?jockey:'',description});
+  }
+  const podium=[];
+  for(let place=1;place<=3;place++){
+   const text=meta[place+'着']||'',m=text.match(/^0?(\d{1,2})[\s　：:]+(.+)$/);
+   if(!m)continue;
+   const number=Number(m[1]),fromList=horseMap.get(number)||{},name=(m[2]||'').split(/[（(]/)[0].trim();
+   const jockey=meta[place+'着騎手']||fromList.jockey||'';
+   const popularity=meta[place+'着単勝人気']||text.match(/(\d+)番人気/)?.[1]||'';
+   const odds=meta[place+'着単勝オッズ']||'';
+   const info={place,number,name,jockey,popularity,odds,frame:meta[place+'着枠番']||'',weight:meta[place+'着斤量']||'',sexAge:meta[place+'着性齢']||''};
+   podium.push(info);
+   if(name){const item=horses.get(name)||{name,podium:0,wins:0};item.podium++;if(place===1)item.wins++;horses.set(name,item);}
+   if(jockey){const item=jockeys.get(jockey)||{name:jockey,podium:0,wins:0};item.podium++;if(place===1)item.wins++;jockeys.set(jockey,item);}
+  }
+  raceRows.push({race,podium,verified:meta['照合状況']||'',source:meta['出典']||'',tickets});
+ }
+ return {horses:[...horses.values()].sort((a,b)=>b.podium-a.podium||b.wins-a.wins),jockeys:[...jockeys.values()].sort((a,b)=>b.podium-a.podium||b.wins-a.wins),raceRows};
+}
+function horseInsightsPanel(source){
+ const insights=horseInsights(source);
+ const ranking=(items,title)=>'<div class="analysis-compact-group"><h3>'+title+'</h3>'+(items.length?items.slice(0,15).map(x=>'<div class="day-edit-row"><span>'+esc(x.name)+'</span><strong>馬券内 '+x.podium+'回 · 1着 '+x.wins+'回</strong></div>').join(''):'<p class="help">該当する馬券内データはまだありません。</p>')+'</div>';
+ const podium=insights.raceRows.filter(r=>r.podium.length);
+ return '<section class="card" id="analysisHorseJockey"><h2>馬・騎手分析</h2><p class="help">登録済みの1〜3着結果から集計。騎手・馬は同じレースで券種を複数購入しても1回だけ数えます。出走機会全体の勝率や馬券回収率ではありません。期間・競馬場・券種の絞り込みを適用します。</p><details open><summary>馬券内騎手（'+insights.jockeys.length+'名）</summary>'+ranking(insights.jockeys,'騎手別 3着内・勝利回数')+'</details><details><summary>馬券内の馬（'+insights.horses.length+'頭）</summary>'+ranking(insights.horses,'馬別 3着内・勝利回数')+'</details><details><summary>レースごとの馬券内詳細（'+podium.length+'レース）</summary>'+podium.map(({race,podium,verified,source})=>'<div class="analysis-compact-group"><h3>'+esc(race.date+' '+race.venue+' '+race.number+'R')+'</h3>'+podium.map(h=>'<div class="day-edit-row"><span>'+h.place+'着 '+esc(h.number+'番 '+h.name)+'</span><small>'+esc([h.jockey&&'騎手 '+h.jockey,h.popularity&&h.popularity+'番人気',h.odds&&'単勝 '+h.odds,h.frame&&h.frame+'枠',h.weight&&'斤量 '+h.weight,h.sexAge].filter(Boolean).join(' · ')||'詳細未確認')+'</small></div>').join('')+'<small>'+esc(verified||'照合状況未確認')+'</small>'+(source?'<p><a href="'+esc(source)+'" target="_blank" rel="noopener noreferrer">情報源</a></p>':'')+'</div>').join('')+'</details></section>';
+}
+function gradedHistoryLabel(race){
+ const record=effectiveCatalog().records.find(r=>raceKey(r)===raceKey(race));
+ const raw=(record?.grade||race.grade||'').normalize('NFKC').toUpperCase().replace(/[\s（）()・.]/g,'');
+ const grade=/GIII|G3/.test(raw)?'G3':/GII|G2/.test(raw)?'G2':/GI|G1/.test(raw)?'G1':/LISTED|リステッド/.test(raw)?'L':'';
+ return {grade,name:race.name||record?.name||''};
+}
+
 function history(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return historyClassic();
  app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><button type="button" id="historySearchClear" class="quiet history-search-clear" hidden>検索を消す</button><div id="historyActiveFilters" class="history-active-filters" hidden></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help" aria-live="polite"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
- const horseCounts=new Map();let verifiedHorseRecords=0;for(const ticket of data.tickets){const raw=ticket.aiImport?.metadata?.['出走馬']||'';if(!raw)continue;verifiedHorseRecords++;const names=new Map(raw.split(/[\n;；]/).map(row=>{const m=row.trim().match(/^(\d{1,2})[：:、,\s]+(.+)$/);return m?[Number(m[1]),m[2]]:null}).filter(Boolean));const nums=new Set(data.lines.filter(l=>l.ticketId===ticket.id).flatMap(l=>l.numbers));for(const n of nums){const name=names.get(n);if(!name)continue;const label=name.split(/[（(]/)[0].trim();if(label)horseCounts.set(label,(horseCounts.get(label)||0)+1);}}const horseStats=document.createElement('section');horseStats.className='card';horseStats.innerHTML='<details><summary>購入馬の分析（情報登録済み '+verifiedHorseRecords+'件）</summary><p class="help">購入馬の登場回数です。同じ馬を複数の券種で購入した場合は券種ごとに数えます。勝率・回収率ではありません。</p>'+(horseCounts.size?[...horseCounts].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([name,count])=>'<div class="day-edit-row"><span>'+esc(name)+'</span><strong>'+count+'回</strong></div>').join(''):'<p>馬情報がまだありません。AIインポートまたは券種詳細から追加できます。</p>')+'</details>';if(verifiedHorseRecords>0)app.append(horseStats);
  let shown=20;
  const indexedHistory=ticketIndex(data).linesByTicket;
  const historyRows=raceHistoryRows(data);
@@ -540,7 +589,7 @@ function history(){
   }
   $('#historyCount').textContent=`${combinedRows.length}件の記録（詳細 ${list.length}レース・かんたん支出 ${quick.length}件）／${Math.min(combinedRows.length,shown)}件表示中${q||venue||type||status||from||to?'・絞り込み中':''}`;
   const renderRace=item=>{
-   const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);
+   const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);const graded=gradedHistoryLabel(race);
    return `<section class="history-race" data-history-kind="race" data-history-date="${esc(race.date)}"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${esc(race.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${signed(stat.profit)}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · 払戻 ${yen(stat.payout)} · 返還 ${yen(stat.refund)} · ${tickets.length}券種</p>
    <details class="history-bet-details"><summary>券種・買い目を確認する</summary>${tickets.map(t=>{
     const ls=indexedHistory.get(t.id)||[],v=summarize(ls);
@@ -572,7 +621,7 @@ function detail(id){const t=data.tickets.find(t=>t.id===id);check(t,'記録が�
   bindQuickEdits(()=>detail(id));
   if($('#detailMoreCorrections'))$('#detailMoreCorrections').onclick=()=>{correctionVisible+=30;renderCorrectionRows();};
  };
- renderCorrectionRows();if(t.aiImport){const editor=document.createElement('section');editor.className='card';editor.innerHTML='<details><summary>馬情報・出典を編集</summary><p class="help">出走馬は「馬番：馬名（騎手／人気／着順）」を1行ずつ入力。未確認情報を推測しないでください。</p><label>出走馬（1行1頭）<textarea id="horseMetadataEdit" rows="8" style="width:100%;box-sizing:border-box"></textarea></label><label>照合状況<input id="horseVerificationEdit" type="text"></label><button id="horseMetadataSave" type="button" class="accent full">馬情報を保存</button></details>';app.append(editor);$('#horseMetadataEdit').value=t.aiImport.metadata?.['出走馬']||'';$('#horseVerificationEdit').value=t.aiImport.metadata?.['照合状況']||'';$('#horseMetadataSave').onclick=guard(async()=>{const raw=$('#horseMetadataEdit').value.trim(),verification=$('#horseVerificationEdit').value.trim();check(raw.length<=12000&&verification.length<=1000,'馬情報が長すぎます。');const rows=raw?raw.split('\n').map(x=>x.trim()).filter(Boolean):[];check(rows.length<=30,'出走馬は30頭以内にしてください。');const seen=new Set();for(const row of rows){const m=row.match(/^(\d{1,2})[：:、,\s]+(.+)$/);check(m&&Number(m[1])>=1&&Number(m[1])<=18,'出走馬は「馬番：馬名（騎手／人気／着順）」の形式で入力してください。');check(!seen.has(Number(m[1])),'同じ馬番が重複しています。');seen.add(Number(m[1]));}const next=clone(data),ticket=next.tickets.find(x=>x.id===id);check(ticket?.aiImport,'対象のAI記録が見つかりません。');ticket.aiImport.metadata={...ticket.aiImport.metadata,'出走馬':rows.join('\n'),'照合状況':verification};await commit(next);detail(id);notify('馬情報を更新しました。');});}$('#editStakes').onclick=()=>location.hash='edit-stakes/'+id;$('#edit').onclick=()=>location.hash='edit/'+id;$('#delete').onclick=guard(async()=>{if(confirm('この券種の記録と買い目を削除します。収支を再計算します。獲得済み育成EXPは保持します。よろしいですか？')){await commit(removeTicket(clone(data),id));location.hash='history';notify('削除しました。');}});
+ renderCorrectionRows();if(t.aiImport){const podiumEditor=document.createElement('section');podiumEditor.className='card';const meta=t.aiImport.metadata||{};podiumEditor.innerHTML='<details><summary>1〜3着の馬・騎手情報を編集</summary><p class="help">公式情報で確認できた項目だけ入力してください。未確認は空欄のままで保存できます。</p>'+[1,2,3].map(n=>'<fieldset><legend>'+n+'着</legend>'+[[''+n+'着','馬番・馬名（例：03 ロードグレイル）'],[n+'着騎手','騎手'],[n+'着単勝人気','単勝人気（数字）'],[n+'着単勝オッズ','単勝オッズ'],[n+'着枠番','枠番'],[n+'着斤量','斤量'],[n+'着性齢','性齢']].map(([key,label])=>'<label>'+label+'<input type="text" data-podium-meta="'+esc(key)+'" maxlength="100"></label>').join('')+'</fieldset>').join('')+'<button id="podiumMetadataSave" type="button" class="accent full">馬券内情報を保存</button></details>';app.append(podiumEditor);podiumEditor.querySelectorAll('[data-podium-meta]').forEach(input=>input.value=meta[input.dataset.podiumMeta]||'');$('#podiumMetadataSave').onclick=guard(async()=>{const next=clone(data),ticket=next.tickets.find(x=>x.id===id);check(ticket?.aiImport,'対象のAI記録が見つかりません。');const metadata={...ticket.aiImport.metadata};for(const input of podiumEditor.querySelectorAll('[data-podium-meta]')){const key=input.dataset.podiumMeta,value=input.value.trim();if(key.endsWith('着')&&value)check(/^0?\d{1,2}[\s　：:]+.+$/.test(value),'着順の馬番・馬名を確認してください。');if(key.endsWith('着単勝人気')&&value)check(/^\d{1,2}$/.test(value),'人気は数字で入力してください。');metadata[key]=value;}ticket.aiImport.metadata=metadata;await commit(next);detail(id);notify('馬券内の馬・騎手情報を保存しました。');});}if(t.aiImport){const editor=document.createElement('section');editor.className='card';editor.innerHTML='<details><summary>馬情報・出典を編集</summary><p class="help">出走馬は「馬番：馬名（騎手／人気／着順）」を1行ずつ入力。未確認情報を推測しないでください。</p><label>出走馬（1行1頭）<textarea id="horseMetadataEdit" rows="8" style="width:100%;box-sizing:border-box"></textarea></label><label>照合状況<input id="horseVerificationEdit" type="text"></label><button id="horseMetadataSave" type="button" class="accent full">馬情報を保存</button></details>';app.append(editor);$('#horseMetadataEdit').value=t.aiImport.metadata?.['出走馬']||'';$('#horseVerificationEdit').value=t.aiImport.metadata?.['照合状況']||'';$('#horseMetadataSave').onclick=guard(async()=>{const raw=$('#horseMetadataEdit').value.trim(),verification=$('#horseVerificationEdit').value.trim();check(raw.length<=12000&&verification.length<=1000,'馬情報が長すぎます。');const rows=raw?raw.split('\n').map(x=>x.trim()).filter(Boolean):[];check(rows.length<=30,'出走馬は30頭以内にしてください。');const seen=new Set();for(const row of rows){const m=row.match(/^(\d{1,2})[：:、,\s]+(.+)$/);check(m&&Number(m[1])>=1&&Number(m[1])<=18,'出走馬は「馬番：馬名（騎手／人気／着順）」の形式で入力してください。');check(!seen.has(Number(m[1])),'同じ馬番が重複しています。');seen.add(Number(m[1]));}const next=clone(data),ticket=next.tickets.find(x=>x.id===id);check(ticket?.aiImport,'対象のAI記録が見つかりません。');ticket.aiImport.metadata={...ticket.aiImport.metadata,'出走馬':rows.join('\n'),'照合状況':verification};await commit(next);detail(id);notify('馬情報を更新しました。');});}$('#editStakes').onclick=()=>location.hash='edit-stakes/'+id;$('#edit').onclick=()=>location.hash='edit/'+id;$('#delete').onclick=guard(async()=>{if(confirm('この券種の記録と買い目を削除します。収支を再計算します。獲得済み育成EXPは保持します。よろしいですか？')){await commit(removeTicket(clone(data),id));location.hash='history';notify('削除しました。');}});
  const getPodium=()=>validatePodium(['podium1','podium2','podium3'].map(k=>$('#'+k).value));
  mountRaceBatch($('#batchResults'),{getData:()=>data,raceId:r.id,getPodium,onDirty:()=>dirty=true,guard,
   onSave:async(updates,podium)=>{
@@ -672,6 +721,7 @@ function analysis(){
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
+ ${horseInsightsPanel(analysisLedger())}
  <details class="card analysis-advanced"><summary>絞り込み</summary><div class="analysis-controls"><label>期間<select id="analysisRange"><option value="all" ${analysisRange==='all'?'selected':''}>全期間</option><option value="year" ${analysisRange==='year'?'selected':''}>年間</option><option value="month" ${analysisRange==='month'?'selected':''}>月間</option></select></label><label>対象年<input id="analysisYear" type="number" min="2000" max="2199" value="${analysisYear}"></label><label>対象月<input id="analysisMonth" type="month" value="${analysisMonth}"></label><label>競馬場<select id="analysisVenue"><option value="">すべて</option>${opts(VENUES,analysisVenue)}</select></label><label>券種<select id="analysisType"><option value="">すべて</option>${opts(TYPES,analysisType)}</select></label></div></details>`;
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
  $('#analysisAllTime').onclick=()=>{analysisRange='all';analysis();};
@@ -851,7 +901,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.9.4',
+ currentVersion:'2.9.5',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
