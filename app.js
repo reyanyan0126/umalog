@@ -1,3 +1,4 @@
+import {parseAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
 import {swipeDirection} from './swipe.js';
@@ -175,6 +176,47 @@ function rewardItems(source){
 }
 function rewardPanel(source){return `<section class="card reward-panel"><h2>成長のご褒美</h2><p class="help">記録とお世話で見た目の称号を集めよう。払戻や育成EXPに追加の効果はありません。</p><div id="growthRewards">${rewardItems(source)}</div></section>`;}
 function sortedTickets(){return [...data.tickets].sort((a,b)=>data.races.find(r=>r.id===b.raceId).date.localeCompare(data.races.find(r=>r.id===a.raceId).date)||b.createdAt.localeCompare(a.createdAt));}
+
+function aiTextImportScreen(){
+ app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIテキスト取込</h1></div>
+ <section class="card"><p>ChatGPTで作成した「うまログ登録データ」を貼り付けてください。内容を確認してから保存します。</p>
+ <label for="aiImportText">登録用テキスト</label><textarea id="aiImportText" rows="12" style="width:100%;max-width:100%;min-height:220px" placeholder="【うまログ登録データ】"></textarea>
+ <div class="row"><button type="button" id="aiImportPreview">内容を確認</button></div><p id="aiImportError" role="alert"></p></section>
+ <section id="aiImportReview" class="card" hidden></section>`;
+ let candidate=null;
+ const shared=location.hash.match(/^#ai-import\?text=(.*)$/s);
+ if(shared){try{const text=decodeURIComponent(shared[1].replace(/\\+/g,'%20'));check(text.length<=120000,'取込データが大きすぎます。');$('#aiImportText').value=text;}catch(e){$('#aiImportError').textContent='共有リンクを読み込めませんでした。テキストを貼り付けてください。';}}
+ $('#aiImportPreview').onclick=()=>{
+  const panel=$('#aiImportReview'),error=$('#aiImportError');panel.hidden=true;candidate=null;error.textContent='';
+  try{
+   candidate=parseAiImport($('#aiImportText').value);
+   const c=candidate,existing=data.races.find(r=>raceKey(r)===raceKey(c));
+   const matching=existing?data.tickets.filter(t=>t.raceId===existing.id&&t.type===c.type):[];
+   const already=matching.some(t=>{const lines=data.lines.filter(l=>l.ticketId===t.id);return c.tickets.some(x=>lines.some(l=>JSON.stringify(l.numbers)===JSON.stringify(x.numbers)&&l.stake===x.stake));});
+   panel.innerHTML=`<h2>登録前の確認</h2><p><strong>${esc(c.date)} ${esc(c.venue)} ${c.number}R / ${esc(c.type)}</strong></p>
+   <p>${c.tickets.length}点　購入 ${yen(c.totalPurchase)}　払戻 ${yen(c.totalPayout)}　収支 ${signed(c.totalPayout-c.totalPurchase)}</p>
+   <div style="max-height:280px;overflow:auto"><table><thead><tr><th>買い目</th><th>購入</th><th>払戻</th></tr></thead><tbody>${c.tickets.map(t=>`<tr><td>${t.numbers.join('-')}</td><td>${yen(t.stake)}</td><td>${yen(t.payout)}</td></tr>`).join('')}</tbody></table></div>
+   ${already?'<p role="alert">同じレース・券種・買い目・金額の記録があります。重複登録に注意してください。</p>':''}
+   <label><input type="checkbox" id="aiImportConfirm"> 日付・券種・購入額・払戻額・重複を確認しました</label>
+   <button type="button" id="aiImportSave">確認して一括登録</button>`;
+   panel.hidden=false;
+   $('#aiImportSave').onclick=guard(async()=>{
+    check($('#aiImportConfirm').checked,'確認チェックを入れてください。');
+    const next=clone(data),c=candidate;
+    let race=next.races.find(r=>raceKey(r)===raceKey(c));
+    if(!race){race={id:uid(),date:c.date,venue:c.venue,number:c.number,name:c.name||''};next.races.push(race);}
+    if(c.podium&&!race.podium){race.podium=c.podium;}
+    const dup=next.tickets.filter(t=>t.raceId===race.id&&t.type===c.type).some(t=>next.lines.some(l=>l.ticketId===t.id&&c.tickets.some(x=>JSON.stringify(l.numbers)===JSON.stringify(x.numbers)&&l.stake===x.stake)));
+    check(!dup,'同じ買い目が登録済みです。二重登録を防ぐため保存を中止しました。');
+    const ticket={id:uid(),raceId:race.id,type:c.type,kind:'reported',memo:c.receipt?'AI取込・受付番号 '+c.receipt:'AIテキスト取込',createdAt:new Date().toISOString()};
+    next.tickets.push(ticket);
+    for(const line of c.tickets)next.lines.push({id:uid(),ticketId:ticket.id,numbers:line.numbers,stake:line.stake,payout:line.payout,refund:0,status:'settled'});
+    validateData(next);await commit(next);notify(c.tickets.length+'点を登録しました。');location.hash='history';
+   });
+  }catch(e){error.textContent=e.message||'解析に失敗しました。';}
+ };
+}
+
 function simpleEntry(id=null,contextDate=null,fromDay=false){
  const editing=id?(data.simpleEntries||[]).find(e=>e.id===id):null;
  check(!id||editing,'編集する記録が見つかりません。');
@@ -183,7 +225,7 @@ function simpleEntry(id=null,contextDate=null,fromDay=false){
  const templates=id?[]:recentSimpleTemplates(data.simpleEntries||[]);
  const templatePanel=templates.length?`<div class="simple-recent"><h3>前回の条件を使う</h3><div class="simple-recent-list">${templates.map((t,i)=>`<button type="button" class="quiet simple-repeat-button" data-simple-template="${i}"><strong>${yen(t.stake)}</strong><small>${esc(t.venue||'競馬場未指定')} · ${esc(t.type||'券種未指定')} · ${esc(t.sourceDate)}</small></button>`).join('')}</div></div>`:'';
  app.innerHTML=`<div class="simple-entry-head"><a href="${backHash}">← ${fromDay?'この日の記録':'購入履歴'}に戻る</a><h1>${id?'記録を編集':'記録する'}</h1></div>
- <form id="simpleEntryForm" class="card simple-entry-form">
+ <p><a class="button quiet" href="#ai-import">AIテキストを貼り付けて一括登録</a></p><form id="simpleEntryForm" class="card simple-entry-form">
  <label>購入日<input id="simpleDate" type="date" required min="2000-01-01" max="2199-12-31" value="${esc(old.date)}"></label>
  <label>購入額 <span class="required-mark">必須</span><input id="simpleStake" type="number" min="100" max="1000000000000" step="100" required inputmode="numeric" value="${old.stake}" placeholder="例：1,000"></label>
  <div id="simpleResultSection" class="simple-settlement simple-payout-inline"><div id="simplePayoutFields"><label>払戻金（円）<input id="simplePayout" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.payout||0}"></label><label>返還金（円）<input id="simpleRefund" type="number" min="0" max="1000000000000" step="1" inputmode="numeric" value="${old.refund||0}"></label></div></div>
@@ -736,7 +778,7 @@ function settings(){app.innerHTML=`<h1>設定・データ管理</h1><section cla
  $('#persist').onclick=guard(async()=>{if(!navigator.storage?.persist){notify('このブラウザは永続化リクエストに対応していません。');return;}notify(await navigator.storage.persist()?'永続ストレージが許可されました。':'永続化は許可されませんでした。バックアップを続けてください。');});
  if(navigator.storage?.persisted)navigator.storage.persisted().then(v=>{if($('#storageInfo'))$('#storageInfo').textContent=v?'永続化：許可済み（バックアップは引き続き必要です）':'永続化：未許可 / ブラウザの空き容量によって消去される可能性があります。';}).catch(()=>{});
  $('#import').onchange=guard(async e=>{restoreCandidate=null;$('#restorePreview').textContent='';const f=e.target.files[0];if(!f)return;check(f.size<=30*1024*1024,'バックアップは30MB以下にしてください。');const parsed=JSON.parse(await f.text());restoreCandidate=recalculate(migrateGrowth(validateData(parsed),new Date(),parsed.character.exp));const s=aggregate(restoreCandidate),current=aggregate(data);$('#restorePreview').innerHTML=`<div class="line"><h3>復元内容の確認</h3><p>${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目<br>確定済み購入 ${yen(s.purchase)}<br>収支 ${signed(s.profit)}<br>振り返り ${restoreCandidate.reviews.length}週 / ${restoreCandidate.character.exp} EXP</p><p class="help negative">現在：${data.races.length}レース / ${data.tickets.length}記録 / ${data.lines.length}買い目 / 収支 ${signed(current.profit)}<br>復元後：${restoreCandidate.races.length}レース / ${restoreCandidate.tickets.length}記録 / ${restoreCandidate.lines.length}買い目 / 収支 ${signed(s.profit)}<br>現在のデータをすべて置換します。</p><label class="checklabel"><input type="checkbox" id="restoreAgree">現在のデータのバックアップを確認しました</label><button id="restore" class="danger full">このバックアップで全件置換</button></div>`;$('#restore').onclick=guard(async()=>{check($('#restoreAgree').checked,'バックアップ確認にチェックしてください。');if(!confirm('現在のデータを削除して、選択したバックアップで全件置換します。実行しますか？'))return;await commit(restoreCandidate,{clearAllDrafts:true});restoreCandidate=null;notify('復元が完了しました。');location.hash='home';});});}
-function render(hash=location.hash||'#home'){try{document.body.classList.remove('entry-sheet-open');document.body.style.overflow='';data=recalculate(data);document.body.classList.toggle('no-motion',!data.settings.motion);const [route,id,venueParam]=(hash.slice(1)||'home').split('/');updateDock(route==='history-pending'?'history':route==='quick-result'?'quick':route);if(route==='entry')entry(null,id?decodeURIComponent(id):null);else if(route==='entry-next'){check(validDate(id)&&VENUES.includes(decodeURIComponent(venueParam||'')),'引き継ぐ日付と競馬場が不正です。');entry();$('#date').value=id;$('#venue').value=decodeURIComponent(venueParam);$('#number').value='';$('#raceName').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='day')dayScreen(id);else if(route==='entry-date'){check(/^\d{4}-\d\d-\d\d$/.test(id||''),'日付が不正です。');entry();$('#date').value=id;$('#number').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='quick')simpleEntry();else if(route==='quick-date'){check(validDate(id),'購入日が不正です。');simpleEntry(null,id,true);}else if(route==='quick-edit')simpleEntry(id,null,venueParam==='day');else if(route==='quick-result')quickResult(decodeURIComponent(id||''));else if(route==='edit')entry(id);else if(route==='edit-stakes'){entry(id);$('#openAmountEditor')?.click();}else if(route==='detail')detail(id);else if(route==='history')history();else if(route==='history-pending')history();else if(route==='calendar')calendarScreen();else if(route==='analysis')analysis();else if(route==='growth')growthScreen();else if(route==='settings')settings();else home();window.scrollTo(0,0);}catch(e){app.innerHTML=`<div class="error">${esc(e.message)} <a href="#home">ホームへ</a></div>`;}}
+function render(hash=location.hash||'#home'){try{document.body.classList.remove('entry-sheet-open');document.body.style.overflow='';data=recalculate(data);document.body.classList.toggle('no-motion',!data.settings.motion);const [route,id,venueParam]=(hash.slice(1)||'home').split('/');updateDock(route==='history-pending'?'history':route==='quick-result'?'quick':route);if(route==='entry')entry(null,id?decodeURIComponent(id):null);else if(route==='entry-next'){check(validDate(id)&&VENUES.includes(decodeURIComponent(venueParam||'')),'引き継ぐ日付と競馬場が不正です。');entry();$('#date').value=id;$('#venue').value=decodeURIComponent(venueParam);$('#number').value='';$('#raceName').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='day')dayScreen(id);else if(route==='entry-date'){check(/^\d{4}-\d\d-\d\d$/.test(id||''),'日付が不正です。');entry();$('#date').value=id;$('#number').value='';$('#date').dispatchEvent(new Event('change'));}else if(route==='ai-import'||route.startsWith('ai-import?'))aiTextImportScreen();else if(route==='quick')simpleEntry();else if(route==='quick-date'){check(validDate(id),'購入日が不正です。');simpleEntry(null,id,true);}else if(route==='quick-edit')simpleEntry(id,null,venueParam==='day');else if(route==='quick-result')quickResult(decodeURIComponent(id||''));else if(route==='edit')entry(id);else if(route==='edit-stakes'){entry(id);$('#openAmountEditor')?.click();}else if(route==='detail')detail(id);else if(route==='history')history();else if(route==='history-pending')history();else if(route==='calendar')calendarScreen();else if(route==='analysis')analysis();else if(route==='growth')growthScreen();else if(route==='settings')settings();else home();window.scrollTo(0,0);}catch(e){app.innerHTML=`<div class="error">${esc(e.message)} <a href="#home">ホームへ</a></div>`;}}
 
 /* Mobile Safari: keep the permanent bottom dock out of the keyboard's way.
    VisualViewport height changes are observational; no ledger or draft data is touched. */
@@ -825,7 +867,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.8.1',
+ currentVersion:'2.9.0',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
