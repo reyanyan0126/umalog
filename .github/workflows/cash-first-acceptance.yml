@@ -13,7 +13,9 @@ jobs:
   acceptance:
     name: Cash-first accounting and PWA acceptance
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,7 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Check source and publish parity
-        run: python tools/check_publish.py
+        run: python3 tools/check_publish.py
       - name: Check JavaScript syntax
         run: |
           node --check app.js
@@ -38,7 +40,6 @@ jobs:
       - name: Install browser dependencies
         run: |
           npm install --no-save --package-lock=false playwright@1.64.1
-          npx playwright install --with-deps chromium
           cat > tests/ci-chromium.cjs <<'EOF'
           module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
           EOF
@@ -50,8 +51,6 @@ jobs:
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
       - name: Navigation and update lifecycle (published PWA)
         run: PUBLISH=1 CHROMIUM_MODULE=./ci-chromium.cjs node tests/navigation-e2e.cjs
-      - name: Install WebKit
-        run: npx playwright install --with-deps webkit
       - name: Navigation and update lifecycle (WebKit)
         run: DEBUG=pw:browser BROWSER=webkit node tests/navigation-e2e.cjs
 
