@@ -2,6 +2,8 @@ name: Cash accounting and PWA release acceptance
 on:
   push:
     branches:
+      - main
+      - fix/ai-import-complete
       - work/v2.5.0-no-pending-cash
       - work/v2.8.1-internal-refactor
   pull_request:
@@ -43,6 +45,12 @@ jobs:
           cat > tests/ci-chromium.cjs <<'EOF'
           module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
           EOF
+      - name: AI import browser acceptance (Chromium and WebKit, source and publish)
+        run: |
+          node tests/ai-import-browser.cjs
+          PUBLISH=1 node tests/ai-import-browser.cjs
+          BROWSER=webkit node tests/ai-import-browser.cjs
+          PUBLISH=1 BROWSER=webkit node tests/ai-import-browser.cjs
       - name: Cash-first browser acceptance (development)
         run: CHROMIUM_MODULE=./ci-chromium.cjs node tests/ux-v250.cjs
       - name: Cash-first browser acceptance (published PWA)

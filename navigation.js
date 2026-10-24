@@ -35,7 +35,7 @@ export function createNavigation({window:win, render, beforeLeave=async()=>true,
   start(){
    let seen=false;
    try{seen=win.sessionStorage.getItem('umalog-title-seen')==='1';}catch{}
-   current=seen?normalize(win.location.hash):'#title';
+   current=seen||/^#ai-import(?:\?|$)/.test(win.location.hash)?normalize(win.location.hash):'#title';
    win.history.replaceState(null,'',current);
    render(current);
   }

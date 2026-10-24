@@ -20,7 +20,7 @@ const base=`【うまログ登録データ】
 2着：09 馬B
 3着：11 馬C
 【登録データ終了】`;
-test('parses Japanese fixed text and podium',()=>{const r=parseAiImport(base);assert.equal(r.date,'2026-10-24');assert.equal(r.tickets.length,2);assert.equal(r.totalPayout,2160);assert.deepEqual(r.podium,[3,9,11]);});
+test('parses Japanese fixed text and podium',()=>{const r=parseAiImport(base);assert.equal(r.date,'2026-10-24');assert.equal(r.tickets.length,2);assert.equal(r.totalPayout,2160);assert.equal(r.metadata['1着'],'03 馬A');assert.equal(r.podium,null);});
 test('supports single-win bet with a variable number of lines',()=>{const t=base.replace('三連複','単勝').replace('03-06-09','03').replace('03-09-11','11');assert.equal(parseAiImport(t).tickets[1].numbers.length,1);});
 test('rejects totals that do not reconcile',()=>assert.throws(()=>parseAiImport(base.replace('購入合計：200円','購入合計：300円')),/一致/));
 test('rejects missing dates rather than guessing',()=>assert.throws(()=>parseAiImport(base.replace('2026-10-24','未確認')),/開催日/));
