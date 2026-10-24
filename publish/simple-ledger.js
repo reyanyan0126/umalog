@@ -1,30 +1,7 @@
 // v2.1.0 lightweight accounting entries coexist with detailed horse-racing tickets.
 // They are never converted into synthetic detailed bets, so purchase totals cannot double-count.
-import {check,money,validDate,VENUES,TYPES,summarize,MAX_MONEY} from './core.js';
-const MAX=100000;
-const allowedKeys=new Set(['id','date','stake','venue','number','type','name','memo','status','payout','refund']);
-const knownString=(v,max)=>typeof v==='string'&&v.length<=max;
-export function validateSimpleEntries(entries){
- check(entries===undefined||Array.isArray(entries)&&entries.length<=MAX,'簡易収支記録の形式が不正です。');
- const seen=new Set();
- for(const e of entries||[]){
-  check(e&&typeof e==='object'&&!Array.isArray(e),'簡易収支記録の内容が不正です。');
-  check(Object.keys(e).every(k=>allowedKeys.has(k)),'簡易記録に不明な項目があります。');
-  check(knownString(e.id,100)&&e.id.length>0&&!seen.has(e.id),'簡易記録のIDが欠落・重複しています。');seen.add(e.id);
-  check(validDate(e.date),'簡易記録の購入日が不正です。');
-  money(e.stake,true);
-  check(e.venue===null||VENUES.includes(e.venue),'簡易記録の競馬場が不正です。');
-  check(e.number===null||Number.isInteger(e.number)&&e.number>=1&&e.number<=12,'簡易記録のレース番号が不正です。');
-  check(e.type===null||TYPES.includes(e.type),'簡易記録の券種が不正です。');
-  check(knownString(e.name,100)&&knownString(e.memo,4000),'簡易記録のメモが不正です。');
-  check(['pending','settled'].includes(e.status),'簡易記録の結果入力状況が不正です。');
-  money(e.payout);money(e.refund);
-  check(e.refund<=e.stake,'返還金は購入額以下にしてください。');
-  check(!(e.refund===e.stake&&e.payout>0),'全額返還と払戻は同時に設定できません。');
-  check(e.status!=='pending'||e.payout===0&&e.refund===0,'結果未入力では払戻・返還金を保存できません。');
- }
- return entries||[];
-}
+import {check,money,validDate,VENUES,TYPES,summarize,MAX_MONEY,validateSimpleEntries} from './core.js';
+export {validateSimpleEntries} from './core.js';
 export function makeSimpleEntry(input,id){
  check(typeof id==='string'&&id.length>0&&id.length<=100,'記録IDが不正です。');
  check(input&&typeof input==='object','入力内容が不正です。');

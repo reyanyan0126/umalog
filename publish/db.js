@@ -34,7 +34,7 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
    }else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
-  }catch(error){problem=error;if(tx.readyState==='active')tx.abort();}};
+  }catch(error){problem=error;try{tx.abort();}catch(abortError){if(abortError?.name!=='InvalidStateError')problem=abortError;}}};
   tx.oncomplete=()=>resolve(data);
   tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));
   tx.onabort=()=>reject(problem||tx.error||new Error('保存が中止されました。入力内容を保持しています。'));
