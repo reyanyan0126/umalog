@@ -608,9 +608,24 @@ function gradedHistoryLabel(race){
  return {grade,name:race.name||record?.name||''};
 }
 
+function historyClassMatch(race,filter){
+ if(!filter)return true;
+ const {grade,name}=gradedHistoryLabel(race);
+ if(filter==='graded')return ['GⅠ','GⅡ','GⅢ'].includes(grade);
+ if(filter==='other')return !['GⅠ','GⅡ','GⅢ'].includes(grade);
+ if(['GⅠ','GⅡ','GⅢ'].includes(filter))return grade===filter;
+ const normalized=String(name||'').normalize('NFKC').replace(/\\s/g,'');
+ if(filter==='maiden')return /新馬|未勝利/.test(normalized);
+ if(filter==='1win')return /1勝クラス|500万下/.test(normalized);
+ if(filter==='2win')return /2勝クラス|1000万下/.test(normalized);
+ if(filter==='3win')return /3勝クラス|1600万下/.test(normalized);
+ if(filter==='open')return grade==='L'||/オープン|OP|リステッド/i.test(normalized);
+ return false;
+}
+
 function history(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return historyClassic();
- app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><button type="button" id="historySearchClear" class="quiet history-search-clear" hidden>検索を消す</button><div id="historyActiveFilters" class="history-active-filters" hidden></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>重賞・条件<select id="historyGrade"><option value="">全レース</option><option value="graded">重賞（GⅠ〜GⅢ）</option><option value="GⅠ">GⅠ</option><option value="GⅡ">GⅡ</option><option value="GⅢ">GⅢ</option><option value="other">重賞以外</option></select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help" aria-live="polite"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
+ app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><button type="button" id="historySearchClear" class="quiet history-search-clear" hidden>検索を消す</button><div id="historyActiveFilters" class="history-active-filters" hidden></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>重賞・条件<select id="historyGrade"><option value="">全レース</option><option value="graded">重賞（GⅠ〜GⅢ）</option><option value="GⅠ">GⅠ</option><option value="GⅡ">GⅡ</option><option value="GⅢ">GⅢ</option><option value="other">重賞以外</option><option value="maiden">新馬・未勝利</option><option value="1win">1勝クラス</option><option value="2win">2勝クラス</option><option value="3win">3勝クラス</option><option value="open">オープン・L</option></select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help" aria-live="polite"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
  let shown=20;
  const indexedHistory=ticketIndex(data).linesByTicket;
  const historyRows=raceHistoryRows(data);
@@ -624,7 +639,7 @@ function history(){
     return (!type||t.type===type)&&(!status||(status==='hit'&&lines.some(l=>l.payout>0))||(status==='miss'&&s.lineCount>0&&!s.lineHits)||(status==='void'&&lines.length>0&&lines.every(l=>l.status==='void')));
    });
    return {...item,tickets:filtered};
-  }).filter(item=>item.tickets.length&&inRange(item.race.date)&&(!venue||item.race.venue===venue)&&(!grade||(grade==='graded'?!!gradedHistoryLabel(item.race).grade:grade==='other'?!gradedHistoryLabel(item.race).grade:gradedHistoryLabel(item.race).grade===grade))&&matchesRaceQuery(item,q));
+  }).filter(item=>item.tickets.length&&inRange(item.race.date)&&(!venue||item.race.venue===venue)&&historyClassMatch(item.race,grade)&&matchesRaceQuery(item,q));
   const overview=purchaseHistoryOverview(list,indexedHistory);
   const quick=(data.simpleEntries||[]).filter(x=>!grade&&inRange(x.date)&&(!venue||x.venue===venue)&&(!type||x.type===type)&&(!status||status==='hit'&&x.payout>0||status==='miss'&&x.payout===0&&x.refund<x.stake||status==='void'&&x.refund===x.stake)&&(!q||[x.date,x.venue||'',x.number===null?'':String(x.number),x.type||'',x.name,x.memo].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q.normalize('NFKC').toLocaleLowerCase('ja')))).sort((a,b)=>b.date.localeCompare(a.date));
   const combinedRows=[
