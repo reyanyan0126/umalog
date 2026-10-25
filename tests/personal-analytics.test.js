@@ -31,3 +31,12 @@ test('full refunds are excluded and race hits are not counted per line',()=>{
  assert.equal(result.overall.hitRaces,1);
  assert.equal(result.rows.find(r=>r.axis==='人気帯').key,'6番人気以内を含む');
 });
+
+test('updater and manifest use the same current version in both bundles',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const version=JSON.parse(readFileSync(new URL('../package.json',import.meta.url))).version;
+ for(const file of ['../app.js','../publish/app.js']){
+  const js=readFileSync(new URL(file,import.meta.url),'utf8');
+  assert.ok(js.includes("currentVersion:'"+version+"'"),file+' updater version must match release');
+ }
+});
