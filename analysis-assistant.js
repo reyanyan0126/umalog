@@ -36,7 +36,8 @@ export function officialSourceAudit(source){
   const key=ticket.raceId;
   const current=grouped.get(key)||{raceId:key,sourceUrl:null,officialLink:false,podium:false,jockey:false,verified:false};
   const url=String(meta['出典']||'');
-  const official=/^https:\\/\\/(?:www\\.|sp\\.)?jra\\.go\\.jp\\//i.test(url);
+  let official=false;
+  try{const parsed=new URL(url);official=parsed.protocol==='https:'&&['jra.go.jp','www.jra.go.jp','sp.jra.go.jp'].includes(parsed.hostname);}catch{}
   if(official){current.officialLink=true;current.sourceUrl=url;}
   current.podium ||= [1,2,3].every(p=>/^0?\\d{1,2}\\s+\\S/.test(meta[p+'着']||''));
   current.jockey ||= [1,2,3].every(p=>!!String(meta[p+'着騎手']||'').trim());
