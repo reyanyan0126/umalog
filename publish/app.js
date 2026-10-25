@@ -1,3 +1,4 @@
+import {buildPersonalAnalytics} from './personal-analytics.js';
 import {parseAiBatch,decodeImportLink,prepareAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
@@ -566,6 +567,22 @@ function jockeyContributionPanel(source){
  return '<section class="card" id="analysisJockeyContribution"><h2>的中貢献騎手ランキング</h2><p class="help">あなたが的中させた買い目に含まれる馬の騎手だけを集計。期間・競馬場・券種の絞り込みに対応します。</p>'+(stats.jockeys.length?'<p class="help">騎手名が確認できる的中買い目から集計。騎手別に的中点数・関連払戻額を表示します。</p>'+rows:'<p class="help">騎手名と的中結果の両方が登録された買い目はまだありません。</p>')+'<details><summary>集計方法・注意点</summary><p class="help">的中1点に関与した騎手をそれぞれ1回として数えます。同じ騎手が同じ買い目に複数回登場しても1回です。払戻額は関与した各騎手に全額を関連付けるため、騎手別の金額を合算すると実際の払戻総額と一致しません。騎手の実際の獲得賞金・個人別利益ではありません。馬券内騎手の登録がない場合は集計されません。</p></details></section>';
 }
 
+
+function personalAnalyticsPanel(source){
+ const report=buildPersonalAnalytics(source);
+ const axes=['競馬場','券種','馬場種別','距離','頭数','1点購入額'];
+ const table=axis=>{
+  const rows=report.rows.filter(r=>r.axis===axis);
+  if(!rows.length)return '<p class="help">この条件の確定済みデータはありません。</p>';
+  return '<div class="table-wrap"><table><thead><tr><th>条件</th><th>確定点数</th><th>的中点数</th><th>収支</th><th>回収率</th></tr></thead><tbody>'+rows.map(r=>'<tr><th scope="row">'+esc(r.key)+'</th><td>'+r.lines+'</td><td>'+r.hits+'</td><td class="'+(r.profit<0?'negative':'positive')+'">'+signed(r.profit)+'</td><td>'+rate(r.roi)+'</td></tr>').join('')+'</tbody></table></div>';
+ };
+ return '<section class="card" id="analysisPersonal"><h2>あなたの馬券傾向</h2><p class="help">確定済みの買い目だけを集計。的中率は払戻がある買い目の割合です。全額返還・未確定は除外します。</p><div class="analysis-essential-grid"><div><small>確定買い目</small><strong>'+report.overall.lines+'点</strong></div><div><small>的中点数</small><strong>'+report.overall.hits+'点</strong></div></div><h3>記録から分かること</h3>'+report.notes.map(n=>'<p class="help">'+esc(n)+'</p>').join('')+'<details><summary>条件別の収支・回収率を見る</summary>'+axes.map(axis=>'<details><summary>'+axis+'</summary>'+table(axis)+'</details>').join('')+'</details></section>';
+}
+function hitHorsePanel(source){
+ const stats=jockeyContribution(source);
+ return '<section class="card" id="analysisHitHorses"><h2>的中貢献馬ランキング</h2><p class="help">的中した買い目に含まれ、結果の1〜3着として確認できる馬を集計します。</p>'+(stats.horses.length?stats.horses.slice(0,20).map((h,i)=>'<div class="day-edit-row"><span>'+(i+1)+'位 '+esc(h.name)+'</span><strong>'+h.hits+'点 · 関連払戻 '+yen(h.payout)+'</strong></div>').join(''):'<p class="help">的中馬の登録がありません。</p>')+'<small>関連払戻額は馬ごとに重複するため合算できません。</small></section>';
+}
+
 function horseInsightsPanel(source){
  const insights=horseInsights(source);
  const podium=insights.raceRows.filter(r=>r.podium.length);
@@ -749,7 +766,9 @@ function analysis(){
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
+ ${personalAnalyticsPanel(analysisLedger())}
  ${jockeyContributionPanel(analysisLedger())}
+ ${hitHorsePanel(analysisLedger())}
  ${horseInsightsPanel(analysisLedger())}
  <details class="card analysis-advanced"><summary>絞り込み</summary><div class="analysis-controls"><label>期間<select id="analysisRange"><option value="all" ${analysisRange==='all'?'selected':''}>全期間</option><option value="year" ${analysisRange==='year'?'selected':''}>年間</option><option value="month" ${analysisRange==='month'?'selected':''}>月間</option></select></label><label>対象年<input id="analysisYear" type="number" min="2000" max="2199" value="${analysisYear}"></label><label>対象月<input id="analysisMonth" type="month" value="${analysisMonth}"></label><label>競馬場<select id="analysisVenue"><option value="">すべて</option>${opts(VENUES,analysisVenue)}</select></label><label>券種<select id="analysisType"><option value="">すべて</option>${opts(TYPES,analysisType)}</select></label></div></details>`;
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
@@ -930,7 +949,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'2.9.7',
+ currentVersion:'4.0.0',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),

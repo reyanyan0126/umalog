@@ -23,7 +23,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
     await page.evaluate(r=>location.hash=r,route);await page.waitForTimeout(250);
     assert.equal(await page.locator('#app > .error').count(),0,variant+route);
     // Hide only the new import entry, then compare the remaining form pixels.
-    if(variant==='candidate')await page.addStyleTag({content:'[data-ai-import-entry],#analysisHorseJockey,#analysisJockeyContribution{display:none!important}'});
+    if(variant==='candidate')await page.addStyleTag({content:'[data-ai-import-entry],#analysisHorseJockey,#analysisJockeyContribution,#analysisPersonal,#analysisHitHorses{display:none!important}'});
     // Exclude only transient notices/status/version. Layout and all app content remain compared.
     await page.addStyleTag({content:'#notice{display:none!important}'});
     const mask=[page.locator('#launchUpdateStatus')];
