@@ -3,12 +3,12 @@ const settled = l => l.status === 'settled' && Number.isFinite(l.payout) && Numb
 const popularityMap=meta=>{
  const map=new Map();
  for(let p=1;p<=3;p++){
-  const n=Number(String(meta[p+'着']||'').match(/^0?(\\d{1,2})(?=\\s)/)?.[1]);
+  const n=Number(String(meta[p+'着']||'').match(/^0?(\d{1,2})(?=\s)/)?.[1]);
   const pop=Number(meta[p+'着単勝人気']);
   if(n>0&&pop>0&&Number.isInteger(pop))map.set(n,pop);
  }
- for(const row of String(meta['出走馬']||'').split(/[\\n;；]/)){
-  const m=row.trim().match(/^(\\d{1,2})[：:、,\\s]+.*?(\\d+)番人気/);
+ for(const row of String(meta['出走馬']||'').split(/[\n;；]/)){
+  const m=row.trim().match(/^(\d{1,2})[：:、,\s]+.*?(\d+)番人気/);
   if(m&&!map.has(Number(m[1])))map.set(Number(m[1]),Number(m[2]));
  }
  return map;
