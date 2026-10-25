@@ -545,16 +545,18 @@ function jockeyContribution(source){
  const insights=horseInsights(source),byJockey=new Map(),byHorse=new Map();
  const settled=line=>line.status==='settled'&&Number(line.payout)>0;
  for(const row of insights.raceRows){
-  const byNumber=new Map(row.podium.filter(h=>h.jockey).map(h=>[h.number,h]));
+  const byNumber=new Map(row.podium.map(h=>[h.number,h]));
   for(const {ticket,lines} of row.tickets){
    for(const line of lines){
     if(!settled(line)||!Array.isArray(line.numbers))continue;
     const unique=new Set(line.numbers.map(Number));
     const matched=[...unique].map(n=>byNumber.get(n)).filter(Boolean);
     for(const h of matched){
+     if(h.jockey){
      const item=byJockey.get(h.jockey)||{name:h.jockey,hits:0,payout:0,stake:0,races:new Set()};
      item.hits++;item.payout+=line.payout;item.stake+=line.stake;item.races.add(raceKey(row.race));byJockey.set(h.jockey,item);
-     const horse=byHorse.get(h.name)||{name:h.name,hits:0,payout:0};horse.hits++;horse.payout+=line.payout;byHorse.set(h.name,horse);
+     }
+     const horse=byHorse.get(h.name)||{name:h.name,hits:0,payout:0,races:new Set()};horse.hits++;horse.payout+=line.payout;horse.races.add(raceKey(row.race));byHorse.set(h.name,horse);
     }
    }
   }
@@ -570,7 +572,7 @@ function jockeyContributionPanel(source){
 
 function personalAnalyticsPanel(source){
  const report=buildPersonalAnalytics(source);
- const axes=['競馬場','券種','馬場種別','距離','頭数','1点購入額'];
+ const axes=['競馬場','券種','馬場種別','距離','頭数','人気帯','買い目構成','1点購入額'];
  const table=axis=>{
   const rows=report.rows.filter(r=>r.axis===axis);
   if(!rows.length)return '<p class="help">この条件の確定済みデータはありません。</p>';
@@ -580,7 +582,7 @@ function personalAnalyticsPanel(source){
 }
 function hitHorsePanel(source){
  const stats=jockeyContribution(source);
- return '<section class="card" id="analysisHitHorses"><h2>的中貢献馬ランキング</h2><p class="help">的中した買い目に含まれ、結果の1〜3着として確認できる馬を集計します。</p>'+(stats.horses.length?stats.horses.slice(0,20).map((h,i)=>'<div class="day-edit-row"><span>'+(i+1)+'位 '+esc(h.name)+'</span><strong>'+h.hits+'点 · 関連払戻 '+yen(h.payout)+'</strong></div>').join(''):'<p class="help">的中馬の登録がありません。</p>')+'<small>関連払戻額は馬ごとに重複するため合算できません。</small></section>';
+ return '<section class="card" id="analysisHitHorses"><h2>的中貢献馬ランキング</h2><p class="help">的中した買い目に含まれ、結果の1〜3着として確認できる馬を集計します。</p>'+(stats.horses.length?stats.horses.slice(0,20).map((h,i)=>'<div class="day-edit-row"><span>'+(i+1)+'位 '+esc(h.name)+'</span><strong>'+h.hits+'点 · '+h.races.size+'レース · 関連払戻 '+yen(h.payout)+'</strong></div>').join(''):'<p class="help">的中馬の登録がありません。</p>')+'<small>関連払戻額は馬ごとに重複するため合算できません。</small></section>';
 }
 
 function horseInsightsPanel(source){
