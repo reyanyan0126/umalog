@@ -11,8 +11,8 @@ for(const path of ['../app.js','../publish/app.js']){
  });
  test(path+' supports grade filtering and reset',()=>{
   assert.ok(source.includes('id="historyGrade"'));
-  assert.ok(source.includes("grade==='graded'"));
-  assert.ok(source.includes("grade==='other'"));
+  assert.ok(source.includes("filter==='graded'"));
+  assert.ok(source.includes("filter==='other'"));
   assert.ok(source.includes("$('#historyGrade').value=''"));
  });
  test(path+' supports month year all with current year selector',()=>{
