@@ -1,3 +1,4 @@
+import {QUESTION_OPTIONS,answerPersonalQuestion,officialSourceAudit} from './analysis-assistant.js';
 import {buildPersonalAnalytics} from './personal-analytics.js';
 import {parseAiBatch,decodeImportLink,prepareAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
@@ -570,6 +571,14 @@ function jockeyContributionPanel(source){
 }
 
 
+
+function analysisAssistantPanel(source){
+ const report=buildPersonalAnalytics(source),audits=officialSourceAudit(source);
+ const buttons=QUESTION_OPTIONS.map(q=>'<button type="button" class="secondary" data-analysis-question="'+q.id+'">'+esc(q.label)+'</button>').join('');
+ const incomplete=audits.filter(a=>!a.officialLink||!a.podium||!a.jockey).length;
+ return '<section class="card" id="analysisAssistant"><h2>あなたの競馬分析アシスタント</h2><p class="help">登録済みの確定結果だけで回答します。端末内で動作し、外部AIには送信しません。</p><div class="analysis-controls" role="group" aria-label="分析の質問">'+buttons+'</div><p id="analysisAssistantAnswer" role="status" aria-live="polite">'+esc(answerPersonalQuestion(report,'summary'))+'</p><details><summary>レース結果の照合状況（'+audits.length+'レース）</summary><p class="help">公式JRAのURLが登録されていても、内容を自動取得・照合したわけではありません。確認できるのは出典URLの形式と入力項目の有無です。</p><p class="help">入力項目に不足のあるレース：'+incomplete+'件</p>'+audits.slice(0,30).map(a=>'<div class="day-edit-row"><span>'+esc(a.raceId)+'<small> 着順'+(a.podium?'あり':'不足')+' · 騎手'+(a.jockey?'あり':'不足')+'</small></span>'+(a.sourceUrl?'<a href="'+esc(a.sourceUrl)+'" target="_blank" rel="noopener noreferrer">JRA原文を確認</a>':'<small>公式URL未登録</small>')+'</div>').join('')+'</details></section>';
+}
+
 function personalAnalyticsPanel(source){
  const report=buildPersonalAnalytics(source);
  const axes=['競馬場','券種','馬場種別','距離','頭数','人気帯','買い目構成','1点購入額'];
@@ -768,11 +777,15 @@ function analysis(){
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
+ ${analysisAssistantPanel(analysisLedger())}
+ <details class="card"><summary>詳細分析：条件・馬・騎手</summary>
  ${personalAnalyticsPanel(analysisLedger())}
  ${jockeyContributionPanel(analysisLedger())}
  ${hitHorsePanel(analysisLedger())}
  ${horseInsightsPanel(analysisLedger())}
+ </details>
  <details class="card analysis-advanced"><summary>絞り込み</summary><div class="analysis-controls"><label>期間<select id="analysisRange"><option value="all" ${analysisRange==='all'?'selected':''}>全期間</option><option value="year" ${analysisRange==='year'?'selected':''}>年間</option><option value="month" ${analysisRange==='month'?'selected':''}>月間</option></select></label><label>対象年<input id="analysisYear" type="number" min="2000" max="2199" value="${analysisYear}"></label><label>対象月<input id="analysisMonth" type="month" value="${analysisMonth}"></label><label>競馬場<select id="analysisVenue"><option value="">すべて</option>${opts(VENUES,analysisVenue)}</select></label><label>券種<select id="analysisType"><option value="">すべて</option>${opts(TYPES,analysisType)}</select></label></div></details>`;
+ document.querySelectorAll('[data-analysis-question]').forEach(button=>button.onclick=()=>{$('#analysisAssistantAnswer').textContent=answerPersonalQuestion(buildPersonalAnalytics(analysisLedger()),button.dataset.analysisQuestion);});
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
  $('#analysisAllTime').onclick=()=>{analysisRange='all';analysis();};
  $('#analysisRange').onchange=e=>{analysisRange=e.target.value;analysis();};
@@ -951,7 +964,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.0.1',
+ currentVersion:'4.0.2',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
