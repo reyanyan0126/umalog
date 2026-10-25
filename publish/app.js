@@ -180,7 +180,7 @@ function rewardPanel(source){return `<section class="card reward-panel"><h2>成�
 function sortedTickets(){return [...data.tickets].sort((a,b)=>data.races.find(r=>r.id===b.raceId).date.localeCompare(data.races.find(r=>r.id===a.raceId).date)||b.createdAt.localeCompare(a.createdAt));}
 
 function aiTextImportScreen(){
- app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIインポート</h1></div><section class="card"><p class="help">ChatGPTで馬券画像を読み取って取込データをコピーし、このボタンを押してください。ChatGPTのアップロード画像を直接取得する機能ではありません。</p><button type="button" id="aiImportClipboard" class="accent full">ChatGPTから取り込む（コピーしたデータ）</button><details><summary>ファイルから取り込む</summary><label>取込ファイル<input id="aiImportFile" type="file" accept=".txt,text/plain"></label></details><p id="aiImportError" role="alert"></p></section><section id="aiImportReview" class="card" hidden></section>`;
+ app.innerHTML=`<div class="simple-entry-head"><a href="#quick">← 記録へ戻る</a><h1>AIインポート</h1></div><section class="card"><p class="help">ChatGPTで作成した取込データをコピーし、下の欄に貼り付けて確認してください。自動的なクリップボード読み取りは行いません。</p><label>ChatGPTからコピーしたデータ<textarea id="aiImportPaste" rows="5" placeholder="ここを長押しして「ペースト」してください"></textarea></label><button type="button" id="aiImportClipboard" class="accent full">入力したデータを確認</button><details><summary>ファイルから取り込む</summary><label>取込ファイル<input id="aiImportFile" type="file" accept=".txt,text/plain"></label></details><p id="aiImportError" role="alert"></p></section><section id="aiImportReview" class="card" hidden></section>`;
  let candidate=null,saving=false,importText='';
  const error=$('#aiImportError'),panel=$('#aiImportReview');
  const preview=()=>{
@@ -196,7 +196,7 @@ function aiTextImportScreen(){
    };
   }catch(e){error.textContent=e.message||'解析に失敗しました。';}
  };
- $('#aiImportClipboard').onclick=async()=>{try{check(navigator.clipboard?.readText,'この環境ではクリップボードを読めません。ChatGPTから取込リンクを開くか、ファイルを選択してください。');importText=await navigator.clipboard.readText();dirty=true;preview();}catch(e){error.textContent=e.message||'クリップボードを読み取れませんでした。Safariの許可を確認してください。';}};
+ $('#aiImportClipboard').onclick=()=>{importText=$('#aiImportPaste').value.trim();if(!importText){error.textContent='コピーしたデータを入力欄に貼り付けてください。';return;}dirty=true;preview();};
  $('#aiImportFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;check(f.size<=3000000,'ファイルは3MB以内にしてください。');importText=await f.text();dirty=true;preview();}catch(e){error.textContent=e.message;}};
  if(location.hash.startsWith('#ai-import?')){try{importText=decodeImportLink(location.hash);preview();}catch(e){error.textContent=e.message;}}
 }
@@ -610,12 +610,12 @@ function gradedHistoryLabel(race){
 
 function history(){
  if(window.__UMALOG_ENTRY_CLASSIC__===true)return historyClassic();
- app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><button type="button" id="historySearchClear" class="quiet history-search-clear" hidden>検索を消す</button><div id="historyActiveFilters" class="history-active-filters" hidden></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help" aria-live="polite"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
+ app.innerHTML=`<h1>購入履歴</h1><section class="card history-compact"><label>記録を探す<input id="historySearch" type="search" enterkeyhint="search" placeholder="日付・競馬場・レース名・メモ"></label><button type="button" id="historySearchClear" class="quiet history-search-clear" hidden>検索を消す</button><div id="historyActiveFilters" class="history-active-filters" hidden></div><details id="historyAdvancedFilters" class="history-advanced"><summary>絞り込み条件</summary><div class="filter"><label>競馬場<select id="vf"><option value="">全場</option>${opts(VENUES,'')}</select></label><label>重賞・条件<select id="historyGrade"><option value="">全レース</option><option value="graded">重賞（GⅠ〜GⅢ）</option><option value="GⅠ">GⅠ</option><option value="GⅡ">GⅡ</option><option value="GⅢ">GⅢ</option><option value="other">重賞以外</option></select></label><label>券種<select id="tf"><option value="">全券種</option>${opts(TYPES,'')}</select></label><label>結果<select id="sf"><option value="">すべて</option><option value="hit">的中あり</option><option value="miss">不的中</option><option value="void">全額返還</option></select></label></div><div class="history-period" role="group" aria-label="購入期間で絞り込み"><label>開始日<input id="historyFrom" type="date" min="2000-01-01" max="2199-12-31"></label><label>終了日<input id="historyTo" type="date" min="2000-01-01" max="2199-12-31"></label><div class="history-period-actions"><button type="button" id="historyThisMonth" class="quiet">今月</button><button type="button" id="historyClearPeriod" class="quiet">期間を解除</button></div></div><p id="historyPeriodWarning" class="help" role="status"></p><div class="history-controls"><button type="button" id="historyClearFilters" class="quiet">条件をクリア</button></div></details><details class="history-finance-details"><summary>表示中の収支を確認</summary><div id="historyFinanceOverview" class="history-finance" aria-live="polite"></div></details><p id="historyCount" class="help" aria-live="polite"></p><div id="historyList"></div><button id="historyMore" type="button" class="quiet full" hidden>さらに表示</button></section>`;
  let shown=20;
  const indexedHistory=ticketIndex(data).linesByTicket;
  const historyRows=raceHistoryRows(data);
  const update=()=>{
-  const q=$('#historySearch').value.trim(),venue=$('#vf').value,type=$('#tf').value,status=$('#sf').value,from=$('#historyFrom').value,to=$('#historyTo').value;
+  const q=$('#historySearch').value.trim(),venue=$('#vf').value,type=$('#tf').value,status=$('#sf').value,grade=$('#historyGrade').value,from=$('#historyFrom').value,to=$('#historyTo').value;
   const inRange=date=>(!from||date>=from)&&(!to||date<=to);
   $('#historyPeriodWarning').textContent=from&&to&&from>to?'開始日が終了日より後です。期間を見直してください。':'';
   const list=historyRows.map(item=>{
@@ -624,9 +624,9 @@ function history(){
     return (!type||t.type===type)&&(!status||(status==='hit'&&lines.some(l=>l.payout>0))||(status==='miss'&&s.lineCount>0&&!s.lineHits)||(status==='void'&&lines.length>0&&lines.every(l=>l.status==='void')));
    });
    return {...item,tickets:filtered};
-  }).filter(item=>item.tickets.length&&inRange(item.race.date)&&(!venue||item.race.venue===venue)&&matchesRaceQuery(item,q));
+  }).filter(item=>item.tickets.length&&inRange(item.race.date)&&(!venue||item.race.venue===venue)&&(!grade||(grade==='graded'?!!gradedHistoryLabel(item.race).grade:grade==='other'?!gradedHistoryLabel(item.race).grade:gradedHistoryLabel(item.race).grade===grade))&&matchesRaceQuery(item,q));
   const overview=purchaseHistoryOverview(list,indexedHistory);
-  const quick=(data.simpleEntries||[]).filter(x=>inRange(x.date)&&(!venue||x.venue===venue)&&(!type||x.type===type)&&(!status||status==='hit'&&x.payout>0||status==='miss'&&x.payout===0&&x.refund<x.stake||status==='void'&&x.refund===x.stake)&&(!q||[x.date,x.venue||'',x.number===null?'':String(x.number),x.type||'',x.name,x.memo].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q.normalize('NFKC').toLocaleLowerCase('ja')))).sort((a,b)=>b.date.localeCompare(a.date));
+  const quick=(data.simpleEntries||[]).filter(x=>!grade&&inRange(x.date)&&(!venue||x.venue===venue)&&(!type||x.type===type)&&(!status||status==='hit'&&x.payout>0||status==='miss'&&x.payout===0&&x.refund<x.stake||status==='void'&&x.refund===x.stake)&&(!q||[x.date,x.venue||'',x.number===null?'':String(x.number),x.type||'',x.name,x.memo].join(' ').normalize('NFKC').toLocaleLowerCase('ja').includes(q.normalize('NFKC').toLocaleLowerCase('ja')))).sort((a,b)=>b.date.localeCompare(a.date));
   const combinedRows=[
    ...list.map((item,index)=>({kind:'race',item,date:item.race.date,index})),
    ...quick.map((item,index)=>({kind:'quick',item,date:item.date,index}))
@@ -635,7 +635,7 @@ function history(){
   const recordedTotal=overview.recordedPurchase+qp,receiveTotal=overview.receipts+receipts,finalProfit=receiveTotal-recordedTotal;
   $('#historyFinanceOverview').innerHTML=`<h2>表示中の収支</h2><div class="history-finance-grid"><div><small>購入額（詳細＋簡易）</small><strong>${yen(recordedTotal)}</strong></div><div><small>払戻・返還</small><strong>${yen(receiveTotal)}</strong></div><div><small>収支</small><strong class="${finalProfit<0?'negative':'positive'}">${signed(finalProfit)}</strong></div></div><p class="help">収支は購入額を支出として、入力済みの払戻・返還を収入として計算しています。</p>`;
   $('#historySearchClear').hidden=!q;
-  const active=[q?'検索中':'',venue?'競馬場':'',type?'券種':'',status?'結果':'',from||to?'期間':''].filter(Boolean);
+  const active=[q?'検索中':'',venue?'競馬場':'',type?'券種':'',status?'結果':'',grade?'重賞・条件':'',from||to?'期間':''].filter(Boolean);
   const activeFilters=$('#historyActiveFilters');activeFilters.hidden=!active.length;
   activeFilters.replaceChildren();
   if(active.length){
@@ -643,11 +643,11 @@ function history(){
    const clear=document.createElement('button');clear.type='button';clear.className='quiet';clear.textContent='すべて解除';
    clear.onclick=()=>$('#historyClearFilters').click();activeFilters.append(label,clear);
   }
-  $('#historyCount').textContent=`${combinedRows.length}件の記録（詳細 ${list.length}レース・かんたん支出 ${quick.length}件）／${Math.min(combinedRows.length,shown)}件表示中${q||venue||type||status||from||to?'・絞り込み中':''}`;
+  $('#historyCount').textContent=`${combinedRows.length}件の記録（詳細 ${list.length}レース・かんたん支出 ${quick.length}件）／${Math.min(combinedRows.length,shown)}件表示中${q||venue||type||status||grade||from||to?'・絞り込み中':''}`;
   const renderRace=item=>{
    const {race,tickets}=item,ids=new Set(tickets.map(t=>t.id)),lines=item.lines.filter(l=>ids.has(l.ticketId)),stat=summarize(lines,[race],tickets);const graded=gradedHistoryLabel(race);
-   return `<section class="history-race" data-history-kind="race" data-history-date="${esc(race.date)}"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${graded.grade?`<span class="tag" aria-label="重賞 ${graded.grade}">${graded.grade}</span> `:""}${esc(graded.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${signed(stat.profit)}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · 払戻 ${yen(stat.payout)} · 返還 ${yen(stat.refund)} · ${tickets.length}券種</p>
-   <details class="history-bet-details"><summary>券種・買い目を確認する</summary>${tickets.map(t=>{
+   return `<section class="history-race" data-history-kind="race" data-history-date="${esc(race.date)}"><div class="row"><div><small>${esc(race.date)} · ${esc(race.venue)} ${race.number}R</small><h3>${graded.grade?`<span class="tag" aria-label="重賞 ${graded.grade}">${graded.grade}</span> `:""}${esc(graded.name||race.venue+' '+race.number+'R')}</h3></div><strong class="${stat.profit<0?'negative':'positive'}">${signed(stat.profit)}</strong></div><p class="help">購入 ${yen(lines.reduce((n,l)=>n+l.stake,0))} · ${tickets.map(t=>esc(t.type)).join(" / ")}</p>
+   <details class="history-bet-details"><summary>買い目・払戻・編集</summary>${tickets.map(t=>{
     const ls=indexedHistory.get(t.id)||[],v=summarize(ls);
     return `<div class="history-ticket"><div class="row"><b>${esc(t.type)} · ${ls.length}点</b><span class="${v.profit<0?'negative':'positive'}">${signed(v.profit)}</span></div><div class="history-ticket-actions"><button type="button" class="quiet" data-detail="${esc(t.id)}">券種の詳細</button><button type="button" class="quiet" data-stake-edit="${esc(t.id)}">金額配分を編集</button><button type="button" class="quiet" data-record-edit="${esc(t.id)}">編集</button><button type="button" class="danger" data-record-delete="${esc(t.id)}">削除</button></div><details><summary>各買い目の訂正</summary>${ls.slice(0,30).map(l=>`<div class="day-edit-row"><span>${l.numbers.join(['馬単','三連単'].includes(t.type)?'→':'－')}</span><small>購入 ${yen(l.stake)} / 払戻 ${yen(l.payout)}</small><button type="button" class="quiet" data-quick-edit="${esc(l.id)}">訂正</button></div>`).join('')}${ls.length>30?'<p class="help">残りの買い目は券種の詳細から確認できます。</p>':''}</details></div>`;
    }).join('')}</details></section>`;
@@ -658,7 +658,7 @@ function history(){
   ).join('')||'<p class="empty">該当する記録がありません。</p>';
   $('#historyMore').hidden=combinedRows.length<=shown;$('#historyMore').textContent=`さらに表示（残り${Math.max(0,combinedRows.length-shown)}件）`;  bindDetails();$('#historyList').querySelectorAll('[data-stake-edit]').forEach(button=>button.onclick=()=>location.hash='edit-stakes/'+button.dataset.stakeEdit);$('#historyList').querySelectorAll('[data-record-edit]').forEach(button=>button.onclick=()=>location.hash='edit/'+button.dataset.recordEdit);$('#historyList').querySelectorAll('[data-record-delete]').forEach(button=>button.onclick=guard(async()=>{const id=button.dataset.recordDelete,ticket=data.tickets.find(t=>t.id===id);if(!ticket)return;if(!confirm('この券種の記録と買い目を削除しますか？この操作は元に戻せません。'))return;await commit(removeTicket(clone(data),id));notify('記録を削除しました。');history();}));bindQuickEdits(()=>history());
  };
- $('#historyMore').onclick=()=>{shown+=20;update();}; ['vf','tf','sf','historyFrom','historyTo'].forEach(id=>$('#'+id).onchange=()=>{shown=20;update();});
+ $('#historyMore').onclick=()=>{shown+=20;update();}; ['vf','tf','sf','historyGrade','historyFrom','historyTo'].forEach(id=>$('#'+id).onchange=()=>{shown=20;update();});
  $('#historySearch').oninput=()=>{shown=20;update();};
  $('#historySearchClear').onclick=()=>{$('#historySearch').value='';shown=20;update();$('#historySearch').focus({preventScroll:true});};
  $('#historyThisMonth').onclick=()=>{const month=jstToday().slice(0,7),[year,number]=month.split('-').map(Number);$('#historyFrom').value=month+'-01';$('#historyTo').value=month+'-'+String(new Date(year,number,0).getDate()).padStart(2,'0');shown=20;update();};
@@ -773,7 +773,7 @@ function analysis(){
  const maxMonth=Math.max(1,...months.map(x=>Math.abs(x.profit)));
  const bestMonth=months.filter(x=>x.recordedPurchase>0).sort((a,b)=>b.profit-a.profit)[0];
  app.innerHTML=`<h1>成績分析</h1>
- <div class="analysis-quick-period" role="group" aria-label="分析期間"><button class="quiet" type="button" id="analysisCurrentMonth" aria-pressed="${analysisRange==='month'&&analysisMonth===jstToday().slice(0,7)}">今月</button><button class="quiet" type="button" id="analysisAllTime" aria-pressed="${analysisRange==='all'}">全期間</button></div>
+ <div class="analysis-quick-period" role="group" aria-label="分析期間"><button class="quiet" type="button" id="analysisCurrentMonth" aria-pressed="${analysisRange==='month'&&analysisMonth===jstToday().slice(0,7)}">今月</button><button class="quiet" type="button" id="analysisCurrentYear" aria-pressed="${analysisRange==='year'&&analysisYear===jstToday().slice(0,4)}">今年</button><button class="quiet" type="button" id="analysisAllTime" aria-pressed="${analysisRange==='all'}">全期間</button></div>
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
@@ -787,6 +787,7 @@ function analysis(){
  <details class="card analysis-advanced"><summary>絞り込み</summary><div class="analysis-controls"><label>期間<select id="analysisRange"><option value="all" ${analysisRange==='all'?'selected':''}>全期間</option><option value="year" ${analysisRange==='year'?'selected':''}>年間</option><option value="month" ${analysisRange==='month'?'selected':''}>月間</option></select></label><label>対象年<input id="analysisYear" type="number" min="2000" max="2199" value="${analysisYear}"></label><label>対象月<input id="analysisMonth" type="month" value="${analysisMonth}"></label><label>競馬場<select id="analysisVenue"><option value="">すべて</option>${opts(VENUES,analysisVenue)}</select></label><label>券種<select id="analysisType"><option value="">すべて</option>${opts(TYPES,analysisType)}</select></label></div></details>`;
  document.querySelectorAll('[data-analysis-question]').forEach(button=>button.onclick=()=>{$('#analysisAssistantAnswer').textContent=answerPersonalQuestion(buildPersonalAnalytics(analysisLedger()),button.dataset.analysisQuestion);});
  $('#analysisCurrentMonth').onclick=()=>{analysisRange='month';analysisMonth=jstToday().slice(0,7);analysis();};
+ $('#analysisCurrentYear').onclick=()=>{analysisRange='year';analysisYear=jstToday().slice(0,4);analysis();};
  $('#analysisAllTime').onclick=()=>{analysisRange='all';analysis();};
  $('#analysisRange').onchange=e=>{analysisRange=e.target.value;analysis();};
  $('#analysisYear').onchange=e=>{if(/^(20\d\d|21\d\d)$/.test(e.target.value)){analysisYear=e.target.value;analysis();}};
@@ -964,7 +965,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.0.3',
+ currentVersion:'4.0.4',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
