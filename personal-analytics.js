@@ -1,5 +1,18 @@
 // Deterministic, offline-only personal analytics. No prediction or external data access.
 const settled = l => l.status === 'settled' && Number.isFinite(l.payout) && Number.isFinite(l.stake) && Number(l.refund||0)<Number(l.stake);
+const popularityMap=meta=>{
+ const map=new Map();
+ for(let p=1;p<=3;p++){
+  const n=Number(String(meta[p+'着']||'').match(/^0?(\d{1,2})(?=\s)/)?.[1]);
+  const pop=Number(meta[p+'着単勝人気']);
+  if(n>0&&pop>0&&Number.isInteger(pop))map.set(n,pop);
+ }
+ for(const row of String(meta['出走馬']||'').split(/[\n;；]/)){
+  const m=row.trim().match(/^(\d{1,2})[：:、,\s]+.*?(\d+)番人気/);
+  if(m&&!map.has(Number(m[1])))map.set(Number(m[1]),Number(m[2]));
+ }
+ return map;
+};
 const num = n => Number.isFinite(Number(n)) ? Number(n) : 0;
 export function buildPersonalAnalytics(source){
  const races = new Map(source.races.map(r=>[r.id,r]));
@@ -20,9 +33,12 @@ export function buildPersonalAnalytics(source){
   add('競馬場',race.venue,line);add('券種',ticket.type,line);
   const m=ticket.aiImport?.metadata||{};
   const nums=Array.isArray(line.numbers)?line.numbers.map(Number):[];
-  const podium=[1,2,3].map(p=>({n:Number((m[p+'着']||'').match(/^0?(\d{1,2})/)?.[1]),pop:Number(m[p+'着単勝人気']||0)}));
-  const pops=nums.map(n=>podium.find(p=>p.n===n)?.pop).filter(n=>n>0);
-  if(pops.length===nums.length&&nums.length){const max=Math.max(...pops);add('人気帯',max<=3?'全頭3番人気以内':max<=6?'6番人気以内を含む':'7番人気以下を含む',line);}
+  const popularity=popularityMap(m);
+  const pops=nums.map(n=>popularity.get(n)).filter(n=>n>0);
+  if(pops.length===nums.length&&nums.length){
+   const max=Math.max(...pops);
+   add('人気帯',max<=3?'全頭3番人気以内':max<=6?'6番人気以内を含む':'7番人気以下を含む',line);
+  }
   if(nums.length){add('買い目構成',nums.length+'頭組',line);}
   if(ticket.type==='ワイド'||ticket.type==='馬連'||ticket.type==='馬単'||ticket.type==='三連複'||ticket.type==='三連単'){
    const key=nums.length===2?'2頭':nums.length===3?'3頭':'';if(key)add('組み合わせ頭数',key,line);

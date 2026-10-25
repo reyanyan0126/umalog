@@ -29,17 +29,19 @@ export function answerPersonalQuestion(report,question){
  return (question==='weak'?'収支が最も低い':'収支が最も高い')+'記録済み区分は'+r.axis+'「'+r.key+'」（'+r.lines+'点、収支'+(r.profit>=0?'+':'−')+yen(Math.abs(r.profit))+'、回収率'+r.roi.toFixed(1)+'%）です。条件同士は重複集計されるため合算できません。過去の実績であり次の的中を保証しません。';
 }
 export function officialSourceAudit(source){
- const results=[];
- const seen=new Set();
+ const grouped=new Map();
  for(const ticket of source.tickets||[]){
-  const meta=ticket.aiImport?.metadata;if(!meta)continue;
-  const url=String(meta['出典']||'');
+  const meta=ticket.aiImport?.metadata;
+  if(!meta)continue;
   const key=ticket.raceId;
-  if(seen.has(key))continue;seen.add(key);
-  const official=/^https:\/\/(?:www\.|sp\.)?jra\.go\.jp\//i.test(url);
-  const podium=[1,2,3].every(p=>/^0?\d{1,2}\s+\S/.test(meta[p+'着']||''));
-  const jockey=[1,2,3].every(p=>!!String(meta[p+'着騎手']||'').trim());
-  results.push({raceId:key,sourceUrl:official?url:null,officialLink:official,podium,jockey,verified:false});
+  const current=grouped.get(key)||{raceId:key,sourceUrl:null,officialLink:false,podium:false,jockey:false,verified:false};
+  const url=String(meta['出典']||'');
+  let official=false;
+  try{const parsed=new URL(url);official=parsed.protocol==='https:'&&['jra.go.jp','www.jra.go.jp','sp.jra.go.jp'].includes(parsed.hostname);}catch{}
+  if(official){current.officialLink=true;current.sourceUrl=url;}
+  current.podium ||= [1,2,3].every(p=>/^0?\d{1,2}\s+\S/.test(meta[p+'着']||''));
+  current.jockey ||= [1,2,3].every(p=>!!String(meta[p+'着騎手']||'').trim());
+  grouped.set(key,current);
  }
- return results;
+ return [...grouped.values()];
 }

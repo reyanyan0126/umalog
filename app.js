@@ -576,7 +576,7 @@ function analysisAssistantPanel(source){
  const report=buildPersonalAnalytics(source),audits=officialSourceAudit(source);
  const buttons=QUESTION_OPTIONS.map(q=>'<button type="button" class="secondary" data-analysis-question="'+q.id+'">'+esc(q.label)+'</button>').join('');
  const incomplete=audits.filter(a=>!a.officialLink||!a.podium||!a.jockey).length;
- return '<section class="card" id="analysisAssistant"><h2>あなたの競馬分析アシスタント</h2><p class="help">登録済みの確定結果だけで回答します。端末内で動作し、外部AIには送信しません。</p><div class="analysis-controls" role="group" aria-label="分析の質問">'+buttons+'</div><p id="analysisAssistantAnswer" role="status" aria-live="polite">'+esc(answerPersonalQuestion(report,'summary'))+'</p><details><summary>レース結果の照合状況（'+audits.length+'レース）</summary><p class="help">公式JRAのURLが登録されていても、内容を自動取得・照合したわけではありません。確認できるのは出典URLの形式と入力項目の有無です。</p><p class="help">入力項目に不足のあるレース：'+incomplete+'件</p>'+audits.slice(0,30).map(a=>'<div class="day-edit-row"><span>'+esc(a.raceId)+'<small> 着順'+(a.podium?'あり':'不足')+' · 騎手'+(a.jockey?'あり':'不足')+'</small></span>'+(a.sourceUrl?'<a href="'+esc(a.sourceUrl)+'" target="_blank" rel="noopener noreferrer">JRA原文を確認</a>':'<small>公式URL未登録</small>')+'</div>').join('')+'</details></section>';
+ return '<section class="card" id="analysisAssistant"><h2>あなたの競馬分析アシスタント</h2><p class="help">登録済みの確定結果だけで回答します。端末内で動作し、外部AIには送信しません。</p><div class="analysis-controls" role="group" aria-label="分析の質問">'+buttons+'</div><p id="analysisAssistantAnswer" role="status" aria-live="polite">'+esc(answerPersonalQuestion(report,'summary'))+'</p><details><summary>レース結果の入力状況（'+audits.length+'レース）</summary><p class="help">公式JRAのURLが登録されていても、内容を自動取得・照合したわけではありません。確認できるのは出典URLの形式と入力項目の有無です。</p><p class="help">入力項目に不足のあるレース：'+incomplete+'件</p>'+audits.slice(0,30).map(a=>'<div class="day-edit-row"><span>'+esc(a.raceId)+'<small> 着順'+(a.podium?'あり':'不足')+' · 騎手'+(a.jockey?'あり':'不足')+'</small></span>'+(a.sourceUrl?'<a href="'+esc(a.sourceUrl)+'" target="_blank" rel="noopener noreferrer">JRA原文を確認</a>':'<small>公式URL未登録</small>')+'</div>').join('')+'</details></section>';
 }
 
 function personalAnalyticsPanel(source){
@@ -964,7 +964,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.0.2',
+ currentVersion:'4.0.3',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
