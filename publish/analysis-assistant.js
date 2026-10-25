@@ -39,7 +39,7 @@ export function officialSourceAudit(source){
   let official=false;
   try{const parsed=new URL(url);official=parsed.protocol==='https:'&&['jra.go.jp','www.jra.go.jp','sp.jra.go.jp'].includes(parsed.hostname);}catch{}
   if(official){current.officialLink=true;current.sourceUrl=url;}
-  current.podium ||= [1,2,3].every(p=>/^0?\\d{1,2}\\s+\\S/.test(meta[p+'着']||''));
+  current.podium ||= [1,2,3].every(p=>/^0?\d{1,2}\s+\S/.test(meta[p+'着']||''));
   current.jockey ||= [1,2,3].every(p=>!!String(meta[p+'着騎手']||'').trim());
   grouped.set(key,current);
  }
