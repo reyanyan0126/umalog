@@ -19,12 +19,16 @@ export async function loadWithRevision(){
  });
 }
 export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
+ if(expectedRevision!==null&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))throw new Error('保存時の更新番号が不正です。');
  const data=validateData(recalculate(input)),db=connection||await openDB();
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
   let problem;
   lookup.onsuccess=()=>{try{
-   const revision=lookup.result||0;
+   const revision=lookup.result??0;
+   if(!Number.isSafeInteger(revision)||revision<0||revision===Number.MAX_SAFE_INTEGER){
+    problem=new Error('保存データの更新番号が不正です。記録を変更せず、バックアップを確認してください。');tx.abort();return;
+   }
    if(expectedRevision!==null&&revision!==expectedRevision){
     problem=new Error('別のタブで記録が更新されています。現在の入力は保存していません。JSONバックアップを取ってから画面を再読込し、変更内容を確認してください。');
     problem.code='STALE_LEDGER';tx.abort();return;
