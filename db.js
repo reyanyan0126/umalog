@@ -57,7 +57,7 @@ async function readOptionalValue(key){
   req.onerror=()=>reject(req.error);
  });
 }
-const draftKey=key=>'entryDraft:'+key;
+const draftKey=key=>{if(typeof key!=='string'||key.length===0||key.length>120)throw new Error('下書きの識別子が不正です。');return 'entryDraft:'+key;};
 export async function loadEntryDraft(key){return readOptionalValue(draftKey(key));}
 export async function saveEntryDraft(key,value){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(value,draftKey(key));tx.oncomplete=()=>resolve(value);tx.onabort=()=>reject(tx.error||new Error('下書きを保存できませんでした。'));tx.onerror=()=>reject(tx.error);});}
 export async function discardEntryDraft(key){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(draftKey(key));tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error||new Error('下書きを破棄できませんでした。'));tx.onerror=()=>reject(tx.error);});}
