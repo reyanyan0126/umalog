@@ -15,3 +15,10 @@ export function nextLedgerRevision(storedRevision,expectedRevision=null){
  }
  return revision+1;
 }
+
+export function readLedgerRevision(storedRevision){
+ const revision=storedRevision===undefined?0:storedRevision;
+ if(!Number.isSafeInteger(revision)||revision<0)
+  throw new Error('保存データの更新番号が不正です。記録を変更せず、バックアップを確認してください。');
+ return revision;
+}
