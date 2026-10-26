@@ -1,5 +1,5 @@
 import {migrateGrowth} from './growth-v2.js';
-import {assertExpectedRevision,nextLedgerRevision} from './ledger-revision.js';
+import {assertExpectedRevision,nextLedgerRevision,readLedgerRevision} from './ledger-revision.js';
 import {emptyCalendar,validateCalendar} from "./calendar.js";
 import {emptyData,validateData,recalculate} from './core.js';
 import {validateCatalog} from './race-info.js';
@@ -13,7 +13,7 @@ export async function loadWithRevision(){
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readonly'),store=tx.objectStore(STORE),main=store.get('main'),rev=store.get('mainRevision');
   let snapshot;
-  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:rev.result||0});}catch(e){reject(e);}};
+  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:readLedgerRevision(rev.result)});}catch(e){reject(e);}};
   main.onsuccess=()=>{snapshot=main.result;};
   tx.onabort=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
   tx.onerror=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
