@@ -4,6 +4,10 @@ on:
     paths:
       - '*.js'
       - 'tests/**'
+      - 'index.html'
+      - 'release.json'
+      - 'package.json'
+      - 'sw.js'
       - '.github/workflows/umalog-quality.yml'
   pull_request:
   workflow_dispatch:
