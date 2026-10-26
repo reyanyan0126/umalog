@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {emptyData, summarize, validateData} from '../core.js';
-import {cashFinance} from '../simple-ledger.js';
+import {cashFinance,cashQuickBreakdown} from '../simple-ledger.js';
 import {summarize as cashSummarize} from '../cash-projections.js';
 
 const base=()=>emptyData();
@@ -119,4 +119,18 @@ test('duplicate quick record IDs are rejected before saving',()=>{
  const data=base();
  data.simpleEntries=[quick('same',100),quick('same',200)];
  assert.throws(()=>validateData(data),/重複/);
+});
+
+test('breakdown rejects malformed date prefixes instead of silently returning empty rows',()=>{
+ assert.throws(()=>cashQuickBreakdown(base(),{prefix:'2026-99'}),/集計対象期間/);
+ assert.throws(()=>cashQuickBreakdown(base(),{prefix:'2026/10'}),/集計対象期間/);
+});
+
+test('combined ledger refuses receipts that exceed accounting maximum',()=>{
+ const data=base();
+ data.simpleEntries=[
+  quick('high1',100,1000000000000),
+  quick('high2',100,1000000000000)
+ ];
+ assert.throws(()=>cashFinance(data),/収支集計の上限/);
 });
