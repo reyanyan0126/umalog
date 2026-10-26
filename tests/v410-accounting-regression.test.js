@@ -154,3 +154,26 @@ test('invalid calendar days and out-of-range years are rejected',()=>{
   assert.throws(()=>cashQuickBreakdown(data,{prefix}),/集計対象期間/);
  }
 });
+
+test('breakdown totals match cash finance for pending and settled quick entries',()=>{
+ const data=base();
+ data.simpleEntries=[
+  quick('win',1000,2200),
+  quick('pending',500,0,0,'pending'),
+  {...quick('refund',300,0,300),venue:'東京'}
+ ];
+ const finance=cashFinance(data);
+ const rows=cashQuickBreakdown(data,{dimension:'venue'});
+ assert.equal(rows.reduce((sum,row)=>sum+row.recordedPurchase,0),finance.recordedPurchase);
+ assert.equal(rows.reduce((sum,row)=>sum+row.receipts,0),finance.receipts);
+ assert.equal(rows.reduce((sum,row)=>sum+row.profit,0),finance.profit);
+ assert.ok(rows.every(row=>row.pendingCount===0));
+});
+test('breakdown rejects receipt totals exceeding the accounting ceiling',()=>{
+ const data=base();
+ data.simpleEntries=[
+  quick('large1',100,1000000000000),
+  quick('large2',100,1000000000000)
+ ];
+ assert.throws(()=>cashQuickBreakdown(data,{dimension:'date'}),/収支集計の上限/);
+});
