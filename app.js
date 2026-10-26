@@ -980,7 +980,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.0.4',
+ currentVersion:'4.1.0',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
