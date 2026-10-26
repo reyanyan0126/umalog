@@ -172,7 +172,7 @@ function dayScreen(date){
 }
 function cashTrendPanel(){
  const rows=monthlyCashTrend(data,{months:12});
- return `<section class="card"><h2>直近12か月の収支推移</h2><p class="help">購入額は購入時に支出として計上。払戻・返還は記録済みの金額のみを集計します。未記録の月は0円です。</p><div class="daily-trend">${rows.map(r=>`<div><span>${r.month}</span><small>購入 ${yen(r.purchase)} · 払戻・返還 ${yen(r.receipts)} · 回収率 ${r.returnRate===null?'—':r.returnRate.toFixed(1)+'%'}</small><strong class="${r.profit<0?'negative':'positive'}">月間 ${signed(r.profit)} / 累積 ${signed(r.cumulative)}</strong></div>`).join('')}</div></section>`;
+ return `<section class="card"><h2>直近12か月の収支推移</h2><p class="help">購入額は購入時に支出として計上。払戻・返還は記録済みの金額のみを集計します。未記録の月は0円です。</p><div class="daily-trend">${rows.map(r=>`<div><span>${r.month}</span><small>購入 ${yen(r.purchase)} · 払戻・返還 ${yen(r.receipts)} · 回収率 ${r.returnRate===null?'—':r.returnRate.toFixed(1)+'%'}</small><strong class="${r.profit<0?'negative':'positive'}">月間 ${signed(r.profit)} / 12か月内累積 ${signed(r.cumulative)}</strong></div>`).join('')}</div></section>`;
 }
 function analysisInsightPanel(a){
  const dateMoney=d=>d?`${d.date} · ${signed(d.summary.profit)}`:'—';
