@@ -17,3 +17,9 @@ test('release, package and application use the same version',()=>{
  assert.ok(app.includes("currentVersion:'"+manifest.version+"'"));
  assert.ok(sw.includes("const VERSION='"+manifest.version+"'"));
 });
+
+test('HTML entrypoint uses current release cache-busting suffix',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const suffix=manifest.version.replace(/\./g,'').replace(/^4/,'4');
+ assert.ok(html.includes('./app.js?v='+suffix));
+});
