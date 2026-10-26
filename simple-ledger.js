@@ -85,6 +85,7 @@ export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type='
   add(key,l.stake,l.payout,l.refund,l.status==='pending');
  }
  for(const e of quick){add(dimension==='date'?e.date:e[dimension],e.stake,e.payout,e.refund,e.status==='pending');}
+ for(const b of buckets.values())check([b.recordedPurchase,b.settledPurchase,b.receipts,b.pendingStake].every(n=>Number.isSafeInteger(n)&&n<=MAX_MONEY),'収支集計の上限を超えています。');
  return [...buckets.values()].map(b=>({...b,profit:b.receipts-b.settledPurchase})).sort((a,b)=>b.recordedPurchase-a.recordedPurchase||a.label.localeCompare(b.label,'ja'));
 }
 
