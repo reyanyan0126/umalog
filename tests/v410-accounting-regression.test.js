@@ -65,3 +65,29 @@ test('full refund and payout cannot coexist in one simple entry',()=>{
  data.simpleEntries=[quick('bad',1000,100,1000)];
  assert.throws(()=>validateData(data),/全額返還/);
 });
+
+test('race-level hit rate counts one winning race once even with multiple winning tickets',()=>{
+ const races=[{id:'r1'},{id:'r2'}];
+ const tickets=[
+  {id:'t1',raceId:'r1'},{id:'t2',raceId:'r1'},{id:'t3',raceId:'r2'}
+ ];
+ const lines=[
+  {ticketId:'t1',stake:100,payout:200,refund:0,status:'settled'},
+  {ticketId:'t2',stake:100,payout:300,refund:0,status:'settled'},
+  {ticketId:'t3',stake:100,payout:0,refund:0,status:'settled'}
+ ];
+ const x=summarize(lines,races,tickets);
+ assert.equal(x.raceCount,2);
+ assert.equal(x.raceHits,1);
+ assert.equal(x.raceRate,50);
+ assert.equal(x.lineHits,2);
+});
+
+test('fully refunded race is excluded from the race hit denominator',()=>{
+ const races=[{id:'r1'}],tickets=[{id:'t1',raceId:'r1'}];
+ const lines=[{ticketId:'t1',stake:100,payout:0,refund:100,status:'void'}];
+ const x=summarize(lines,races,tickets);
+ assert.equal(x.raceCount,0);
+ assert.equal(x.raceRate,null);
+ assert.equal(x.lineCount,0);
+});
