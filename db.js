@@ -1,4 +1,5 @@
 import {migrateGrowth} from './growth-v2.js';
+import {assertExpectedRevision,nextLedgerRevision} from './ledger-revision.js';
 import {emptyCalendar,validateCalendar} from "./calendar.js";
 import {emptyData,validateData,recalculate} from './core.js';
 import {validateCatalog} from './race-info.js';
@@ -19,21 +20,15 @@ export async function loadWithRevision(){
  });
 }
 export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
- if(expectedRevision!==null&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))throw new Error('保存時の更新番号が不正です。');
+ assertExpectedRevision(expectedRevision);
  const data=validateData(recalculate(input)),db=connection||await openDB();
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
   let problem;
   lookup.onsuccess=()=>{try{
-   const revision=lookup.result??0;
-   if(!Number.isSafeInteger(revision)||revision<0||revision===Number.MAX_SAFE_INTEGER){
-    problem=new Error('保存データの更新番号が不正です。記録を変更せず、バックアップを確認してください。');tx.abort();return;
-   }
-   if(expectedRevision!==null&&revision!==expectedRevision){
-    problem=new Error('別のタブで記録が更新されています。現在の入力は保存していません。JSONバックアップを取ってから画面を再読込し、変更内容を確認してください。');
-    problem.code='STALE_LEDGER';tx.abort();return;
-   }
-   store.put(data,'main');store.put(revision+1,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
+   let nextRevision;
+   try{nextRevision=nextLedgerRevision(lookup.result,expectedRevision);}catch(error){problem=error;tx.abort();return;}
+   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
    if(clearAllDrafts){
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
