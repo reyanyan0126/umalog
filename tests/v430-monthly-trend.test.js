@@ -21,3 +21,9 @@ test('monthly trend rejects invalid time windows',()=>{
  assert.throws(()=>monthlyCashTrend(d,{months:0}),/表示月数/);
  assert.throws(()=>monthlyCashTrend(d,{through:'2026-13'}),/集計終了月/);
 });
+
+test('trend refuses periods crossing the supported earliest year',()=>{
+ const d=emptyData();
+ assert.throws(()=>monthlyCashTrend(d,{months:2,through:'2000-01'}),/集計開始月/);
+ assert.equal(monthlyCashTrend(d,{months:1,through:'2000-01'}).length,1);
+});
