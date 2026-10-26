@@ -20,6 +20,6 @@ test('release, package and application use the same version',()=>{
 
 test('HTML entrypoint uses current release cache-busting suffix',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- const suffix=manifest.version.replace(/\./g,'').replace(/^4/,'4');
+ const suffix=manifest.version.replace(/\./g,'');
  assert.ok(html.includes('./app.js?v='+suffix));
 });
