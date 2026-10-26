@@ -22,3 +22,12 @@ test('draft refuses invalid dates and negative stakes',()=>{
  const e=draft();e.lines=[{id:'one',type:'単勝',numbers:[1],stake:-100,payout:0,refund:0,status:'pending'}];
  assert.throws(()=>validateEntryDraft(e),/購入額/);
 });
+
+test('draft keys reject empty and oversized identifiers',()=>{
+ const empty=draft();empty.key='';
+ assert.throws(()=>validateEntryDraft(empty),/下書きの形式/);
+ const long=draft();long.key='a'.repeat(121);
+ assert.throws(()=>validateEntryDraft(long),/下書きの形式/);
+ const boundary=draft();boundary.key='a'.repeat(120);
+ assert.doesNotThrow(()=>validateEntryDraft(boundary));
+});
