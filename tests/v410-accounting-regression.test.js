@@ -177,3 +177,9 @@ test('breakdown rejects receipt totals exceeding the accounting ceiling',()=>{
  ];
  assert.throws(()=>cashQuickBreakdown(data,{dimension:'date'}),/収支集計の上限/);
 });
+
+test('breakdown rejects overflow split between separate venues',()=>{
+ const data=base();
+ data.simpleEntries=[quick('largeTokyo',100,1000000000000),{...quick('largeSapporo',100,1000000000000),venue:'札幌'}];
+ assert.throws(()=>cashQuickBreakdown(data,{dimension:'venue'}),/収支集計の上限/);
+});
