@@ -4,7 +4,7 @@ import {saveEntryDraft} from './db.js';
 const modes=['normal','box','flow','formation'];
 const statuses=['pending','settled','void'];
 export function validateEntryDraft(value){
- check(value&&value.version===1&&typeof value.key==='string'&&value.key.length<130,'下書きの形式が不正です。');
+ check(value&&value.version===1&&typeof value.key==='string'&&value.key.length>0&&value.key.length<=120,'下書きの形式が不正です。');
  const r=value.race;
  check(r&&validDate(r.date)&&VENUES.includes(r.venue)&&['',...Array.from({length:12},(_,i)=>String(i+1))].includes(r.number)&&typeof r.name==='string'&&r.name.length<=100,'下書きのレースが不正です。');
  check(Array.isArray(value.lines)&&value.lines.length<=10000,'下書きの買い目が不正です。');
