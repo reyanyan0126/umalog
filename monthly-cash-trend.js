@@ -7,6 +7,7 @@ export function monthlyCashTrend(data,{months=12,through=null,venue='',type=''}=
  const end=through??new Date(Date.now()+9*3600000).toISOString().slice(0,7);
  check(/^\d{4}-(0[1-9]|1[0-2])$/.test(end)&&Number(end.slice(0,4))>=2000&&Number(end.slice(0,4))<=2199),'集計終了月が不正です。');
  const [year,month]=end.split('-').map(Number);
+ check(year*12+month-months+1>=2000*12+1,'集計開始月が対応範囲より前です。');
  const rows=[];
  let cumulative=0;
  for(let offset=months-1;offset>=0;offset--){
