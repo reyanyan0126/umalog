@@ -1,0 +1,24 @@
+name: v4.1 Accounting Regression
+on:
+  push:
+    paths:
+      - 'core.js'
+      - 'simple-ledger.js'
+      - 'cash-projections.js'
+      - 'tests/v410-accounting-regression.test.js'
+      - '.github/workflows/v410-accounting.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  accounting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run accounting regression tests
+        run: node --test tests/v410-accounting-regression.test.js
+      - name: Run complete Node test suite
+        run: npm test
