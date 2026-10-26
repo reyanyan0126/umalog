@@ -91,3 +91,32 @@ test('fully refunded race is excluded from the race hit denominator',()=>{
  assert.equal(x.raceRate,null);
  assert.equal(x.lineCount,0);
 });
+
+test('cash accounting: detailed and quick records are combined exactly once',()=>{
+ const data=base();
+ data.races=[{id:'r1',date:'2026-10-26',venue:'東京',number:11,name:'テスト'}];
+ data.tickets=[{id:'t1',raceId:'r1',type:'単勝',kind:'reported',memo:'',createdAt:'2026-10-26T00:00:00.000Z'}];
+ data.lines=[{id:'l1',ticketId:'t1',numbers:[1],stake:1000,payout:2500,refund:0,status:'settled'}];
+ data.simpleEntries=[quick('q1',2000,0)];
+ const x=cashFinance(data);
+ assert.equal(x.recordedPurchase,3000);
+ assert.equal(x.receipts,2500);
+ assert.equal(x.profit,-500);
+ assert.equal(x.detailCount,1);
+ assert.equal(x.simpleCount,1);
+ assert.equal(x.returnRate,2500/3000*100);
+});
+
+test('empty ledger has no fabricated return rate',()=>{
+ const x=cashFinance(base());
+ assert.equal(x.recordedPurchase,0);
+ assert.equal(x.receipts,0);
+ assert.equal(x.profit,0);
+ assert.equal(x.returnRate,null);
+});
+
+test('duplicate quick record IDs are rejected before saving',()=>{
+ const data=base();
+ data.simpleEntries=[quick('same',100),quick('same',200)];
+ assert.throws(()=>validateData(data),/重複/);
+});
