@@ -1,0 +1,23 @@
+name: Umalog Full Quality Gate
+on:
+  push:
+    paths:
+      - '*.js'
+      - 'tests/**'
+      - '.github/workflows/umalog-quality.yml'
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          for file in *.js tests/*.js; do node --check "$file"; done
+      - name: Run all regression tests
+        run: npm test
