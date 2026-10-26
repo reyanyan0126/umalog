@@ -134,3 +134,23 @@ test('combined ledger refuses receipts that exceed accounting maximum',()=>{
  ];
  assert.throws(()=>cashFinance(data),/収支集計の上限/);
 });
+
+test('valid month and exact day filters select only matching entries',()=>{
+ const data=base();
+ data.simpleEntries=[
+  quick('oct26',1000,1500),
+  {...quick('oct25',2000,0),date:'2026-10-25'},
+  {...quick('nov',3000,0),date:'2026-11-01'}
+ ];
+ assert.equal(cashFinance(data,{prefix:'2026-10'}).recordedPurchase,3000);
+ assert.equal(cashFinance(data,{prefix:'2026-10-26'}).recordedPurchase,1000);
+ assert.equal(cashQuickBreakdown(data,{prefix:'2026-11'}).reduce((s,x)=>s+x.recordedPurchase,0),3000);
+});
+
+test('invalid calendar days and out-of-range years are rejected',()=>{
+ const data=base();
+ for(const prefix of ['2026-02-30','2026-13','1999','2200','2026-00']){
+  assert.throws(()=>cashFinance(data,{prefix}),/集計対象期間/);
+  assert.throws(()=>cashQuickBreakdown(data,{prefix}),/集計対象期間/);
+ }
+});
