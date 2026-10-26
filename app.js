@@ -1,5 +1,6 @@
 import {QUESTION_OPTIONS,answerPersonalQuestion,officialSourceAudit} from './analysis-assistant.js';
 import {buildPersonalAnalytics} from './personal-analytics.js';
+import {monthlyCashTrend} from './monthly-cash-trend.js';
 import {parseAiBatch,decodeImportLink,prepareAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
@@ -169,9 +170,13 @@ function dayScreen(date){
  app.innerHTML=`<a href="#calendar">← カレンダーへ</a><h1>${date} のうまログ</h1><section class="card day-summary"><div class="day-metrics">${metric('総支出',yen(combined.recordedPurchase))}${metric('確定購入',yen(combined.settledPurchase))}${metric('払戻',yen(combined.payout))}${metric('返還',yen(combined.refund))}</div><small>確定収支（全記録）</small><div class="balance ${combined.profit<0?'negative':'positive'}">${combined.settledCount?signed(combined.profit):'—'}</div><p class="help">購入額は支出に計上済みです。</p></section>${section}${quickRows||(!section?'<section class="card empty">この日の記録はありません。</section>':'')}<a class="button quiet full" href="#entry-date/${date}">＋ この日のレースを記録</a><a class="button quiet full" href="#quick-date/${date}">⚡ この日の支出を入力</a>`;
  bindQuickEdits(()=>dayScreen(date));
 }
+function cashTrendPanel(){
+ const rows=monthlyCashTrend(data,{months:12});
+ return `<section class="card"><h2>直近12か月の収支推移</h2><p class="help">購入額は購入時に支出として計上。払戻・返還は記録済みの金額のみを集計します。未記録の月は0円です。</p><div class="daily-trend">${rows.map(r=>`<div><span>${r.month}</span><small>購入 ${yen(r.purchase)} · 払戻・返還 ${yen(r.receipts)} · 回収率 ${r.returnRate===null?'—':r.returnRate.toFixed(1)+'%'}</small><strong class="${r.profit<0?'negative':'positive'}">月間 ${signed(r.profit)} / 累積 ${signed(r.cumulative)}</strong></div>`).join('')}</div></section>`;
+}
 function analysisInsightPanel(a){
  const dateMoney=d=>d?`${d.date} · ${signed(d.summary.profit)}`:'—';
- return `<section class="card analysis-insights"><h2>記録した日の成績</h2><div class="day-metrics">${metric('記録日',a.days+'日')}${metric('プラスの日',a.wins+'日')}${metric('マイナスの日',a.losses+'日')}</div><p class="help">収支ゼロの日 ${a.neutrals}日 · プラスの日の割合 ${rate(a.winDayRate)}。一部でも結果確定した日を集計し、未入力の買い目は除外しています。</p><div class="analysis-extremes"><p>最高の日 <b>${dateMoney(a.best)}</b></p><p>最低の日 <b>${dateMoney(a.worst)}</b></p></div><details><summary>累積収支（月末時点・${a.cumulativeMonths.length}か月）</summary>${a.cumulativeMonths.length?`<div class="daily-trend">${a.cumulativeMonths.map(m=>`<div><span>${m.month}</span><small>月間 ${signed(m.profit)}</small><strong class="${m.cumulative<0?'negative':'positive'}">${signed(m.cumulative)}</strong></div>`).join('')}</div>`:'<p class="empty">確定した記録がありません。</p>'}</details></section>`;
+ return `<section class="card analysis-insights"><h2>記録した日の成績</h2><div class="day-metrics">${metric('記録日',a.days+'日')}${metric('プラスの日',a.wins+'日')}${metric('マイナスの日',a.losses+'日')}</div><p class="help">収支ゼロの日 ${a.neutrals}日 · プラスの日の割合 ${rate(a.winDayRate)}。一部でも結果確定した日を集計し、未入力の買い目は除外しています。</p><div class="analysis-extremes"><p>最高の日 <b>${dateMoney(a.best)}</b></p><p>最低の日 <b>${dateMoney(a.worst)}</b></p></div><details><summary>累積収支（月末時点・${a.cumulativeMonths.length}か月）</summary>${a.cumulativeMonths.length?`<div class="daily-trend">${a.cumulativeMonths.map(m=>`<div><span>${m.month}</span><small>月間 ${signed(m.profit)}</small><strong class="${m.cumulative<0?'negative':'positive'}">${signed(m.cumulative)}</strong></div>`).join('')}</div>`:'<p class="empty">確定した記録がありません。</p>'}</details></section>`+cashTrendPanel();
 }
 function rewardItems(source){
  return growthRewards(source).map(r=>`<div class="reward-item ${r.unlocked?'is-unlocked':'is-locked'}"><span class="reward-icon" aria-hidden="true">${r.unlocked?r.icon:'◇'}</span><div><b>${r.name}</b><small>${r.description}</small></div><span class="reward-progress">${r.unlocked?'獲得済み':Math.min(r.current,r.goal)+'/'+r.goal}</span></div>`).join('');
