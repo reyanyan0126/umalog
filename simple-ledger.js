@@ -49,9 +49,9 @@ export function recentSimpleTemplates(entries,limit=3){
  }
  return templates;
 }
-const match=(date,month,venue,type)=> (!month||date.startsWith(month))&&(!venue||venue===true||venue===undefined);
+const validPeriodPrefix=prefix=>typeof prefix==='string'&&(prefix===''||/^\d{4}$/.test(prefix)&&Number(prefix)>=2000&&Number(prefix)<=2199||/^\d{4}-(0[1-9]|1[0-2])$/.test(prefix)&&Number(prefix.slice(0,4))>=2000&&Number(prefix.slice(0,4))<=2199||validDate(prefix));
 export function combinedFinance(data,{prefix='',venue='',type=''}={}){
- check(typeof prefix==='string'&&/^(?:|\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2})$/.test(prefix),'集計対象期間が不正です。');
+ check(validPeriodPrefix(prefix),'集計対象期間が不正です。');
  check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
  check(!type||TYPES.includes(type),'券種の指定が不正です。');
  const raceById=new Map(data.races.map(r=>[r.id,r])),ticketById=new Map(data.tickets.map(t=>[t.id,t]));
@@ -72,7 +72,7 @@ export function combinedFinance(data,{prefix='',venue='',type=''}={}){
 }
 export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type=''}={}){
  check(['venue','type','date'].includes(dimension),'分析軸が不正です。');
- check(typeof prefix==='string'&&/^(?:|\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2})$/.test(prefix),'集計対象期間が不正です。');
+ check(validPeriodPrefix(prefix),'集計対象期間が不正です。');
  check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
  check(!type||TYPES.includes(type),'券種の指定が不正です。');
  const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix)&&(!venue||e.venue===venue)&&(!type||e.type===type));
