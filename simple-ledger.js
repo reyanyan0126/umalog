@@ -66,12 +66,13 @@ export function combinedFinance(data,{prefix='',venue='',type=''}={}){
  const sum=(rows,key)=>rows.reduce((n,e)=>n+e[key],0);
  const stakeSettled=d.purchase+sum(settled,'stake'),payout=d.payout+sum(settled,'payout'),refund=d.refund+sum(settled,'refund');
  const allReceipts=payout+refund,unknown=d.pendingStake+sum(pending,'stake'),rawNet=allReceipts-allRecorded;
- check([allRecorded,stakeSettled,payout,refund,unknown].every(x=>Number.isSafeInteger(x)&&x<=MAX_MONEY),'収支集計の上限を超えています。');
+ check([allRecorded,stakeSettled,payout,refund,allReceipts,unknown].every(x=>Number.isSafeInteger(x)&&x<=MAX_MONEY),'収支集計の上限を超えています。');
  return {recordedPurchase:allRecorded,receipts:allReceipts,tentativeNet:rawNet,settledPurchase:stakeSettled,payout,refund,profit:allReceipts-stakeSettled,returnRate:stakeSettled?allReceipts/stakeSettled*100:null,pendingStake:unknown,pendingCount:d.pendingCount+pending.length,settledCount:d.settledCount+settled.length,detailCount:detail.length,simpleCount:quick.length,
   coverage:{all:detail.length+quick.length,venue:detail.length+quick.filter(e=>e.venue!==null).length,number:detail.length+quick.filter(e=>e.number!==null).length,type:detail.length+quick.filter(e=>e.type!==null).length,combination:detail.length}};
 }
 export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type=''}={}){
  check(['venue','type','date'].includes(dimension),'分析軸が不正です。');
+ check(typeof prefix==='string'&&/^(?:|\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2})$/.test(prefix),'集計対象期間が不正です。');
  check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
  check(!type||TYPES.includes(type),'券種の指定が不正です。');
  const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix)&&(!venue||e.venue===venue)&&(!type||e.type===type));
