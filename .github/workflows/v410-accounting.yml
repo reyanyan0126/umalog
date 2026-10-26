@@ -4,10 +4,12 @@ on:
     paths:
       - 'core.js'
       - 'db.js'
+      - 'ledger-revision.js'
       - 'simple-ledger.js'
       - 'cash-projections.js'
       - 'tests/v410-accounting-regression.test.js'
       - 'tests/v420-backup-integrity.test.js'
+      - 'tests/v420-revision.test.js'
       - '.github/workflows/v410-accounting.yml'
   pull_request:
   workflow_dispatch:
@@ -21,6 +23,6 @@ jobs:
         with:
           node-version: '22'
       - name: Run accounting and backup regression tests
-        run: node --test tests/v410-accounting-regression.test.js tests/v420-backup-integrity.test.js
+        run: node --test tests/v410-accounting-regression.test.js tests/v420-backup-integrity.test.js tests/v420-revision.test.js
       - name: Run complete Node test suite
         run: npm test
