@@ -21,6 +21,7 @@ export async function loadWithRevision(){
 }
 export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
  assertExpectedRevision(expectedRevision);
+ if(clearDraftKey!==null)draftKey(clearDraftKey);
  const data=validateData(recalculate(input)),db=connection||await openDB();
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
