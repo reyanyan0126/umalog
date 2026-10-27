@@ -28,9 +28,11 @@ test('startup does not automatically check and apply service worker updates',()=
  assert.doesNotMatch(app,/updates\.register\(\)\.then\(async\(\)=>\{lockUpdateGestures\(true\)/);
  assert.match(app,/updates\.register\(\)\.catch\(/);
 });
-test('service worker tries live startup resources before stale cache',()=>{
- assert.doesNotMatch(sw,/if\(event\.request\.mode==='navigate'\|\|url\.pathname\.endsWith/);
- assert.match(sw,/fetch\(event\.request,\{cache:'no-store'\}\)/);
+test('service worker serves the complete installed release atomically',()=>{
+ assert.match(sw,/if\(cached\)return cached/);
+ assert.doesNotMatch(sw,/fetch\(event\.request,\{cache:'no-store'\}\)/);
+ assert.match(sw,/cache\.addAll/);
+ assert.doesNotMatch(sw,/indexedDB\.deleteDatabase/);
 });
 
 test('canonical URL retains bounded self-repair without touching financial IndexedDB',()=>{
