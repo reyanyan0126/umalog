@@ -23,3 +23,12 @@ test('HTML entrypoint uses current release cache-busting suffix',()=>{
  const suffix=manifest.version.replace(/\./g,'');
  assert.ok(html.includes('./app.js?v='+suffix));
 });
+
+test('startup does not automatically check and apply service worker updates',()=>{
+ assert.doesNotMatch(app,/updates\.register\(\)\.then\(async\(\)=>\{lockUpdateGestures\(true\)/);
+ assert.match(app,/updates\.register\(\)\.catch\(/);
+});
+test('service worker tries live startup resources before stale cache',()=>{
+ assert.match(sw,/event\.request\.mode==='navigate'\|\|url\.pathname\.endsWith\('\/app\.js'\)/);
+ assert.match(sw,/fetch\(event\.request,\{cache:'no-store'\}\)/);
+});
