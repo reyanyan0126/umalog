@@ -16,6 +16,9 @@ self.addEventListener('fetch',event=>{
   const cache=await caches.open(CACHE);
   const key=event.request.mode==='navigate'?'./index.html':event.request;
   const cached=await cache.match(key,{ignoreSearch:true});
+  if(event.request.mode==='navigate'||url.pathname.endsWith('/app.js')){
+   try{const fresh=await fetch(event.request,{cache:'no-store'});if(fresh.ok)return fresh;}catch{}
+  }
   return cached||fetch(event.request);
  })());
 });
