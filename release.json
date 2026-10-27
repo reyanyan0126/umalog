@@ -1,1 +1,1 @@
-{"version":"4.3.4","schemaVersion":1,"notes":"起動時の読み込み停止・JavaScriptエラーの表示を追加。保存データの削除や移行は行いません。"}
+{"version":"4.3.5","schemaVersion":1,"notes":"起動時の自動更新処理を停止し、古いPWAキャッシュからの起動失敗を軽減。収支データは変更しません。"}
