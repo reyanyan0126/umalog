@@ -3,7 +3,7 @@
  const start=document.getElementById('launchStart');
  const status=document.getElementById('launchUpdateStatus');
  const update=document.getElementById('launchUpdate');
- const flag='umalog-startup-recovery-attempted-v437';
+ const flag='umalog-startup-recovery-attempted-v450';
  let recovering=false;
  function show(message){
   if(start&&!start.disabled)return;
@@ -22,14 +22,14 @@
     const keys=await caches.keys();
     for(const key of keys){if(key.startsWith('umalog-'))await caches.delete(key);}
    }
-   location.replace('./index.html?startup=437');
+   location.replace('./index.html?startup=450');
   }catch(e){recovering=false;show('自動修復に失敗しました: '+(e.message||e));}
  }
- function failed(message){
+ function safeGet(key){try{return sessionStorage.getItem(key);}catch{return null;}}\n function safeSet(key,value){try{sessionStorage.setItem(key,value);}catch{}}\n function safeRemove(key){try{sessionStorage.removeItem(key);}catch{}}\n function failed(message){
   if(start&&!start.disabled)return;
   show(message);
-  if(!sessionStorage.getItem(flag)){
-   sessionStorage.setItem(flag,'1');
+  if(!safeGet(flag)){
+   safeSet(flag,'1');
    recover();
   }else{
    update.disabled=false;
@@ -39,7 +39,7 @@
  }
  window.addEventListener('error',e=>failed('起動エラー: '+(e.message||'JavaScriptの読み込みに失敗しました。')));
  window.addEventListener('unhandledrejection',e=>failed('起動エラー: '+(e.reason?.message||'初期化に失敗しました。')));
- setTimeout(()=>{if(start.disabled)failed('起動が完了しません。');else sessionStorage.removeItem(flag);},15000);
+ setTimeout(()=>{if(start.disabled)failed('起動が完了しません。');else safeRemove(flag);},15000);
  status.textContent='起動準備中…';
 })();
 </script><script type="module" src="./app.js?v=440"></script></body></html>
