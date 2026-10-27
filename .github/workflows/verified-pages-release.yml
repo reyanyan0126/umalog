@@ -1,0 +1,66 @@
+name: Verified GitHub Pages release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: verified-pages
+  cancel-in-progress: false
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 tools/check_publish.py
+      - run: npm test
+  acceptance:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 tools/check_publish.py && npm test
+      - run: npm install --no-save --package-lock=false playwright@1.64.1
+      - name: Browser startup and PWA smoke
+        run: |
+          node tests/startup-smoke.cjs
+          PUBLISH=1 node tests/startup-smoke.cjs
+          BROWSER=webkit node tests/startup-smoke.cjs
+          PUBLISH=1 BROWSER=webkit node tests/startup-smoke.cjs
+      - name: Ledger, navigation and backup acceptance
+        run: |
+          node tests/ux-v250.cjs
+          PUBLISH=1 node tests/ux-v250.cjs
+          node tests/navigation-e2e.cjs
+          PUBLISH=1 node tests/navigation-e2e.cjs
+          node tests/ai-import-browser.cjs
+          PUBLISH=1 node tests/ai-import-browser.cjs
+      - name: UI and data compatibility
+        run: |
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
+          BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
+  deploy:
+    needs: [quality, acceptance]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - id: deployment
+        uses: actions/deploy-pages@v4
