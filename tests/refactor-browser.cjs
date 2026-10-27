@@ -31,6 +31,16 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
     fs.writeFileSync(path.join(output,`${width}-${variant}-${route.replaceAll('/','_')}.png`),snapshots[route]);
    }
    shots.push(snapshots);assert.deepEqual(errors,[]);
+   // A changed historical layout is allowed, but a repeated render of the
+   // same current screen must be deterministic and free of horizontal overflow.
+   if(variant==='candidate'){
+    for(const route of ['home','quick','history','analysis','settings']){
+     await page.evaluate(r=>location.hash=r,route);
+     await page.waitForTimeout(250);
+     assert.equal(await page.locator('#app > .error').count(),0,'candidate route error: '+route);
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'horizontal overflow '+width+' '+route);
+    }
+   }
    if(width===390){
     await page.locator('#launchStart').click();await page.evaluate(()=>location.hash='quick');await page.locator('#simpleStake').fill('2000');await page.locator('#simplePayout').fill('3000');await page.locator('#simpleSave').click();await page.waitForTimeout(200);
     const id=await page.evaluate(async()=>{const d=await(await import('./db.js')).load();return d.simpleEntries.find(x=>x.id!=='fixture').id;});
