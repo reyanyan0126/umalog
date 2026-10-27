@@ -58,7 +58,7 @@ test('navigation does not prompt when staying on the same screen',async()=>{
 test('data protection: schema remains v1 and main writes use revision checks',()=>{
  const db=readFileSync(new URL('../db.js',import.meta.url),'utf8');
  assert.match(db,/VERSION=1,STORE='state'/);
- assert.match(db,/expectedRevision!==null&&revision!==expectedRevision/);
+ assert.match(db,/nextLedgerRevision\(lookup\.result,expectedRevision\)/);
  assert.match(db,/store\.put\(data,'main'\)/);
  assert.match(db,/tx\.onabort=\(\)=>reject/);
 });
