@@ -37,8 +37,8 @@ test('service worker serves the complete installed release atomically',()=>{
 
 test('canonical URL retains bounded self-repair without touching financial IndexedDB',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.match(html,/sessionStorage\.getItem\(flag\)/);
- assert.match(html,/sessionStorage\.setItem\(flag,'1'\)/);
+ assert.match(html,/sessionStorage\.getItem\(key\)/);
+ assert.match(html,/safeSet\(flag,'1'\)/);
  assert.match(html,/reg\.unregister\(\)/);
  assert.match(html,/caches\.delete\(key\)/);
  assert.doesNotMatch(html,/indexedDB\.deleteDatabase/);
