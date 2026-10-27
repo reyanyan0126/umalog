@@ -1,5 +1,7 @@
 name: Verified GitHub Pages release
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,7 +33,11 @@ jobs:
         with:
           node-version: '22'
       - run: python3 tools/check_publish.py && npm test
-      - run: npm install --no-save --package-lock=false playwright@1.64.1
+      - run: |
+          npm install --no-save --package-lock=false playwright@1.64.1
+          cat > tests/ci-chromium.cjs <<'EOF'
+          module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
+          EOF
       - name: Browser startup and PWA smoke
         run: |
           node tests/startup-smoke.cjs
@@ -45,6 +51,8 @@ jobs:
           BROWSER=webkit node tests/offline-pwa.cjs
           PUBLISH=1 BROWSER=webkit node tests/offline-pwa.cjs
       - name: Ledger, navigation and backup acceptance
+        env:
+          CHROMIUM_MODULE: ./ci-chromium.cjs
         run: |
           node tests/ux-v250.cjs
           PUBLISH=1 node tests/ux-v250.cjs
@@ -53,10 +61,13 @@ jobs:
           node tests/ai-import-browser.cjs
           PUBLISH=1 node tests/ai-import-browser.cjs
       - name: UI and data compatibility
+        env:
+          CHROMIUM_MODULE: ./ci-chromium.cjs
         run: |
           git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
           BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: [quality, acceptance]
     runs-on: ubuntu-latest
     environment:
