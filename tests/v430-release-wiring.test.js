@@ -29,6 +29,6 @@ test('startup does not automatically check and apply service worker updates',()=
  assert.match(app,/updates\.register\(\)\.catch\(/);
 });
 test('service worker tries live startup resources before stale cache',()=>{
- assert.match(sw,/event\.request\.mode==='navigate'\|\|url\.pathname\.endsWith\('\/app\.js'\)/);
+ assert.doesNotMatch(sw,/if\(event\.request\.mode==='navigate'\|\|url\.pathname\.endsWith/);
  assert.match(sw,/fetch\(event\.request,\{cache:'no-store'\}\)/);
 });
