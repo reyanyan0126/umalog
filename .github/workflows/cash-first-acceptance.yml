@@ -45,6 +45,12 @@ jobs:
           cat > tests/ci-chromium.cjs <<'EOF'
           module.exports={executablePath:async()=>require('playwright').chromium.executablePath(),args:[]};
           EOF
+      - name: Startup smoke (Chromium and WebKit, source and publish)
+        run: |
+          node tests/startup-smoke.cjs
+          PUBLISH=1 node tests/startup-smoke.cjs
+          BROWSER=webkit node tests/startup-smoke.cjs
+          PUBLISH=1 BROWSER=webkit node tests/startup-smoke.cjs
       - name: AI import browser acceptance (Chromium and WebKit, source and publish)
         run: |
           node tests/ai-import-browser.cjs
