@@ -51,6 +51,12 @@ jobs:
           PUBLISH=1 node tests/startup-smoke.cjs
           BROWSER=webkit node tests/startup-smoke.cjs
           PUBLISH=1 BROWSER=webkit node tests/startup-smoke.cjs
+      - name: Offline PWA reopen (Chromium and WebKit)
+        run: |
+          node tests/offline-pwa.cjs
+          PUBLISH=1 node tests/offline-pwa.cjs
+          BROWSER=webkit node tests/offline-pwa.cjs
+          PUBLISH=1 BROWSER=webkit node tests/offline-pwa.cjs
       - name: AI import browser acceptance (Chromium and WebKit, source and publish)
         run: |
           node tests/ai-import-browser.cjs
