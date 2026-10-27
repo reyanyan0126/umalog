@@ -27,3 +27,9 @@ test('trend refuses periods crossing the supported earliest year',()=>{
  assert.throws(()=>monthlyCashTrend(d,{months:2,through:'2000-01'}),/集計開始月/);
  assert.equal(monthlyCashTrend(d,{months:1,through:'2000-01'}).length,1);
 });
+
+test('monthly trend module imports and runs after startup syntax repair',()=>{
+ const result=monthlyCashTrend(emptyData(),{months:1,through:'2026-10'});
+ assert.equal(result.length,1);
+ assert.equal(result[0].month,'2026-10');
+});
