@@ -1,1 +1,1 @@
-{"version":"4.5.0","schemaVersion":1,"notes":"公開品質検証、PWAの原子的キャッシュ、起動復旧、収支・画面回帰テストの安定化"}
+{"version":"4.5.1","schemaVersion":1,"notes":"起動JavaScript構文エラー修正、PWAオフライン回帰検査、検証付き公開フロー改善"}

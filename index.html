@@ -3,7 +3,7 @@
  const start=document.getElementById('launchStart');
  const status=document.getElementById('launchUpdateStatus');
  const update=document.getElementById('launchUpdate');
- const flag='umalog-startup-recovery-attempted-v450';
+ const flag='umalog-startup-recovery-attempted-v451';
  let recovering=false;
  function show(message){
   if(start&&!start.disabled)return;
@@ -22,7 +22,7 @@
     const keys=await caches.keys();
     for(const key of keys){if(key.startsWith('umalog-'))await caches.delete(key);}
    }
-   location.replace('./index.html?startup=450');
+   location.replace('./index.html?startup=451');
   }catch(e){recovering=false;show('自動修復に失敗しました: '+(e.message||e));}
  }
  function safeGet(key){try{return sessionStorage.getItem(key);}catch{return null;}}
@@ -45,4 +45,4 @@
  setTimeout(()=>{if(start.disabled)failed('起動が完了しません。');else safeRemove(flag);},15000);
  status.textContent='起動準備中…';
 })();
-</script><script type="module" src="./app.js?v=450"></script></body></html>
+</script><script type="module" src="./app.js?v=451"></script></body></html>
