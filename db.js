@@ -35,9 +35,8 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
    store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(stamp,'lastMainSaveAt');
    store.put({savedAt:stamp,revision:nextRevision,json:JSON.stringify(data)},'ledgerBackup:'+String(nextRevision).padStart(12,'0'));
    // Retain the last 50 revisions without deleting the newest snapshot.
-   const snapshots=store.openCursor(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
-   let seen=0;
-   snapshots.onsuccess=()=>{const cursor=snapshots.result;if(cursor){seen++;if(nextRevision>50 && seen<=nextRevision-50)cursor.delete();cursor.continue();}};
+   const snapshotKeys=store.getAllKeys(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
+   snapshotKeys.onsuccess=()=>{const keys=snapshotKeys.result;for(const key of keys.slice(0,Math.max(0,keys.length-50)))store.delete(key);};
    if(clearAllDrafts){
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
