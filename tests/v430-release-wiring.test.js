@@ -32,3 +32,19 @@ test('service worker tries live startup resources before stale cache',()=>{
  assert.doesNotMatch(sw,/if\(event\.request\.mode==='navigate'\|\|url\.pathname\.endsWith/);
  assert.match(sw,/fetch\(event\.request,\{cache:'no-store'\}\)/);
 });
+
+test('canonical URL retains bounded self-repair without touching financial IndexedDB',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(html,/sessionStorage\.getItem\(flag\)/);
+ assert.match(html,/sessionStorage\.setItem\(flag,'1'\)/);
+ assert.match(html,/reg\.unregister\(\)/);
+ assert.match(html,/caches\.delete\(key\)/);
+ assert.doesNotMatch(html,/indexedDB\.deleteDatabase/);
+});
+test('publish and source boot files remain identical except asset paths',()=>{
+ for(const name of ['index.html','app.js','sw.js','release.json','monthly-cash-trend.js']){
+  const source=readFileSync(new URL('../'+name,import.meta.url),'utf8');
+  const published=readFileSync(new URL('../publish/'+name,import.meta.url),'utf8');
+  assert.equal(published,source.replaceAll('./assets/','./'),name);
+ }
+});
