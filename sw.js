@@ -16,12 +16,10 @@ self.addEventListener('fetch',event=>{
   const cache=await caches.open(CACHE);
   const key=event.request.mode==='navigate'?'./index.html':event.request;
   const cached=await cache.match(key,{ignoreSearch:true});
-  // Network-first for every app module: avoid mixing a new entry point with stale imports.
-  // Keep the last complete precache for offline fallback; never touch IndexedDB.
-  try{
-   const fresh=await fetch(event.request,{cache:'no-store'});
-   if(fresh.ok)return fresh;
-  }catch{}
-  return cached||fetch(event.request);
+  // Versioned shell files are served from one completely installed cache.
+  // Network-first could combine a new HTML/JS response with old imported modules.
+  // Unknown resources may use the network; financial IndexedDB is untouched.
+  if(cached)return cached;
+  return fetch(event.request);
  })());
 });
