@@ -1,3 +1,4 @@
+import {snapshotOf,decodeSnapshot,recordCount} from './backup-integrity.js';
 import {migrateGrowth} from './growth-v2.js';
 import {assertExpectedRevision,nextLedgerRevision,readLedgerRevision} from './ledger-revision.js';
 import {emptyCalendar,validateCalendar} from "./calendar.js";
@@ -5,46 +6,67 @@ import {emptyData,validateData,recalculate} from './core.js';
 import {validateCatalog} from './race-info.js';
 const DB='umalog',VERSION=1,STORE='state';
 let connection;
-export function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別のタブを閉じて再試行してください。'));req.onsuccess=()=>{connection=req.result;connection.onversionchange=()=>connection.close();resolve(connection);};});}
-export async function load(){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get('main');r.onsuccess=()=>{try{resolve(r.result?migrateGrowth(validateData(r.result),new Date(),r.result.character.exp):migrateGrowth(emptyData()));}catch(e){reject(e);}};r.onerror=()=>reject(r.error||new Error('保存データを読み込めませんでした。'));tx.onabort=()=>reject(tx.error||new Error('データの読み込みが中断されました。'));});}
+export function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB,VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別のタブを閉じて再試行してください。'));req.onsuccess=()=>{connection=req.result;connection.onversionchange=()=>{req.result.close();connection=null;};resolve(connection);};});}
+export async function load(){return (await loadWithRevision()).data;}
 // One atomic write: failed validation/transaction leaves the old snapshot intact.
 export async function loadWithRevision(){
  const db=connection||await openDB();
  return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE,'readonly'),store=tx.objectStore(STORE),main=store.get('main'),rev=store.get('mainRevision');
+  const tx=db.transaction(STORE,'readonly'),store=tx.objectStore(STORE),main=store.get('main'),rev=store.get('mainRevision'),backups=store.count(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
   let snapshot;
-  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:readLedgerRevision(rev.result)});}catch(e){reject(e);}};
+  tx.oncomplete=()=>{try{if(snapshot===undefined&&(readLedgerRevision(rev.result)>0||backups.result>0))throw new Error('収支本体が見つかりません。既存バックアップを保護するため保存を停止しました。');resolve({data:snapshot!==undefined?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:readLedgerRevision(rev.result)});}catch(e){reject(e);}};
   main.onsuccess=()=>{snapshot=main.result;};
   tx.onabort=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
   tx.onerror=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
  });
 }
-export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
+export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null,allowEmpty=false,restore=false}={}){
  assertExpectedRevision(expectedRevision);
+ if(expectedRevision===null)throw new Error('読み込み済みの更新番号が必要です。');
  if(clearDraftKey!==null)draftKey(clearDraftKey);
- const data=validateData(recalculate(input)),db=connection||await openDB();
+ const data=validateData(recalculate(structuredClone(input))),db=connection||await openDB();
+ const snapshot=snapshotOf(data,expectedRevision+1);
  return new Promise((resolve,reject)=>{
-  const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
+  const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);
+  const lookup=store.get('mainRevision'),savedTime=store.get('lastMainSaveAt'),previous=store.get('main');
   let problem;
-  lookup.onsuccess=()=>{try{
-   let nextRevision;
-   try{nextRevision=nextLedgerRevision(lookup.result,expectedRevision);}catch(error){problem=error;tx.abort();return;}
-   // Keep an immutable JSON-compatible recovery copy for every successful ledger save.
-   // It shares the transaction with the ledger, so failed writes leave both untouched.
-   const stamp=new Date().toISOString();
-   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(stamp,'lastMainSaveAt');
-   store.put({savedAt:stamp,revision:nextRevision,json:JSON.stringify(data)},'ledgerBackup:'+String(nextRevision).padStart(12,'0'));
-   // Retain the last 50 revisions without deleting the newest snapshot.
-   const snapshotKeys=store.getAllKeys(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
-   snapshotKeys.onsuccess=()=>{const keys=snapshotKeys.result;for(const key of keys.slice(0,Math.max(0,keys.length-50)))store.delete(key);};
-   if(clearAllDrafts){
-    const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
-    cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
-   }else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
-  }catch(error){problem=error;if(tx.readyState==='active')tx.abort();}};
+  previous.onsuccess=()=>{try{
+   const nextRevision=nextLedgerRevision(lookup.result,expectedRevision);
+   const old=previous.result;
+   if(old===undefined&&expectedRevision>0)throw new Error('既存データが見つかりません。保存を停止しました。');
+   if(old!==undefined){
+    validateData(old);
+    if((recordCount(old)>0&&recordCount(data)===0)||(old.races.length>0&&data.races.length===0)){
+     if(restore||!allowEmpty)throw new Error('空データによる全件上書きを阻止しました。');
+    }
+    // Protect exact pre-migration/pre-delete bytes, including pre-backup releases.
+    const oldKey='ledgerBackup:'+String(expectedRevision).padStart(16,'0');
+    store.put(snapshotOf(old,expectedRevision,savedTime.result||snapshot.savedAt),oldKey);
+    if(restore)store.put(snapshotOf(old,expectedRevision),'preRestoreBackup');
+   }
+   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(snapshot.savedAt,'lastMainSaveAt');
+   store.put(snapshot,'ledgerBackup:'+String(nextRevision).padStart(16,'0'));
+   // Sort numerically: older releases used 12-digit keys. Deduplicate by revision.
+   const cursor=store.openCursor(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff')),rows=[];
+   cursor.onsuccess=()=>{try{const c=cursor.result;if(c){rows.push({key:c.key,revision:c.value.revision});c.continue();return;}
+    rows.sort((a,b)=>b.revision-a.revision);const seen=new Set();let kept=0;
+    for(const row of rows){if(seen.has(row.revision)||kept>=50)store.delete(row.key);else{seen.add(row.revision);kept++;}}
+   }catch(e){problem=e;tx.abort();}};
+   if(clearAllDrafts){const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));cursor.onsuccess=()=>{const c=cursor.result;if(c){c.delete();c.continue();}};}
+   else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
+  }catch(error){problem=error;tx.abort();}};
   tx.oncomplete=()=>resolve(data);
-  tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。入力内容を保持しています。'));
-  tx.onabort=()=>reject(problem||tx.error||new Error('保存が中止されました。入力内容を保持しています。'));
+  tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。元の記録を保持しています。'));
+  tx.onabort=()=>reject(problem||tx.error||new Error('自動バックアップを含む保存全体を中止しました。元の記録を保持しています。'));
+ });
+}
+export async function listBackups(){
+ const db=connection||await openDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readonly'),s=tx.objectStore(STORE),r=s.openCursor(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff')),rows=[];
+  const add=(key,value)=>{try{const d=decodeSnapshot(value);rows.push({key,...value,races:d.races.length,records:recordCount(d),valid:true});}catch(e){rows.push({key,savedAt:value?.savedAt,revision:value?.revision,valid:false,error:e.message});}};
+  r.onsuccess=()=>{const c=r.result;if(c){add(c.key,c.value);c.continue();}};
+  const protectedCopy=s.get('preRestoreBackup');protectedCopy.onsuccess=()=>{if(protectedCopy.result!==undefined)add('preRestoreBackup',protectedCopy.result);};
+  tx.oncomplete=()=>resolve(rows.sort((a,b)=>b.revision-a.revision));tx.onabort=()=>reject(tx.error);tx.onerror=()=>reject(tx.error);
  });
 }
 
