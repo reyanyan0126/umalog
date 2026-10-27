@@ -1,0 +1,24 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>うまログ 保存データ救出</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:auto;padding:22px;line-height:1.7}button{padding:14px;margin:8px 0;width:100%;font-size:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f2f2;padding:12px}strong{color:#a33}</style></head><body><h1>保存データ救出（読み取り専用）</h1><p><strong>この画面ではデータの削除・上書き・初期化を行いません。</strong>ホーム画面版とSafari版では保存領域が異なる場合があります。</p><button id="inspect">端末内の保存状況を調べる</button><button id="export" disabled>見つかった元データをJSONで保存</button><pre id="result" role="status">未確認</pre><script>
+let raw=null;
+const output=document.getElementById('result'),save=document.getElementById('export');
+document.getElementById('inspect').onclick=async()=>{
+ save.disabled=true;raw=null;output.textContent='読み取り中…';
+ try{
+  const req=indexedDB.open('umalog');
+  const db=await new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(new Error('別の画面でデータベースが使用中です'));req.onupgradeneeded=()=>{req.transaction.abort();reject(new Error('この保存領域には既存のumalogデータベースがありません（新規作成は中止しました）'));};});
+  if(!db.objectStoreNames.contains('state')){output.textContent='state保存領域がありません。';db.close();return;}
+  const tx=db.transaction('state','readonly'),store=tx.objectStore('state');
+  const keys=['main','mainRevision','lastMainSaveAt'];
+  const values=await Promise.all(keys.map(key=>new Promise((resolve,reject)=>{const r=store.get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);})));
+  db.close();raw=values[0]??null;
+  const data=raw;
+  output.textContent=JSON.stringify({database:'umalog',hasMain:data!==null,revision:values[1]??null,lastSaveAt:values[2]??null,races:Array.isArray(data?.races)?data.races.length:null,tickets:Array.isArray(data?.tickets)?data.tickets.length:null,lines:Array.isArray(data?.lines)?data.lines.length:null,simpleEntries:Array.isArray(data?.simpleEntries)?data.simpleEntries.length:null},null,2);
+  save.disabled=data===null;
+ }catch(e){output.textContent='読み取り失敗: '+(e?.message||e);}
+};
+save.onclick=()=>{
+ if(raw===null)return;
+ const blob=new Blob([JSON.stringify(raw,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download='umalog-raw-rescue-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+};
+</script></body></html>
