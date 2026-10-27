@@ -1,5 +1,6 @@
 import {QUESTION_OPTIONS,answerPersonalQuestion,officialSourceAudit} from './analysis-assistant.js';
 import {buildPersonalAnalytics} from './personal-analytics.js';
+import {monthlyCashTrend} from './monthly-cash-trend.js';
 import {parseAiBatch,decodeImportLink,prepareAiImport} from './ai-text-import.js';
 import {summarize,aggregate,inclusiveMonthlyRows} from './cash-projections.js';
 import {createNavigation} from './navigation.js';
@@ -169,9 +170,13 @@ function dayScreen(date){
  app.innerHTML=`<a href="#calendar">← カレンダーへ</a><h1>${date} のうまログ</h1><section class="card day-summary"><div class="day-metrics">${metric('総支出',yen(combined.recordedPurchase))}${metric('確定購入',yen(combined.settledPurchase))}${metric('払戻',yen(combined.payout))}${metric('返還',yen(combined.refund))}</div><small>確定収支（全記録）</small><div class="balance ${combined.profit<0?'negative':'positive'}">${combined.settledCount?signed(combined.profit):'—'}</div><p class="help">購入額は支出に計上済みです。</p></section>${section}${quickRows||(!section?'<section class="card empty">この日の記録はありません。</section>':'')}<a class="button quiet full" href="#entry-date/${date}">＋ この日のレースを記録</a><a class="button quiet full" href="#quick-date/${date}">⚡ この日の支出を入力</a>`;
  bindQuickEdits(()=>dayScreen(date));
 }
+function cashTrendPanel(){
+ const rows=monthlyCashTrend(data,{months:12});
+ return `<section class="card"><h2>直近12か月の収支推移</h2><p class="help">購入額は購入時に支出として計上。払戻・返還は記録済みの金額のみを集計します。未記録の月は0円です。</p><div class="daily-trend">${rows.map(r=>`<div><span>${r.month}</span><small>購入 ${yen(r.purchase)} · 払戻・返還 ${yen(r.receipts)} · 回収率 ${r.returnRate===null?'—':r.returnRate.toFixed(1)+'%'}</small><strong class="${r.profit<0?'negative':'positive'}">月間 ${signed(r.profit)} / 12か月内累積 ${signed(r.cumulative)}</strong></div>`).join('')}</div></section>`;
+}
 function analysisInsightPanel(a){
  const dateMoney=d=>d?`${d.date} · ${signed(d.summary.profit)}`:'—';
- return `<section class="card analysis-insights"><h2>記録した日の成績</h2><div class="day-metrics">${metric('記録日',a.days+'日')}${metric('プラスの日',a.wins+'日')}${metric('マイナスの日',a.losses+'日')}</div><p class="help">収支ゼロの日 ${a.neutrals}日 · プラスの日の割合 ${rate(a.winDayRate)}。一部でも結果確定した日を集計し、未入力の買い目は除外しています。</p><div class="analysis-extremes"><p>最高の日 <b>${dateMoney(a.best)}</b></p><p>最低の日 <b>${dateMoney(a.worst)}</b></p></div><details><summary>累積収支（月末時点・${a.cumulativeMonths.length}か月）</summary>${a.cumulativeMonths.length?`<div class="daily-trend">${a.cumulativeMonths.map(m=>`<div><span>${m.month}</span><small>月間 ${signed(m.profit)}</small><strong class="${m.cumulative<0?'negative':'positive'}">${signed(m.cumulative)}</strong></div>`).join('')}</div>`:'<p class="empty">確定した記録がありません。</p>'}</details></section>`;
+ return `<section class="card analysis-insights"><h2>記録した日の成績</h2><div class="day-metrics">${metric('記録日',a.days+'日')}${metric('プラスの日',a.wins+'日')}${metric('マイナスの日',a.losses+'日')}</div><p class="help">収支ゼロの日 ${a.neutrals}日 · プラスの日の割合 ${rate(a.winDayRate)}。一部でも結果確定した日を集計し、未入力の買い目は除外しています。</p><div class="analysis-extremes"><p>最高の日 <b>${dateMoney(a.best)}</b></p><p>最低の日 <b>${dateMoney(a.worst)}</b></p></div><details><summary>累積収支（月末時点・${a.cumulativeMonths.length}か月）</summary>${a.cumulativeMonths.length?`<div class="daily-trend">${a.cumulativeMonths.map(m=>`<div><span>${m.month}</span><small>月間 ${signed(m.profit)}</small><strong class="${m.cumulative<0?'negative':'positive'}">${signed(m.cumulative)}</strong></div>`).join('')}</div>`:'<p class="empty">確定した記録がありません。</p>'}</details></section>`+cashTrendPanel();
 }
 function rewardItems(source){
  return growthRewards(source).map(r=>`<div class="reward-item ${r.unlocked?'is-unlocked':'is-locked'}"><span class="reward-icon" aria-hidden="true">${r.unlocked?r.icon:'◇'}</span><div><b>${r.name}</b><small>${r.description}</small></div><span class="reward-progress">${r.unlocked?'獲得済み':Math.min(r.current,r.goal)+'/'+r.goal}</span></div>`).join('');
@@ -792,6 +797,7 @@ function analysis(){
  <section class="card analysis-essential-card"><h2>収支</h2><div class="analysis-essential-grid"><div><small>収支</small><strong class="${total.profit<0?'negative':'positive'}">${signed(total.profit)}</strong></div><div><small>回収率</small><strong>${rate(total.returnRate)}</strong></div></div><div class="analysis-cash-bars"><div><span>購入</span>${bar(total.recordedPurchase,Math.max(total.recordedPurchase,total.receipts,1),'loss')}<b>${yen(total.recordedPurchase)}</b></div><div><span>払戻・返還</span>${bar(total.receipts,Math.max(total.recordedPurchase,total.receipts,1))}<b>${yen(total.receipts)}</b></div></div></section>
  <section class="card analysis-essential-monthly"><h2>月別収支</h2>${bestMonth?`<p class="analysis-best-month">直近6か月の最高収支 <strong>${esc(bestMonth.month.slice(2))} · ${signed(bestMonth.profit)}</strong></p>`:``}${months.length?months.map(x=>`<div class="analysis-simple-month"><time datetime="${esc(x.month)}">${esc(x.month.slice(2))}</time><span class="analysis-diverge"><i class="analysis-diverge-negative" style="width:${x.profit<0?Math.abs(x.profit)/maxMonth*50:0}%"></i><i class="analysis-diverge-positive" style="width:${x.profit>0?x.profit/maxMonth*50:0}%"></i></span><strong class="${x.profit<0?'negative':'positive'}">${signed(x.profit)}</strong></div>`).join(''):'<p class="analysis-empty">—</p>'}</section>
  <section class="card analysis-favorites"><h2>購入傾向</h2>${topRows('venue','競馬場別')}${topRows('type','券種別')}<div class="analysis-compact-group"><h3>購入金額帯</h3>${amountRows.length?amountRows.map(([label,stake])=>`<div class="analysis-favorite-row"><span>${esc(label)}</span>${bar(stake,allStake)}<strong>${rate(allStake?stake/allStake*100:null)}</strong></div>`).join(''):'<p class="help">記録がありません。</p>'}</div></section>
+ ${cashTrendPanel()}
  ${analysisAssistantPanel(analysisLedger())}
  <details class="card"><summary>詳細分析：条件・馬・騎手</summary>
  ${personalAnalyticsPanel(analysisLedger())}
@@ -980,7 +986,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.0.4',
+ currentVersion:'4.3.8',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty,
  reload:()=>location.reload(),
@@ -1016,4 +1022,4 @@ $('#launchUpdate').onclick=async()=>{
 };
 try{const snapshot=await loadWithRevision();data=snapshot.data;ledgerRevision=snapshot.revision;const next=recalculate(grow(migrateGrowth(data)));
  if(JSON.stringify(next)!==JSON.stringify(data)){try{data=await save(next,{expectedRevision:ledgerRevision});ledgerRevision++;}catch(error){if(error.code!=='STALE_LEDGER')throw error;const fresh=await loadWithRevision();data=fresh.data;ledgerRevision=fresh.revision;}}
- try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().then(async()=>{lockUpdateGestures(true);try{await updates.check();}finally{if(!/新しいバージョンを適用しています/.test(updateStatus.textContent||''))lockUpdateGestures(false);}}).catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}
+ try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}

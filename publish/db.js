@@ -1,4 +1,5 @@
 import {migrateGrowth} from './growth-v2.js';
+import {assertExpectedRevision,nextLedgerRevision,readLedgerRevision} from './ledger-revision.js';
 import {emptyCalendar,validateCalendar} from "./calendar.js";
 import {emptyData,validateData,recalculate} from './core.js';
 import {validateCatalog} from './race-info.js';
@@ -12,24 +13,23 @@ export async function loadWithRevision(){
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readonly'),store=tx.objectStore(STORE),main=store.get('main'),rev=store.get('mainRevision');
   let snapshot;
-  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:rev.result||0});}catch(e){reject(e);}};
+  tx.oncomplete=()=>{try{resolve({data:snapshot?migrateGrowth(validateData(snapshot),new Date(),snapshot.character.exp):migrateGrowth(emptyData()),revision:readLedgerRevision(rev.result)});}catch(e){reject(e);}};
   main.onsuccess=()=>{snapshot=main.result;};
   tx.onabort=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
   tx.onerror=()=>reject(tx.error||new Error('データを読み取れませんでした。'));
  });
 }
 export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expectedRevision=null}={}){
+ assertExpectedRevision(expectedRevision);
+ if(clearDraftKey!==null)draftKey(clearDraftKey);
  const data=validateData(recalculate(input)),db=connection||await openDB();
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE),lookup=store.get('mainRevision');
   let problem;
   lookup.onsuccess=()=>{try{
-   const revision=lookup.result||0;
-   if(expectedRevision!==null&&revision!==expectedRevision){
-    problem=new Error('別のタブで記録が更新されています。現在の入力は保存していません。JSONバックアップを取ってから画面を再読込し、変更内容を確認してください。');
-    problem.code='STALE_LEDGER';tx.abort();return;
-   }
-   store.put(data,'main');store.put(revision+1,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
+   let nextRevision;
+   try{nextRevision=nextLedgerRevision(lookup.result,expectedRevision);}catch(error){problem=error;tx.abort();return;}
+   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
    if(clearAllDrafts){
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
@@ -58,7 +58,7 @@ async function readOptionalValue(key){
   req.onerror=()=>reject(req.error);
  });
 }
-const draftKey=key=>'entryDraft:'+key;
+const draftKey=key=>{if(typeof key!=='string'||key.length===0||key.length>120)throw new Error('下書きの識別子が不正です。');return 'entryDraft:'+key;};
 export async function loadEntryDraft(key){return readOptionalValue(draftKey(key));}
 export async function saveEntryDraft(key,value){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(value,draftKey(key));tx.oncomplete=()=>resolve(value);tx.onabort=()=>reject(tx.error||new Error('下書きを保存できませんでした。'));tx.onerror=()=>reject(tx.error);});}
 export async function discardEntryDraft(key){const db=connection||await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(draftKey(key));tx.oncomplete=()=>resolve();tx.onabort=()=>reject(tx.error||new Error('下書きを破棄できませんでした。'));tx.onerror=()=>reject(tx.error);});}
