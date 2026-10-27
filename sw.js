@@ -14,7 +14,7 @@ self.addEventListener('fetch',event=>{
  if(!url.href.startsWith(self.registration.scope))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
-  const key=event.request.mode==='navigate'?'./index.html':event.request;
+  const key=event.request.mode==='navigate' && (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html')) ? './index.html' : event.request;
   const cached=await cache.match(key,{ignoreSearch:true});
   // Versioned shell files are served from one completely installed cache.
   // Network-first could combine a new HTML/JS response with old imported modules.
