@@ -25,7 +25,10 @@
    location.replace('./index.html?startup=450');
   }catch(e){recovering=false;show('自動修復に失敗しました: '+(e.message||e));}
  }
- function safeGet(key){try{return sessionStorage.getItem(key);}catch{return null;}}\n function safeSet(key,value){try{sessionStorage.setItem(key,value);}catch{}}\n function safeRemove(key){try{sessionStorage.removeItem(key);}catch{}}\n function failed(message){
+ function safeGet(key){try{return sessionStorage.getItem(key);}catch{return null;}}
+ function safeSet(key,value){try{sessionStorage.setItem(key,value);}catch{}}
+ function safeRemove(key){try{sessionStorage.removeItem(key);}catch{}}
+ function failed(message){
   if(start&&!start.disabled)return;
   show(message);
   if(!safeGet(flag)){
