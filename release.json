@@ -1,1 +1,1 @@
-{"version":"4.3.3","schemaVersion":1,"notes":"下書き識別子の検証条件統一、分類をまたぐ収支集計の上限チェック、回帰テスト追加"}
+{"version":"4.3.4","schemaVersion":1,"notes":"起動時の読み込み停止・JavaScriptエラーの表示を追加。保存データの削除や移行は行いません。"}
