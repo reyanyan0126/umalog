@@ -1,0 +1,12 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>うまログ 起動復旧</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#eff8f0;color:#153e31;padding:28px;line-height:1.7}button{font-size:18px;background:#316b58;color:white;border:0;border-radius:16px;padding:18px;width:100%}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style></head><body><h1>うまログ 起動復旧</h1><p>古いアプリのキャッシュだけを整理して最新版を読み込みます。<strong>収支記録が保存されているIndexedDB、SafariのWebサイトデータは削除しません。</strong></p><button id="recover">起動を復旧する</button><p id="status" role="status"></p><script>
+document.getElementById('recover').onclick=async()=>{
+ const button=document.getElementById('recover'),status=document.getElementById('status');
+ button.disabled=true;status.textContent='古い起動キャッシュを整理しています…';
+ try{
+  if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const reg of regs){if(reg.scope.startsWith(new URL('./',location.href).href))await reg.unregister();}}
+  if('caches' in window){const keys=await caches.keys();for(const key of keys){if(key.startsWith('umalog-'))await caches.delete(key);}}
+  status.textContent='完了しました。最新版を開きます…';
+  location.replace('./index.html?startup_recovery=20261027');
+ }catch(e){status.textContent='復旧処理に失敗しました: '+(e.message||e)+ '。収支データは削除していません。';button.disabled=false;}
+};
+</script></body></html>
