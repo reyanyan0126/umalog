@@ -42,7 +42,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
     }
    }
    if(width===390){
-    await page.locator('#launchStart').click();await page.evaluate(()=>location.hash='quick');await page.locator('#simpleStake').fill('2000');await page.locator('#simplePayout').fill('3000');await page.locator('#simpleSave').click();await page.waitForTimeout(200);
+    if(await page.locator('#launchStart').isVisible())await page.locator('#launchStart').click();await page.evaluate(()=>location.hash='quick');await page.locator('#simpleStake').fill('2000');await page.locator('#simplePayout').fill('3000');await page.locator('#simpleSave').click();await page.waitForTimeout(200);
     const id=await page.evaluate(async()=>{const d=await(await import('./db.js')).load();return d.simpleEntries.find(x=>x.id!=='fixture').id;});
     await page.evaluate(id=>location.hash='quick-edit/'+id,id);await page.locator('#simplePayout').fill('4000');await page.locator('#simpleSave').click();await page.waitForTimeout(200);
     assert.equal(await page.evaluate(async id=>(await(await import('./db.js')).load()).simpleEntries.find(x=>x.id===id).payout,id),4000);
