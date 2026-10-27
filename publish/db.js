@@ -29,7 +29,15 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
   lookup.onsuccess=()=>{try{
    let nextRevision;
    try{nextRevision=nextLedgerRevision(lookup.result,expectedRevision);}catch(error){problem=error;tx.abort();return;}
-   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(new Date().toISOString(),'lastMainSaveAt');
+   // Keep an immutable JSON-compatible recovery copy for every successful ledger save.
+   // It shares the transaction with the ledger, so failed writes leave both untouched.
+   const stamp=new Date().toISOString();
+   store.put(data,'main');store.put(nextRevision,'mainRevision');store.put(stamp,'lastMainSaveAt');
+   store.put({savedAt:stamp,revision:nextRevision,json:JSON.stringify(data)},'ledgerBackup:'+String(nextRevision).padStart(12,'0'));
+   // Retain the last 50 revisions without deleting the newest snapshot.
+   const snapshots=store.openCursor(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
+   let seen=0;
+   snapshots.onsuccess=()=>{const cursor=snapshots.result;if(cursor){seen++;if(nextRevision>50 && seen<=nextRevision-50)cursor.delete();cursor.continue();}};
    if(clearAllDrafts){
     const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));
     cursor.onsuccess=()=>{const record=cursor.result;if(record){record.delete();record.continue();}};
