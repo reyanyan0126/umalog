@@ -56,6 +56,18 @@ const pw=require('playwright');
  await context.setOffline(true);await page.reload();await page.locator('#homeSummary').waitFor();
  await page.goto(base+'/rescue.html');assert.match(await page.locator('h1').textContent(),/保存データ救出/);
  await page.goto(base+'/recovery.html');assert.match(await page.locator('h1').textContent(),/起動復旧/);pass('offline app and exact rescue/recovery navigation');await context.setOffline(false);
+ // An orphaned backup with revision zero must never be overwritten by a fresh ledger.
+ const orphan=await browser.newContext(),op=await orphan.newPage();await op.goto(base+'/rescue.html');
+ assert.equal(await op.evaluate(async()=>{
+  const m=await import('./db.js'),core=await import('./core.js'),db=await m.openDB();
+  const original=core.emptyData();original.simpleEntries=[{id:'orphan1',date:'2026-10-28',stake:100,payout:0,refund:0,status:'pending',venue:null,number:null,type:null,name:'',memo:''}];
+  const {snapshotOf}=await import('./backup-integrity.js');
+  await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(snapshotOf(original,0),'ledgerBackup:0000000000000000');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+  let loadBlocked=false,saveBlocked=false;
+  try{await m.loadWithRevision();}catch{loadBlocked=true;}
+  try{await m.save(core.emptyData(),{expectedRevision:0});}catch{saveBlocked=true;}
+  return loadBlocked&&saveBlocked&&(await m.listBackups()).length===1&&await new Promise(resolve=>{const tx=db.transaction('state','readonly'),r=tx.objectStore('state').get('main');tx.oncomplete=()=>resolve(r.result===undefined);});
+ }),true);await orphan.close();pass('orphaned revision-zero backup blocks empty first-write and stays intact');
  // Legacy main has no revision/backups; migration only becomes durable on user save.
  const legacy=await browser.newContext(),lp=await legacy.newPage();await lp.goto(base+'/rescue.html');
  assert.equal(await lp.evaluate(async json=>{const m=await import('./db.js'),db=await m.openDB();await new Promise(r=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(JSON.parse(json),'main');tx.oncomplete=r;});const s=await m.loadWithRevision();await m.save(s.data,{expectedRevision:s.revision});return (await m.listBackups()).some(x=>x.revision===0&&x.records===2);},exported),true);await legacy.close();pass('legacy no-revision snapshot protected before first save');
