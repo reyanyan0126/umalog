@@ -10,6 +10,7 @@ export function createUpdates({serviceWorker, onOffer, onStatus, canReload, relo
   refreshing=true;
   reload();
  });
+ serviceWorker?.addEventListener('message',event=>{if(event.data?.type==='UPDATE_BLOCKED')onStatus('他のうまログ画面を閉じてから更新してください。');});
  const offer=()=>{if(registration?.waiting)onOffer();};
  async function register(){
   if(!serviceWorker)return null;

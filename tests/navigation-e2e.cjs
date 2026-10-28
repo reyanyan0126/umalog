@@ -23,7 +23,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
   // Seed isolated test data only; no production origin is accessed.
-  await page.evaluate(async()=>{const db=await import('./db.js');const {makeSimpleEntry}=await import('./simple-ledger.js');const d=await db.load();d.simpleEntries=[makeSimpleEntry({date:'2026-10-20',stake:1000,status:'settled',payout:1700},'navigation-fixture')];await db.save(d);});
+  await page.evaluate(async()=>{const db=await import('./db.js');const {makeSimpleEntry}=await import('./simple-ledger.js');const d=await db.load();d.simpleEntries=[makeSimpleEntry({date:'2026-10-20',stake:1000,status:'settled',payout:1700},'navigation-fixture')];await db.save(d,{expectedRevision:(await db.loadWithRevision()).revision});});
   await page.reload();await home();
   const snapshot=()=>page.evaluate(async()=>JSON.stringify(await(await import('./db.js')).load()));
   const before=await snapshot();

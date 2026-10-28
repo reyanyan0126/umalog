@@ -1,1 +1,1 @@
-{"version":"4.5.1","schemaVersion":1,"notes":"起動JavaScript構文エラー修正、PWAオフライン回帰検査、検証付き公開フロー改善"}
+{"version":"4.5.2","schemaVersion":1,"notes":"データ保護強化、50世代バックアップ管理・復元、保存後の外部JSON保存導線、安全な更新と公開検証"}
