@@ -856,6 +856,7 @@ function settings(){app.innerHTML=`<h1>設定</h1><section class="card"><h2>育�
  const fold=(label,id)=>{const d=document.createElement('details');d.className='card settings-fold';d.id=id;const s=document.createElement('summary');s.textContent=label;d.append(s);return d;};
  const appearance=fold('表示・育成','settingsAppearance'),advanced=fold('高度な設定','settingsAdvanced');
  const advancedNodes=[...app.children].filter(n=>n.tagName!=='H1'&&![growthCard,motionCard,backupCard,restoreCard,budgetCard].includes(n));
+ const titleButton=$('#returnToTitle');
  appearance.append(motionCard,growthCard);
  advanced.append(budgetCard,...advancedNodes);
  const extra=fold('保存状況・CSV出力','settingsStorage');
@@ -865,7 +866,7 @@ function settings(){app.innerHTML=`<h1>設定</h1><section class="card"><h2>育�
  const csvNote=$('#storageInfo').previousElementSibling;
  if(csvNote?.tagName==='P')extra.append(csvNote);
  extra.append($('#storageInfo'),$('#persist'));
- const titleButton=$('#returnToTitle');titleButton.onclick=()=>navigate('#title');app.append(titleButton);
+ titleButton.onclick=()=>navigate('#title');app.append(titleButton);
  app.insertBefore(backupCard,titleButton);app.insertBefore(restoreCard,titleButton);app.insertBefore(appearance,titleButton);app.insertBefore(advanced,titleButton);
  backupCard.append(extra);
  $('#export').textContent='JSONをファイルに保存';
