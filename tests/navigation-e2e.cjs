@@ -58,7 +58,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
    console.log('PASS legacy cache -> new release -> title -> Home');
   }
   for(let i=0;i<4;i++){
-   await page.locator('#settingsButton').click();await page.locator('#settingsForm').waitFor();
+   await page.locator('#settingsButton').click();await page.locator('#settingsAppearance > summary').waitFor();
    await page.locator('#returnToTitle').click();await title();
    assert.equal(await page.locator('#settingsForm').count(),0);
    await page.locator('#launchStart').click();await home();
