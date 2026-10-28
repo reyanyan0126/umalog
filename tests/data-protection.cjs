@@ -74,6 +74,18 @@ const pw=require('playwright');
   await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(original,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
   return candidate?.valid===false&&(await dbmod.listBackups()).find(x=>x.key===key)?.valid===true;
  }),true);pass('corrupted generation detected without destroying original backup');
+ // Restoring a previous generation must recover the exact accounting values.
+ assert.equal(await page.evaluate(async()=>{
+  const current=await dbmod.loadWithRevision(),rows=await dbmod.listBackups();
+  const candidate=rows.find(x=>x.valid&&x.key!=='preRestoreBackup'&&x.records===2);
+  if(!candidate)return false;
+  const expected=JSON.parse(candidate.json);
+  const stake=x=>x.simpleEntries.reduce((sum,e)=>sum+e.stake,0);
+  const payout=x=>x.simpleEntries.reduce((sum,e)=>sum+(e.payout||0),0);
+  await dbmod.save(expected,{expectedRevision:current.revision,restore:true});
+  const actual=(await dbmod.loadWithRevision()).data;
+  return actual.simpleEntries.length===expected.simpleEntries.length&&stake(actual)===stake(expected)&&payout(actual)===payout(expected)&&JSON.stringify(actual.simpleEntries)===JSON.stringify(expected.simpleEntries);
+ }),true);pass('restored generation preserves record count, stakes and payouts');
  // Reload/PWA update/offline, with the populated ledger.
  await page.goto(base);await page.locator('#launchStart:not([disabled])').waitFor();await page.locator('#launchStart').click();await page.locator('#homeSummary').waitFor();
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.reload();
