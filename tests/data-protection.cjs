@@ -54,6 +54,26 @@ const pw=require('playwright');
   let rejected=false;try{await dbmod.save(fixture(),{expectedRevision:rev-1});}catch{rejected=true;}
   return rejected&&JSON.stringify(await readRaw('main'))===before&&JSON.stringify(await dbmod.listBackups())===rows;
  }),true);pass('stale write preserves ledger and backup history');
+ // A failed restore must preserve both the current ledger and its backup history.
+ assert.equal(await page.evaluate(async()=>{
+  const before=JSON.stringify(await readRaw('main')),revision=await readRaw('mainRevision');
+  const backups=JSON.stringify(await dbmod.listBackups()),put=IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put=function(value,key){
+   if(key==='preRestoreBackup')throw new DOMException('forced restore backup failure','QuotaExceededError');
+   return put.call(this,value,key);
+  };
+  let rejected=false;try{await dbmod.save(fixture(),{expectedRevision:revision,restore:true});}catch{rejected=true;}finally{IDBObjectStore.prototype.put=put;}
+  return rejected&&JSON.stringify(await readRaw('main'))===before&&(await readRaw('mainRevision'))===revision&&JSON.stringify(await dbmod.listBackups())===backups;
+ }),true);pass('failed restore backup write rolls back ledger and generations');
+ // A corrupted stored generation is reported invalid and cannot silently become a valid restore candidate.
+ assert.equal(await page.evaluate(async()=>{
+  const db=await dbmod.openDB(),key='ledgerBackup:0000000000000001';
+  const original=await readRaw(key);if(!original)return false;
+  await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put({...original,json:'{corrupt'},key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+  const candidate=(await dbmod.listBackups()).find(x=>x.key===key);
+  await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(original,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+  return candidate?.valid===false&&(await dbmod.listBackups()).find(x=>x.key===key)?.valid===true;
+ }),true);pass('corrupted generation detected without destroying original backup');
  // Reload/PWA update/offline, with the populated ledger.
  await page.goto(base);await page.locator('#launchStart:not([disabled])').waitFor();await page.locator('#launchStart').click();await page.locator('#homeSummary').waitFor();
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.reload();
