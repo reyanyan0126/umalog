@@ -89,7 +89,7 @@ const pw=require('playwright');
  // Reload/PWA update/offline, with the populated ledger.
  await page.goto(base);await page.locator('#launchStart:not([disabled])').waitFor();await page.locator('#launchStart').click();await page.locator('#homeSummary').waitFor();
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.reload();
- assert.equal(await page.evaluate(async()=>(await (await import('./db.js')).loadWithRevision()).revision),59);pass('normal startup and reload do not save or migrate persisted bytes');
+ assert.equal(await page.evaluate(async()=>(await (await import('./db.js')).loadWithRevision()).revision),60);pass('normal startup and reload do not save or migrate persisted bytes');
  release='interrupted';broken=true;
  await page.evaluate(async()=>{const r=await navigator.serviceWorker.ready;await r.update();});
  await page.waitForFunction(async()=>{const r=await navigator.serviceWorker.ready;return !r.installing;});
@@ -98,7 +98,7 @@ const pw=require('playwright');
  await page.waitForFunction(async()=>!!(await navigator.serviceWorker.ready).waiting);
  await page.evaluate(async()=>{(await navigator.serviceWorker.ready).waiting?.postMessage({type:'SKIP_WAITING'});});
  await page.waitForFunction(async()=>!(await navigator.serviceWorker.ready).waiting);await page.reload();
- assert.deepEqual(await page.evaluate(async()=>{const m=await import('./db.js');return [(await m.loadWithRevision()).revision,(await m.listBackups()).filter(x=>x.key!=='preRestoreBackup').length];}),[59,50]);pass('successful PWA update retains records and 50 generations');
+ assert.deepEqual(await page.evaluate(async()=>{const m=await import('./db.js');return [(await m.loadWithRevision()).revision,(await m.listBackups()).filter(x=>x.key!=='preRestoreBackup').length];}),[60,50]);pass('successful PWA update retains records and 50 generations');
  await context.setOffline(true);await page.reload();await page.locator('#homeSummary').waitFor();
  await page.goto(base+'/rescue.html');assert.match(await page.locator('h1').textContent(),/保存データ救出/);
  await page.goto(base+'/recovery.html');assert.match(await page.locator('h1').textContent(),/起動復旧/);pass('offline app and exact rescue/recovery navigation');await context.setOffline(false);
