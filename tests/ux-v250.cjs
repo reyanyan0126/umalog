@@ -19,7 +19,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_PATH||'playwright');
    d.races.push({id:'cash-race',date:'2026-10-18',venue:'札幌',number:11,name:'従来レース'});
    d.tickets.push({id:'cash-ticket',raceId:'cash-race',type:'単勝',kind:'reported',memo:'',createdAt:'2026-10-18T10:00:00Z'});
    d.lines.push({id:'cash-line',ticketId:'cash-ticket',numbers:[1],stake:200,status:'pending',payout:0,refund:0});
-   await db.save(d);return JSON.stringify(await db.load());
+   await db.save(d,{expectedRevision:(await db.loadWithRevision()).revision});return JSON.stringify(await db.load());
   });
   await page.reload();await page.waitForSelector('#homeSummary');
   assert.match(await page.locator('#homeSummary .home-profit').innerText(),/[-−]1,000円/);
