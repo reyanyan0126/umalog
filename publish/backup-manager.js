@@ -18,8 +18,8 @@ export function offerExternalBackup(data){
  const close=document.createElement('button');close.className='quiet';close.textContent='あとで';close.onclick=()=>panel.remove();panel.append(text,button,close);
 }
 export async function mountBackupManager(container,{commit,getData,guard,notify}){
- const section=document.createElement('section');section.id='backupManager';container.append(section);
- const heading=document.createElement('h2');heading.textContent='バックアップ管理';
+ const section=document.createElement('details');section.id='backupManager';container.append(section);
+ const heading=document.createElement('summary');heading.textContent='自動バックアップ履歴・復元';
  const help=document.createElement('p');help.className='help';help.textContent='直近50世代をこの端末のIndexedDBに保存します。保存領域の消去では全世代が失われます。iPhoneでは保存ボタン→共有→「ファイルに保存」で、このiPhone内またはiCloud Driveを選んでください。Safariとホーム画面版は同じ記録とは限りません。記録した側から書き出してください。バックアップ失敗時は収支の変更も保存しません。';
  section.append(heading,help);
  try{

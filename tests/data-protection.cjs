@@ -7,7 +7,7 @@ const pw=require('playwright');
   const file=path.resolve(root,'.'+name);if(!file.startsWith(root+path.sep))return res.writeHead(403).end();
   if(broken&&name==='/backup-manager.js')return res.writeHead(503).end();
   try{res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml'}[path.extname(file)]||'text/plain'));res.setHeader('Cache-Control','no-store');
-   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace("const VERSION='4.5.3'",`const VERSION='4.5.3-${release}'`);res.end(content);
+   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace("const VERSION='4.5.4'",`const VERSION='4.5.4-${release}'`);res.end(content);
   }catch{res.writeHead(404).end();}
  });await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const browser=await pw[process.env.BROWSER||'chromium'].launch({headless:true,...(process.env.BROWSER_PATH?{executablePath:process.env.BROWSER_PATH}:{})});
@@ -62,11 +62,11 @@ const pw=require('playwright');
  // User-facing add/edit/delete, backup preview and restore.
  const ui=await browser.newContext({viewport:{width:390,height:844}}),up=await ui.newPage();up.on('dialog',d=>d.accept());await up.goto(base);await up.locator('#launchStart:not([disabled])').click();
  await up.goto(base+'/#quick');await up.locator('#simpleStake').fill('1000');await up.locator('#simplePayout').fill('2300');await up.locator('#simpleSave').click();await up.locator('#externalBackupPrompt').waitFor();
- await up.goto(base+'/#settings');await up.locator('#backupManager details').waitFor();assert.equal(await up.locator('#backupManager details').count(),1);
+ await up.goto(base+'/#settings');await up.locator('#backupManager > summary').click();await up.locator('#backupManager details').waitFor();assert.equal(await up.locator('#backupManager details').count(),1);
  const uiId=await up.evaluate(async()=>(await (await import('./db.js')).load()).simpleEntries[0].id);
  await up.goto(base+'/#quick-edit/'+uiId);await up.locator('#simpleStake').fill('2000');await up.locator('#simpleSave').click();await up.waitForURL('**/#history');
  await up.goto(base+'/#quick-edit/'+uiId);await up.locator('#simpleDelete').click();await up.waitForURL('**/#history');
- await up.goto(base+'/#settings');await up.locator('#backupManager details').first().waitFor();
+ await up.goto(base+'/#settings');await up.locator('#backupManager > summary').click();await up.locator('#backupManager details').first().waitFor();
  const oldGeneration=up.locator('#backupManager details').filter({hasText:'世代 1 /'});await oldGeneration.locator('summary').click();await oldGeneration.getByRole('button',{name:'内容を確認して復元'}).click();await up.locator('#homeSummary').waitFor();
  assert.equal(await up.evaluate(async()=>(await (await import('./db.js')).load()).simpleEntries[0].stake),1000);pass('iPhone-sized UI add/edit/delete/preview/generation restore');
  await up.goto(base+'/#settings');await up.locator('#import').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{broken')});

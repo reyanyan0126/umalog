@@ -1177,3 +1177,6 @@ html{scroll-padding-top:calc(76px + env(safe-area-inset-top))}
 
 #externalBackupPrompt{max-width:520px;margin:12px auto;box-shadow:0 4px 20px #0003;border:2px solid var(--accent,#6366f1)}
 #externalBackupPrompt p{margin:0 0 8px;font-size:.85rem}#externalBackupPrompt button{margin:3px}#backupManager details{padding:12px 0;border-bottom:1px solid #8884}#backupManager button{margin:4px 0}
+
+/* Settings: one primary action and progressive disclosure. */
+.settings-fold>summary,#backupManager>summary{font-weight:700;font-size:1rem;cursor:pointer;padding:10px 0;min-height:44px;line-height:24px}.settings-fold>.card{box-shadow:none;border:0;padding:12px 0;margin:0}.settings-fold h2{font-size:1rem}#settingsStorage{box-shadow:none;border:0;margin:12px 0 0;padding:0}#backupManager{border-top:1px solid #8883;margin-top:12px}#settingsAppearance>section:first-of-type{padding-top:16px}

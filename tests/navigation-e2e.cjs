@@ -64,7 +64,7 @@ const pw=require(process.env.PLAYWRIGHT_PATH||'playwright');
    await page.locator('#launchStart').click();await home();
   }
   console.log('PASS initial title, Start and four Settings -> Title -> Home cycles');
-  await page.locator('#settingsButton').click();await page.locator('#motion').click();
+  await page.locator('#settingsButton').click();await page.locator('#settingsAppearance > summary').click();await page.locator('#motion').click();
   page.once('dialog',d=>d.dismiss());await page.locator('#returnToTitle').click();
   await page.waitForFunction(()=>location.hash==='#settings');assert.equal(await page.locator('#launchScreen').isVisible(),false);assert.equal(await page.locator('#settingsForm').count(),1);
   page.once('dialog',d=>d.accept());await page.locator('#returnToTitle').click();await title();
