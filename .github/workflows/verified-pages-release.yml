@@ -79,6 +79,21 @@ jobs:
         run: |
           git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v280" c41a979a2013925d320269baf9663cdcabd112cb
           BASELINE_DIR="$RUNNER_TEMP/umalog-v280" OUTPUT_DIR="$RUNNER_TEMP/umalog-comparison" node tests/refactor-browser.cjs
+  configure-source:
+    if: github.event_name == 'pull_request' && github.head_ref == 'fix/data-protection-20261028' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: [quality, acceptance]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const {data:before} = await github.rest.repos.getPages(context.repo);
+            if (before.build_type !== 'workflow') {
+              await github.request('PUT /repos/{owner}/{repo}/pages', {...context.repo, build_type:'workflow'});
+            }
+            const {data:after} = await github.rest.repos.getPages(context.repo);
+            core.info(JSON.stringify({build_type:after.build_type,source:after.source}));
+            if (after.build_type !== 'workflow') core.setFailed('Pages source conversion failed');
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: [quality, acceptance]
