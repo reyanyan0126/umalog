@@ -7,7 +7,7 @@ const pw=require('playwright');
   const file=path.resolve(root,'.'+name);if(!file.startsWith(root+path.sep))return res.writeHead(403).end();
   if(broken&&name==='/backup-manager.js')return res.writeHead(503).end();
   try{res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml'}[path.extname(file)]||'text/plain'));res.setHeader('Cache-Control','no-store');
-   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace("const VERSION='4.5.2'",`const VERSION='4.5.2-${release}'`);res.end(content);
+   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace("const VERSION='4.5.3'",`const VERSION='4.5.3-${release}'`);res.end(content);
   }catch{res.writeHead(404).end();}
  });await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const browser=await pw[process.env.BROWSER||'chromium'].launch({headless:true,...(process.env.BROWSER_PATH?{executablePath:process.env.BROWSER_PATH}:{})});

@@ -29,6 +29,7 @@ const playwright=require('playwright');
   const url='http://127.0.0.1:'+server.address().port+prefix;
   await page.goto(url,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>{const b=document.getElementById('launchStart');return b&&!b.disabled;},null,{timeout:15000});
+  assert.equal(await page.locator('#launchUpdateStatus').textContent(),'','ready screen must not retain loading message');
   assert.deepEqual(errors,[],'startup must not throw JavaScript errors');
   await page.locator('#launchStart').click();
   await page.locator('#launchScreen').waitFor({state:'hidden'});

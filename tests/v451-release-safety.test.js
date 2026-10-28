@@ -21,5 +21,5 @@ test('verified deploy waits for quality and browser acceptance',()=>{
 test('release manifests match and contain the expected patch version',()=>{
  const a=JSON.parse(read('release.json')),b=JSON.parse(read('publish/release.json'));
  assert.deepEqual(a,b);
- assert.equal(a.version,'4.5.2');
+ assert.equal(a.version,'4.5.3');
 });

@@ -988,7 +988,7 @@ window.addEventListener('beforeunload',e=>{if(dirty||calendarDirty){entryDraftSe
 $('#settingsButton').onclick=()=>navigate('#settings');
 $('#launchStart').onclick=()=>navigate('#home');
 const updates=createUpdates({serviceWorker:navigator.serviceWorker,
- currentVersion:'4.5.2',
+ currentVersion:'4.5.3',
  getPublishedVersion:async()=>{const response=await fetch('./release.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('release unavailable');const info=await response.json();return /^\d+\.\d+\.\d+$/.test(info.version)?info.version:null;},
  canReload:()=>!dirty&&!calendarDirty&&!busy,
  reload:()=>location.reload(),
@@ -1025,4 +1025,4 @@ $('#launchUpdate').onclick=async()=>{
 try{const snapshot=await loadWithRevision();data=snapshot.data;ledgerRevision=snapshot.revision;
  // Preserve the exact persisted ledger during startup. Never auto-save a migrated or empty snapshot.
 
- try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}
+ try{catalog=validateCatalog((await loadCatalog())||emptyCatalog());}catch(e){catalogWarning="レース情報キャッシュを読み込めません。収支データには影響しません。";}try{calendarState=await loadCalendar();calendarState.calendar=validateCalendar(calendarState.calendar);}catch(e){calendarWarning='開催キャッシュが不正です。既存データは変更していません。';calendarState={revision:0,importedAt:null,calendar:emptyCalendar()};}navigation.start();$('#launchUpdateStatus').textContent='';$('#launchStart').disabled=false;$('#launchUpdate').disabled=false;updates.register().catch(()=>notify('更新の自動確認に失敗しました。通信状態を確認してください。'));}catch(e){$('#launchScreen').hidden=true;app.innerHTML=`<h1>データを読み込めませんでした</h1><p class="error">${esc(e.message)}</p><p>ブラウザの保存設定・空き容量を確認してください。既存データは変更していません。</p><button onclick="location.reload()">再読み込み</button>`;}
