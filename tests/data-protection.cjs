@@ -40,6 +40,20 @@ const pw=require('playwright');
  assert.equal(await page.evaluate(async()=>{const get=IDBObjectStore.prototype.get;IDBObjectStore.prototype.get=function(){throw new Error('forced read failure');};try{await dbmod.loadWithRevision();return false;}catch{return true;}finally{IDBObjectStore.prototype.get=get;}}),true);pass('read failure rejects');
  // Corrupt persisted main deliberately in isolated test storage; check no mutation on load/save.
  assert.equal(await page.evaluate(async()=>{const db=await dbmod.openDB(),original=await readRaw('main');async function put(value){return new Promise(r=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(value,'main');tx.oncomplete=r;});}await put(null);let failures=0;try{await dbmod.loadWithRevision();}catch{failures++;}try{await dbmod.save(fixture(),{expectedRevision:59});}catch{failures++;}const unchanged=(await readRaw('main'))===null;await put(original);return failures===2&&unchanged;}),true);pass('null/corrupt data is not treated as first launch');
+ // Failed writes must never modify a valid ledger or its backup history.
+ assert.equal(await page.evaluate(async()=>{
+  const db=await dbmod.openDB(),before=JSON.stringify(await readRaw('main')),revision=await readRaw('mainRevision');
+  const rowsBefore=JSON.stringify(await dbmod.listBackups());
+  const broken=structuredClone(await readRaw('main'));broken.simpleEntries[0].stake=-100;
+  let rejected=false;try{await dbmod.save(broken,{expectedRevision:revision});}catch{rejected=true;}
+  return rejected&&JSON.stringify(await readRaw('main'))===before&&(await readRaw('mainRevision'))===revision&&JSON.stringify(await dbmod.listBackups())===rowsBefore;
+ }),true);pass('invalid accounting write preserves main, revision and all backups');
+ // A stale client must not overwrite a newer edit or append a generation.
+ assert.equal(await page.evaluate(async()=>{
+  const rev=await readRaw('mainRevision'),before=JSON.stringify(await readRaw('main')),rows=JSON.stringify(await dbmod.listBackups());
+  let rejected=false;try{await dbmod.save(fixture(),{expectedRevision:rev-1});}catch{rejected=true;}
+  return rejected&&JSON.stringify(await readRaw('main'))===before&&JSON.stringify(await dbmod.listBackups())===rows;
+ }),true);pass('stale write preserves ledger and backup history');
  // Reload/PWA update/offline, with the populated ledger.
  await page.goto(base);await page.locator('#launchStart:not([disabled])').waitFor();await page.locator('#launchStart').click();await page.locator('#homeSummary').waitFor();
  await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.reload();
