@@ -67,7 +67,7 @@ const pw=require('playwright');
  }),true);pass('failed restore backup write rolls back ledger and generations');
  // A corrupted stored generation is reported invalid and cannot silently become a valid restore candidate.
  assert.equal(await page.evaluate(async()=>{
-  const db=await dbmod.openDB(),key='ledgerBackup:0000000000000001';
+  const db=await dbmod.openDB(),latest=(await dbmod.listBackups()).find(x=>x.key!=='preRestoreBackup'&&x.valid),key=latest?.key;
   const original=await readRaw(key);if(!original)return false;
   await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put({...original,json:'{corrupt'},key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
   const candidate=(await dbmod.listBackups()).find(x=>x.key===key);
