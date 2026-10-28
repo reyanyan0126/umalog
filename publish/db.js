@@ -30,7 +30,9 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
   const tx=db.transaction(STORE,'readwrite'),store=tx.objectStore(STORE);
   const lookup=store.get('mainRevision'),savedTime=store.get('lastMainSaveAt'),previous=store.get('main'),backupCount=store.count(IDBKeyRange.bound('ledgerBackup:','ledgerBackup:\uffff'));
   let problem;
-  previous.onsuccess=()=>{try{
+  backupCount.onsuccess=()=>{if(previous.readyState!=='done'||lookup.readyState!=='done'||savedTime.readyState!=='done')return;applySave();};
+  previous.onsuccess=()=>{if(backupCount.readyState==='done'&&lookup.readyState==='done'&&savedTime.readyState==='done')applySave();};
+  function applySave(){try{
    const nextRevision=nextLedgerRevision(lookup.result,expectedRevision);
    const old=previous.result;
    if(old===undefined&&(expectedRevision>0||backupCount.result>0))throw new Error('収支本体が見つかりません。残存するバックアップを保護するため保存を停止しました。');
