@@ -6,6 +6,7 @@ export const isGraded=r=>/^(J)?G(I|II|III)$/.test(gradeCode(r.grade));
 export const eventKey=r=>r.eventId||`${r.date.slice(0,4)}|${r.venue}|${r.name}`;
 export function gradedEvents(calendar){const map=new Map(),blocked=new Map(calendar.meetings.filter(r=>['cancelled','changed'].includes(r.status)).map(r=>[meetingKey(r),r.status]));for(const r of [...calendar.featuredEvents,...calendar.races]){if(!isGraded(r))continue;const key=eventKey(r),old=map.get(key);if(old&&Date.parse(old.retrievedAt)>Date.parse(r.retrievedAt))continue;map.set(key,{...r,key,status:blocked.get(meetingKey(r))||r.status,number:r.number??null});}return [...map.values()].sort((a,b)=>a.date.localeCompare(b.date)||(a.startTime||'99:99').localeCompare(b.startTime||'99:99')||a.venue.localeCompare(b.venue,'ja')||a.key.localeCompare(b.key,'ja'));}
 export function periodEvents(events,period,today=jstToday()){let start=today,end='2199-12-31';if(period==='week'){start=weekOf(today);end=addDays(start,6);}else if(period==='next'){start=addDays(weekOf(today),7);end=addDays(start,6);}else if(period==='month'){start=today.slice(0,7)+'-01';end=today.slice(0,7)+'-31';}return events.filter(r=>r.date>=start&&r.date<=end);}
+export function filterGradedEvents(events,{year='all',grade='all',venue='all',status='all'}={}){return events.filter(r=>(year==='all'||r.date.startsWith(year+'-'))&&(grade==='all'||gradeCode(r.grade)===grade)&&(venue==='all'||r.venue===venue)&&(status==='all'||(status==='active'?selectable(r):r.status===status)));}
 export const selectable=r=>r&&!['cancelled','changed'].includes(r.status);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function eventLabel(r){return `${r.date} · ${r.venue} · ${r.name}（${r.grade}${r.gradeStatus==='pending'?`／${r.proposedGrade||'格付け'}申請中`:''}）`;}
@@ -16,9 +17,17 @@ function compactGradedRow(r){
 }
 export function mountGradedHome(el,events){
  const soon=periodEvents(events,'all');
- el.innerHTML=`<div class="graded-home-heading"><h2>今後の重賞</h2><small>直近3件</small></div><ul class="graded-soon-compact" id="gradedSoon">${soon.slice(0,3).map(compactGradedRow).join('')}</ul>${!events.length?'<p class="help">重賞情報は未登録</p>':!soon.length?'<p class="help">登録済みの今後の予定はありません</p>':''}<details id="gradedAll"><summary>すべての重賞予定を見る</summary><p class="help">2026年末まで掲載・2027年は一部予定</p><label>期間<select id="gradedPeriod"><option value="week">今週</option><option value="next">来週</option><option value="month">今月</option><option value="all">全予定</option></select></label><ul class="graded-list" id="gradedFull"></ul><p id="gradedCount" role="status"></p></details>`;
- const update=()=>{const rows=periodEvents(events,el.querySelector('#gradedPeriod').value);el.querySelector('#gradedFull').innerHTML=list(rows);el.querySelector('#gradedCount').textContent=rows.length?`${rows.length}件`:events.length?'この期間の登録済み予定はありません':'重賞情報は未登録';};
- el.querySelector('#gradedPeriod').onchange=update;update();
+ const years=[...new Set(events.map(r=>r.date.slice(0,4)))].sort();
+ const venues=[...new Set(events.map(r=>r.venue))].sort((a,b)=>a.localeCompare(b,'ja'));
+ el.innerHTML=`<div class="graded-home-heading"><h2>今後の重賞</h2><small>直近3件</small></div><ul class="graded-soon-compact" id="gradedSoon">${soon.slice(0,3).map(compactGradedRow).join('')}</ul>${!events.length?'<p class="help">重賞情報は未登録</p>':!soon.length?'<p class="help">登録済みの今後の予定はありません</p>':''}<details id="gradedAll"><summary>すべての重賞予定を見る</summary><p class="help">登録済みの日程を表示します。開催・格付けの変更は情報源を確認してください。</p><label>期間<select id="gradedPeriod"><option value="week">今週</option><option value="next">来週</option><option value="month">今月</option><option value="all">全予定</option></select></label><label>年<select id="gradedYear"><option value="all">全年</option>${years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('')}</select></label><label>格付け<select id="gradedGrade"><option value="all">すべて</option><option value="GI">GI</option><option value="GII">GII</option><option value="GIII">GIII</option><option value="JGI">J・GI</option><option value="JGII">J・GII</option><option value="JGIII">J・GIII</option></select></label><label>競馬場<select id="gradedVenue"><option value="all">全競馬場</option>${venues.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select></label><label>開催状態<select id="gradedStatus"><option value="all">すべて</option><option value="active">変更・中止を除く</option><option value="changed">変更</option><option value="cancelled">中止</option></select></label><ul class="graded-list" id="gradedFull"></ul><p id="gradedCount" role="status"></p></details>`;
+ const update=()=>{
+  const period=el.querySelector('#gradedPeriod').value;
+  const rows=filterGradedEvents(periodEvents(events,period),{year:el.querySelector('#gradedYear').value,grade:el.querySelector('#gradedGrade').value,venue:el.querySelector('#gradedVenue').value,status:el.querySelector('#gradedStatus').value});
+  el.querySelector('#gradedFull').innerHTML=list(rows);
+  el.querySelector('#gradedCount').textContent=rows.length?`${rows.length}件`:events.length?'条件に一致する登録済み予定はありません':'重賞情報は未登録';
+ };
+ for(const id of ['gradedPeriod','gradedYear','gradedGrade','gradedVenue','gradedStatus'])el.querySelector('#'+id).onchange=update;
+ update();
 }
 export function mountGradedPicker(el,events,onChoose){
  const today=jstToday(),yesterday=addDays(today,-1);
