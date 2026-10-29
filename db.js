@@ -62,7 +62,16 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
    if(clearAllDrafts){const cursor=store.openCursor(IDBKeyRange.bound('entryDraft:','entryDraft:\uffff'));cursor.onsuccess=()=>{const c=cursor.result;if(c){c.delete();c.continue();}};}
    else if(clearDraftKey!==null)store.delete('entryDraft:'+clearDraftKey);
   }catch(error){problem=error;tx.abort();}};
-  tx.oncomplete=()=>resolve(data);
+  tx.oncomplete=()=>{
+   // A committed write is not yet considered verified: re-read the durable ledger.
+   (async()=>{
+    const verifyTx=db.transaction(STORE,'readonly'),verifyStore=verifyTx.objectStore(STORE);
+    const main=verifyStore.get('main'),revision=verifyStore.get('mainRevision'),backup=verifyStore.get('ledgerBackup:'+String(expectedRevision+1).padStart(16,'0'));
+    await new Promise((resolve,reject)=>{verifyTx.oncomplete=resolve;verifyTx.onabort=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));verifyTx.onerror=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));});
+    if(revision.result!==expectedRevision+1||!backup.result||backup.result.checksum!==snapshot.checksum||JSON.stringify(validateData(main.result))!==snapshot.json)throw new Error('保存後の照合に失敗しました。再保存せず、バックアップと保存状態を確認してください。');
+    return data;
+   })().then(resolve,reject);
+  };
   tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。元の記録を保持しています。'));
   tx.onabort=()=>reject(problem||tx.error||new Error('自動バックアップを含む保存全体を中止しました。元の記録を保持しています。'));
  });
