@@ -1,5 +1,6 @@
 import {snapshotOf,decodeSnapshot,recordCount} from './backup-integrity.js';
 import {migrateGrowth} from './growth-v2.js';
+import {verifyPersistedLedger} from './ledger-verification.js';
 import {assertExpectedRevision,nextLedgerRevision,readLedgerRevision} from './ledger-revision.js';
 import {emptyCalendar,validateCalendar} from "./calendar.js";
 import {emptyData,validateData,recalculate} from './core.js';
@@ -68,7 +69,7 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
     const verifyTx=db.transaction(STORE,'readonly'),verifyStore=verifyTx.objectStore(STORE);
     const main=verifyStore.get('main'),revision=verifyStore.get('mainRevision'),backup=verifyStore.get('ledgerBackup:'+String(expectedRevision+1).padStart(16,'0'));
     await new Promise((resolve,reject)=>{verifyTx.oncomplete=resolve;verifyTx.onabort=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));verifyTx.onerror=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));});
-    if(revision.result!==expectedRevision+1||!backup.result||backup.result.checksum!==snapshot.checksum||JSON.stringify(validateData(main.result))!==snapshot.json)throw new Error('保存後の照合に失敗しました。再保存せず、バックアップと保存状態を確認してください。');
+    verifyPersistedLedger({main:main.result,revision:revision.result,backup:backup.result},expectedRevision+1,snapshot.json);
     return data;
    })().then(resolve,reject);
   };
