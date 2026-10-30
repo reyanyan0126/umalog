@@ -7,7 +7,7 @@ const pw=require('playwright');
   const file=path.resolve(root,'.'+name);if(!file.startsWith(root+path.sep))return res.writeHead(403).end();
   if(broken&&name==='/backup-manager.js')return res.writeHead(503).end();
   try{res.setHeader('Content-Type',({'.js':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml'}[path.extname(file)]||'text/plain'));res.setHeader('Cache-Control','no-store');
-   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace("const VERSION='4.5.4'",`const VERSION='4.5.4-${release}'`);res.end(content);
+   let content=fs.readFileSync(file);if(name==='/sw.js')content=content.toString().replace(/const VERSION='[^']+'/,`const VERSION='test-${release}'`);res.end(content);
   }catch{res.writeHead(404).end();}
  });await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const browser=await pw[process.env.BROWSER||'chromium'].launch({headless:true,...(process.env.BROWSER_PATH?{executablePath:process.env.BROWSER_PATH}:{})});
@@ -117,6 +117,26 @@ const pw=require('playwright');
  // Legacy main has no revision/backups; migration only becomes durable on user save.
  const legacy=await browser.newContext(),lp=await legacy.newPage();await lp.goto(base+'/rescue.html');
  assert.equal(await lp.evaluate(async json=>{const m=await import('./db.js'),db=await m.openDB();await new Promise(r=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put(JSON.parse(json),'main');tx.oncomplete=r;});const s=await m.loadWithRevision();await m.save(s.data,{expectedRevision:s.revision});return (await m.listBackups()).some(x=>x.revision===0&&x.records===2);},exported),true);await legacy.close();pass('legacy no-revision snapshot protected before first save');
+ // A post-commit read failure must be distinguished from an aborted transaction.
+ const verifyContext=await browser.newContext(),vp=await verifyContext.newPage();await vp.goto(base+'/rescue.html');
+ assert.deepEqual(await vp.evaluate(async()=>{
+  const m=await import('./db.js'),c=await import('./core.js');await m.save(c.emptyData(),{expectedRevision:0});
+  await m.saveEntryDraft('new',{note:'keep this draft'});
+  const get=IDBObjectStore.prototype.get;let failed=false,code=null;
+  IDBObjectStore.prototype.get=function(key){if(!failed&&this.transaction.mode==='readonly'&&key==='main'){failed=true;throw new Error('forced verification read failure');}return get.call(this,key);};
+  try{await m.save(c.emptyData(),{expectedRevision:1,restore:true});}catch(e){code=e.code;}finally{IDBObjectStore.prototype.get=get;}
+  const actual=await m.loadWithRevision();let staleRejected=false;try{await m.save(c.emptyData(),{expectedRevision:1});}catch{staleRejected=true;}
+  return [code,actual.revision,(await m.listBackups()).filter(x=>x.key!=='preRestoreBackup').length,staleRejected,(await m.loadEntryDraft('new')).note];
+ }),['LEDGER_COMMITTED_UNVERIFIED',2,2,true,'keep this draft']);pass('post-commit read failure is explicit, not retried, and restore preserves draft');
+ await verifyContext.close();
+ // The UI must latch after a committed-but-unverified save, even after further clicks.
+ const locked=await browser.newContext(),lockedPage=await locked.newPage();await lockedPage.goto(base);await lockedPage.locator('#launchStart:not([disabled])').click();await lockedPage.goto(base+'/#quick');
+ await lockedPage.locator('#simpleStake').fill('1000');await lockedPage.locator('#simplePayout').fill('2300');
+ await lockedPage.evaluate(()=>{const get=IDBObjectStore.prototype.get;IDBObjectStore.prototype.get=function(key){if(this.transaction.mode==='readonly'&&key==='main'){IDBObjectStore.prototype.get=get;throw new Error('forced post-commit read');}return get.call(this,key);};});
+ await lockedPage.locator('#simpleSave').click();await lockedPage.locator('#saveVerificationError').waitFor();
+ await lockedPage.locator('#simpleSave').click();
+ assert.deepEqual(await lockedPage.evaluate(async()=>{const m=await import('./db.js'),s=await m.loadWithRevision();return [s.revision,s.data.simpleEntries.length];}),[1,1]);
+ assert.match(await lockedPage.locator('#saveVerificationError').textContent(),/更新番号 1/);pass('UI blocks repeat save after verification error and reports persisted revision');await locked.close();
  // User-facing add/edit/delete, backup preview and restore.
  const ui=await browser.newContext({viewport:{width:390,height:844}}),up=await ui.newPage();up.on('dialog',d=>d.accept());await up.goto(base);await up.locator('#launchStart:not([disabled])').click();
  await up.goto(base+'/#quick');await up.locator('#simpleStake').fill('1000');await up.locator('#simplePayout').fill('2300');await up.locator('#simpleSave').click();await up.locator('#externalBackupPrompt').waitFor();

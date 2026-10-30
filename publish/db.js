@@ -71,7 +71,10 @@ export async function save(input,{clearDraftKey=null,clearAllDrafts=false,expect
     await new Promise((resolve,reject)=>{verifyTx.oncomplete=resolve;verifyTx.onabort=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));verifyTx.onerror=()=>reject(verifyTx.error||new Error('保存後の読取に失敗しました。'));});
     verifyPersistedLedger({main:main.result,revision:revision.result,backup:backup.result},expectedRevision+1,snapshot.json);
     return data;
-   })().then(resolve,reject);
+   })().then(resolve,cause=>{
+    const error=new Error('書き込みは完了しましたが、保存後の照合に失敗しました。再保存せず保存状態を確認してください。',{cause});
+    error.code='LEDGER_COMMITTED_UNVERIFIED';error.committedRevision=expectedRevision+1;reject(error);
+   });
   };
   tx.onerror=()=>reject(problem||tx.error||new Error('保存に失敗しました。元の記録を保持しています。'));
   tx.onabort=()=>reject(problem||tx.error||new Error('自動バックアップを含む保存全体を中止しました。元の記録を保持しています。'));
