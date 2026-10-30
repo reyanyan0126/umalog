@@ -34,8 +34,8 @@ export async function mountBackupManager(container,{commit,getData,guard,notify}
    if(row.valid){
     const d=decodeSnapshot(row),amounts=document.createElement('p'),download=document.createElement('button');amounts.textContent=totals(d);box.append(amounts);download.textContent='この世代をJSONで保存';download.onclick=guard(()=>exportBackup(d));box.append(download);
     const restore=document.createElement('button');restore.textContent='内容を確認して復元';restore.className='danger';restore.onclick=guard(async()=>{
-     const current=getData();if(!confirm(`現在：${current.races.length}レース / ${recordCount(current)}購入記録 / ${totals(current)}\n復元後：${d.races.length}レース / ${recordCount(d)}購入記録 / ${totals(d)}\n現在のデータを保護コピーに保存して全件置換します。実行しますか？`))return;
-     await commit(migrateGrowth(structuredClone(d),new Date(),d.character.exp),{restore:true,clearAllDrafts:true});notify('復元が完了しました。復元直前の記録も保護しています。');location.hash='home';
+     const current=getData();if(!confirm(`現在：${current.races.length}レース / ${recordCount(current)}購入記録 / ${totals(current)}\n復元後：${d.races.length}レース / ${recordCount(d)}購入記録 / ${totals(d)}\nバックアップ日時：${row.savedAt?new Date(row.savedAt).toLocaleString('ja-JP'):'不明'} / ${row.checksum?'整合性確認済み':'旧形式：構造確認済み'}\n現在のデータを保護コピーに保存して全件置換します。下書きは保持します。実行しますか？`))return;
+     await commit(migrateGrowth(structuredClone(d),new Date(),d.character.exp),{restore:true});notify('復元が完了しました。復元直前の記録も保護しています。');location.hash='home';
     });box.append(restore);
    }
    section.append(box);
