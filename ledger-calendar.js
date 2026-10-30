@@ -1,5 +1,5 @@
 import {summarize as oldSummarize,jstToday} from './core.js';
-import {cashFinance} from './simple-ledger.js';
+import {groupedCashFinance} from './simple-ledger.js';
 import {calendarMetricValue} from './screen-roles.js';
 import {selectable} from './graded-races.js';
 import {japaneseHolidayName,HOLIDAY_YEARS} from './jp-holidays.js';
@@ -18,12 +18,14 @@ export function ledgerMonth(data,events,month){
  const group=date=>{if(!byDay.has(date))byDay.set(date,{tickets:[],lines:[]});return byDay.get(date);};
  for(const t of data.tickets){const r=racesById.get(t.raceId);if(r&&r.date.startsWith(month))group(r.date).tickets.push({ticket:t,race:r});}
  for(const l of data.lines){const t=ticketsById.get(l.ticketId),r=t&&racesById.get(t.raceId);if(r&&r.date.startsWith(month))group(r.date).lines.push(l);}
+ const finances=groupedCashFinance(data,{prefix:month}),quickDays=new Map();
+ for(const e of data.simpleEntries||[]){if(!e.date.startsWith(month))continue;if(!quickDays.has(e.date))quickDays.set(e.date,[]);quickDays.get(e.date).push(e);}
  const eventDays=new Map();
  for(const e of events){if(!e.date.startsWith(month))continue;if(!eventDays.has(e.date))eventDays.set(e.date,[]);eventDays.get(e.date).push(e);}
- const days=Array.from({length:count},(_,i)=>{const date=month+'-'+String(i+1).padStart(2,'0'),grouped=byDay.get(date),lines=grouped?.lines||[],hasQuick=(data.simpleEntries||[]).some(e=>e.date===date);
-  const inclusive=hasQuick?cashFinance(data,{prefix:date}):null;
-  const summary=hasQuick?{...summarize(lines),purchase:inclusive.settledPurchase,payout:inclusive.payout,refund:inclusive.refund,profit:inclusive.profit,settledCount:inclusive.settledCount,pendingCount:inclusive.pendingCount,pendingStake:inclusive.pendingStake}:lines.length?summarize(lines):null;
-  return {date,day:i+1,summary,tickets:grouped?.tickets||[],quick:(data.simpleEntries||[]).filter(e=>e.date===date),events:eventDays.get(date)||[],holiday:japaneseHolidayName(date)};
+ const days=Array.from({length:count},(_,i)=>{const date=month+'-'+String(i+1).padStart(2,'0'),grouped=byDay.get(date),lines=grouped?.lines||[],hasQuick=quickDays.has(date);
+  const inclusive=hasQuick?finances.get(date):null;
+  const summary=hasQuick?{...summarize(lines),purchase:inclusive.settledPurchase,payout:inclusive.payout,refund:inclusive.refund,profit:inclusive.profit,returnRate:inclusive.returnRate,settledCount:inclusive.settledCount,pendingCount:inclusive.pendingCount,pendingStake:inclusive.pendingStake}:lines.length?summarize(lines):null;
+  return {date,day:i+1,summary,tickets:grouped?.tickets||[],quick:quickDays.get(date)||[],events:eventDays.get(date)||[],holiday:japaneseHolidayName(date)};
  });
  return {month,offset,days};
 }

@@ -1,6 +1,6 @@
-import {summarize as oldSummarize} from './core.js';
-import {cashFinance as combinedFinance} from './simple-ledger.js';
-import {analysisCoverage as oldAnalysisCoverage,inclusiveMonthlyRows as oldInclusiveMonthlyRows} from './analysis-quality.js';
+import {check,summarize as oldSummarize} from './core.js';
+import {cashFinance as combinedFinance,groupedCashFinance} from './simple-ledger.js';
+import {analysisCoverage as oldAnalysisCoverage} from './analysis-quality.js';
 import {compareCategories as oldCompareCategories} from './category-compare.js';
 // Cash-flow projections: old pending records remain readable, but no cost is excluded.
 export const summarize=(lines,races=[],tickets=[])=>{
@@ -20,10 +20,11 @@ export const analysisCoverage=(ledger,opts={})=>{
  const x=oldAnalysisCoverage(ledger,opts),finance=combinedFinance(ledger,opts);
  return {...x,finance,pendingCount:0,pendingStake:0,settledCount:x.total,settledCountShare:x.total?100:null,settledShare:finance.recordedPurchase?100:null};
 };
-export const inclusiveMonthlyRows=(ledger,opts={})=>oldInclusiveMonthlyRows(ledger,opts).map(row=>{
- const c=combinedFinance(ledger,{prefix:row.month,venue:opts.venue||'',type:opts.type||''});
- return {...row,...c,settledShare:c.recordedPurchase?100:null};
-});
+export const inclusiveMonthlyRows=(ledger,{limit=6,...opts}={})=>{
+ check(Number.isInteger(limit)&&limit>=1&&limit<=24,'表示月数は1〜24か月の範囲で指定してください。');
+ const grouped=groupedCashFinance(ledger,{...opts,dimension:'month'});
+ return [...grouped.keys()].sort().slice(-limit).map(month=>{const c=grouped.get(month);return {month,...c,settledShare:c.recordedPurchase?100:null};});
+};
 export const compareCategories=(ledger,opts={})=>{
  const out=oldCompareCategories(ledger,opts);
  const convert=r=>({...r,settledPurchase:r.recordedPurchase,profit:r.receipts-r.recordedPurchase,
