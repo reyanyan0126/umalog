@@ -50,10 +50,13 @@ export function recentSimpleTemplates(entries,limit=3){
  return templates;
 }
 const validPeriodPrefix=prefix=>typeof prefix==='string'&&(prefix===''||/^\d{4}$/.test(prefix)&&Number(prefix)>=2000&&Number(prefix)<=2199||/^\d{4}-(0[1-9]|1[0-2])$/.test(prefix)&&Number(prefix.slice(0,4))>=2000&&Number(prefix.slice(0,4))<=2199||validDate(prefix));
-export function combinedFinance(data,{prefix='',venue='',type=''}={}){
+function validateFinanceFilters({prefix,venue,type}){
  check(validPeriodPrefix(prefix),'集計対象期間が不正です。');
  check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
  check(!type||TYPES.includes(type),'券種の指定が不正です。');
+}
+export function combinedFinance(data,{prefix='',venue='',type=''}={}){
+ validateFinanceFilters({prefix,venue,type});
  const raceById=new Map(data.races.map(r=>[r.id,r])),ticketById=new Map(data.tickets.map(t=>[t.id,t]));
  const detail=data.lines.filter(l=>{
   const t=ticketById.get(l.ticketId),r=t&&raceById.get(t.raceId);
@@ -72,9 +75,7 @@ export function combinedFinance(data,{prefix='',venue='',type=''}={}){
 }
 export function quickBreakdown(data,{prefix='',dimension='venue',venue='',type=''}={}){
  check(['venue','type','date'].includes(dimension),'分析軸が不正です。');
- check(validPeriodPrefix(prefix),'集計対象期間が不正です。');
- check(!venue||VENUES.includes(venue),'競馬場の指定が不正です。');
- check(!type||TYPES.includes(type),'券種の指定が不正です。');
+ validateFinanceFilters({prefix,venue,type});
  const quick=validateSimpleEntries(data.simpleEntries).filter(e=>e.date.startsWith(prefix)&&(!venue||e.venue===venue)&&(!type||e.type===type));
  const raceById=new Map(data.races.map(r=>[r.id,r])),ticketById=new Map(data.tickets.map(t=>[t.id,t]));
  const buckets=new Map();
@@ -107,4 +108,21 @@ export function cashQuickBreakdown(data,options={}){
  return quickBreakdown(data,options).map(x=>({...x,
   settledPurchase:x.recordedPurchase,profit:x.receipts-x.recordedPurchase,
   pendingCount:0,pendingStake:0,settledCount:x.count}));
+}
+
+// Partition once, then use the SAME cashFinance rules for each disjoint group.
+// No persistent cache: edits cannot leave stale aggregate values behind.
+export function groupedCashFinance(data,{prefix='',venue='',type='',dimension='date'}={}){
+ validateFinanceFilters({prefix,venue,type});
+ check(['date','month'].includes(dimension),'集計単位が不正です。');
+ const races=new Map(data.races.map(r=>[r.id,r])),tickets=new Map(data.tickets.map(t=>[t.id,t])),groups=new Map();
+ const matches=(date,v,t)=>date.startsWith(prefix)&&(!venue||v===venue)&&(!type||t===type);
+ const group=date=>{const key=dimension==='month'?date.slice(0,7):date;if(!groups.has(key))groups.set(key,{races:new Map(),tickets:new Map(),lines:[],simpleEntries:[]});return groups.get(key);};
+ for(const line of data.lines){
+  const ticket=tickets.get(line.ticketId),race=ticket&&races.get(ticket.raceId);
+  if(!race||!matches(race.date,race.venue,ticket.type))continue;
+  const g=group(race.date);g.races.set(race.id,race);g.tickets.set(ticket.id,ticket);g.lines.push(line);
+ }
+ for(const entry of validateSimpleEntries(data.simpleEntries))if(matches(entry.date,entry.venue,entry.type))group(entry.date).simpleEntries.push(entry);
+ return new Map([...groups].map(([key,g])=>[key,cashFinance({...g,races:[...g.races.values()],tickets:[...g.tickets.values()]})]));
 }

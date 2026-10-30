@@ -73,6 +73,19 @@ jobs:
           PUBLISH=1 node tests/navigation-e2e.cjs
           node tests/ai-import-browser.cjs
           PUBLISH=1 node tests/ai-import-browser.cjs
+      - name: Draft failure navigation protection (Chromium and WebKit)
+        run: |
+          node tests/quality-browser.cjs
+          BROWSER=webkit node tests/quality-browser.cjs
+      - name: Paired large-ledger performance and correctness
+        run: |
+          git -c safe.directory="$GITHUB_WORKSPACE" worktree add "$RUNNER_TEMP/umalog-v459" c24b1836c8fa1c0a4629c12c660fc33170b3d39b
+          BASELINE_DIR="$RUNNER_TEMP/umalog-v459" OUTPUT_DIR="$RUNNER_TEMP/umalog-performance" node tests/quality-performance.cjs
+      - name: Preserve measured performance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-performance
+          path: ${{ runner.temp }}/umalog-performance
       - name: UI and data compatibility
         env:
           CHROMIUM_MODULE: ./ci-chromium.cjs
