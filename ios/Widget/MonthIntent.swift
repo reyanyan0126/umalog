@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import WidgetKit
 
 // Both the provider and the intent live in the widget extension. All sizes
 // share this selection; zero follows the current month as time advances.
@@ -26,6 +27,7 @@ struct SetRaceMonth: AppIntent {
         } else if RaceCalendar.start(month) != nil {
             UserDefaults.standard.set(month, forKey: MonthSelection.key)
         }
+        WidgetCenter.shared.reloadTimelines(ofKind: "UmalogRaceCalendar")
         return .result()
     }
 }

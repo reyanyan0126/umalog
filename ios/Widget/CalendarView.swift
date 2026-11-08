@@ -115,7 +115,7 @@ struct CalendarWidgetView: View {
                                 }
                                 .padding(.horizontal, 2)
                                 .padding(.top, 1)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                 .background(isToday ? todayTile : tile)
                                 .overlay { if isToday { Rectangle().strokeBorder(gold, lineWidth: 0.8) } }
                                 .clipped()

@@ -4,6 +4,10 @@ iOS 17以降のWidgetKit版。中・大サイズの年月の横の ◀ ▶ で�
 
 ## 手元のiPhoneで試す
 
+GitHub Actionsの成功した「Native iPhone widget」のArtifactsから **Umalog-iPhone-Xcode** をダウンロードできます。ZIPを展開し、Macで `ios/Umalog.xcodeproj` を開いたら、下の手順3へ進みます。生成済みプロジェクトを使う場合はXcodeGenのインストールは不要です。
+
+リポジトリから準備する場合は次の手順です。
+
 1. Macに、手元のiPhoneのiOSに対応するXcodeとXcodeGenを用意します。Homebrewを利用している場合は `brew install xcodegen`。
 2. このリポジトリを取得して次を実行します。
 
