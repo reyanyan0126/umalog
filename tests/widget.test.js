@@ -98,5 +98,6 @@ test('full month places graded names inside the correct shared date and uses the
  names.length=0;
  api.render('large',{feed,mode:'online',time:now},now);
  for(const grade of ['G1','G2','G3'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
+ assert.ok(names.includes('アルゼンチン共和国杯'));
  for(const prefix of ['みやこ','アルゼン','武蔵野','デイリー','エリザベス'])assert.ok(names.some(t=>t.startsWith(prefix)));
 });

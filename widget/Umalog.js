@@ -127,26 +127,26 @@ function monthCells(today, races) {
   }
   const grid = monthGrid(today);
   const weeks = Math.ceil((grid.findIndex(Boolean) + grid.filter(Boolean).length)/7);
-  const columns = Array(7).fill(1), weights = Array(weeks).fill(1);
+  const columns = Array(7).fill(0), weights = Array(weeks).fill(1);
   const cells = grid.slice(0,weeks*7).map((day,i)=>{
     const date = day ? prefix+String(day).padStart(2,'0') : null;
     const events = byDate.get(date) || [], col=i%7, week=Math.floor(i/7);
-    if (events.length) columns[col]=3.6;
+    if (events.length) columns[col]=1;
     weights[week]=Math.max(weights[week],1+Math.min(3,events.length)*0.85);
     return {date,day,events,col,week};
   });
-  function edges(weights,start,span) {
+  function edges(weights,start,span,min=0) {
     const sum=weights.reduce((a,b)=>a+b,0), points=[start];
-    for (const weight of weights) points.push(points[points.length-1]+weight/sum*span);
+    for (const weight of weights) points.push(points[points.length-1]+min+weight/sum*(span-min*weights.length));
     return points;
   }
-  const xs=edges(columns,9,342), ys=edges(weights,49,284);
+  const xs=edges(columns.some(Boolean)?columns:Array(7).fill(1),9,342,16), ys=edges(weights,49,284);
   return cells.map(c=>({...c,x:xs[c.col],y:ys[c.week],w:xs[c.col+1]-xs[c.col],h:ys[c.week+1]-ys[c.week]}));
 }
-function nameLines(name,width,lines) {
+function nameLines(name,width,lines,size=10) {
   // Treat Japanese glyphs as full-width; leave a small margin for native fonts.
   const units = s=>Array.from(s).reduce((n,c)=>n+(/[ -~]/.test(c)?0.65:1),0);
-  const limit=width/10.4;
+  const limit=width/(size+0.4);
   let value=name;
   if(units(value)>limit*lines) value=value.replace(/ステークス/g,'S').replace(/カップ/g,'C');
   const output=[''];
@@ -190,7 +190,7 @@ function largeCalendar(today,state,now) {
     if(date===today){
       d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+2,y+1,17,16));
     }
-    label(String(day),x+4,y+1,w-4,12,date===today?'#102421':paper,true);
+    label(String(day),x+4,y+1,w-3,w<20?10:12,date===today?'#102421':paper,true);
     if (!events.length) continue;
     const capacity=Math.max(1,Math.floor((h-6)/23));
     const visible=events.slice(0,capacity);
@@ -215,8 +215,13 @@ function largeCalendar(today,state,now) {
       const badge=grade+' '+status+(status?' ':'')+r.venue+(i===0&&extra?' +'+extra:'');
       label(badge,x+left,i===0?y+3:cursor,w-left-1,8,ink,true);
       if(i) cursor+=11;
-      const parts=nameLines(r.name,width,lines[i]);
-      for(const part of parts){label(part,x+3,cursor,width,10,paper,true);cursor+=12;}
+      let fontSize=10, parts=nameLines(r.name,width,lines[i]);
+      // Keep a recognizable whole title when a slightly smaller face fits.
+      if(parts[parts.length-1].endsWith('…')){
+        const smaller=nameLines(r.name,width,lines[i],8.2);
+        if(!smaller[smaller.length-1].endsWith('…')){fontSize=8.2;parts=smaller;}
+      }
+      for(const part of parts){label(part,x+3,cursor,width,fontSize,paper,true);cursor+=12;}
     });
   }
   const rows=cells.flatMap(c=>c.events);
