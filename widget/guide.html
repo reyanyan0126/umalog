@@ -1,14 +1,14 @@
 <!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>うまログ｜重賞ウィジェットの導入</title>
 <style>:root{color-scheme:dark}body{background:#142227;color:#f2f6f5;font:16px/1.7 system-ui;max-width:40rem;margin:auto;padding:1.2rem}a{color:#76e3c0}button{background:#76e3c0;color:#142227;border:0;border-radius:.5rem;padding:.8rem;font-weight:bold}li{margin:.6em 0}h1{font-size:1.6rem}h2{font-size:1.2rem}</style>
 <a href="../#calendar">← うまログ</a><h1>iPhoneに重賞カレンダーを追加</h1>
-<p>すでに使っている場合は、ホームで選択中のスクリプトを開き、下のボタンでコピーしたコードに置き換えて保存します。</p><p>以前の一覧がホームに残っている場合は、新しい名前「うまログ月間1.3」で保存し、今ある大ウィジェットを長押し →「ウィジェットを編集」→「Script」でその名前を選び直してください。RUNとホームの右下に「月間 1.3」が出れば新版です。反映が遅い場合は、新しい大ウィジェットを追加して同じスクリプトを選択し、表示を確認してから古い枠を外してください。</p>
+<p>すでに使っている場合は、ホームで選択中のスクリプトを開き、下のボタンでコピーしたコードに置き換えて保存します。</p><p>以前の一覧がホームに残っている場合は、新しい名前「うまログ月間1.4」で保存し、今ある大ウィジェットを長押し →「ウィジェットを編集」→「Script」でその名前を選び直してください。RUNとホームの右下に「月間 1.4」が出れば新版です。反映が遅い場合は、新しい大ウィジェットを追加して同じスクリプトを選択し、表示を確認してから古い枠を外してください。</p>
 <ol><li><a href="https://apps.apple.com/jp/app/scriptable/id1405459188">App StoreでScriptableをインストール</a>して、一度開きます。</li>
-<li>このページで <button id="copy">スクリプトをコピー</button> <span id="msg" role="status"></span>。コピーできない場合は<a href="Umalog.js?v=1.3">コードを開いて全文コピー</a>してください。</li>
-<li>Scriptable右上の「＋」を押し、編集欄に貼り付けます。タイトルを「うまログ月間1.3」に変更し、▶︎で初回実行。通信許可を求められたら許可します。大サイズのプレビューを閉じ「Done」で保存します。</li>
+<li>このページで <button id="copy">スクリプトをコピー</button> <span id="msg" role="status"></span>。コピーできない場合は<a href="Umalog.js?v=1.4">コードを開いて全文コピー</a>してください。</li>
+<li>Scriptable右上の「＋」を押し、編集欄に貼り付けます。タイトルを「うまログ月間1.4」に変更し、▶︎で初回実行。通信許可を求められたら許可します。大サイズのプレビューを閉じ「Done」で保存します。</li>
 <li>ホーム画面を長押し →「編集」→「ウィジェットを追加」→「Scriptable」。横にスワイプして大サイズを選び、追加します。</li>
-<li>追加した枠を長押し →「ウィジェットを編集」→「Script」で「うまログ月間1.3」を選択。戻ると各日の重賞が入った当月カレンダーが表示されます。</li>
+<li>追加した枠を長押し →「ウィジェットを編集」→「Script」で「うまログ月間1.4」を選択。戻ると各日の重賞が入った当月カレンダーが表示されます。</li>
 <li>小・中サイズも同じ手順で追加できます。使わないサイズは枠を長押しして削除できます。</li></ol>
-<h2>表示と更新</h2><p>丸は日本時間の今日、下線は重賞日です。小は今日以降の次の開催日、中は予定のある直近の月、大は全面月間カレンダーです。開催日のマスにGⅠ・GⅡ・GⅢ、競馬場、重賞名を表示します。曜日は均等な7列に並び、各レース名は1行です。長い名称は略記し、入りきらない末尾を「...」と表示します。「仮」は認可前、「申」は格付け申請中、同日の「+数字」は残り件数です。「ほか○件」はタップしてカレンダーの各日で確認できます。当日分は結果が取り込まれるまで予定に残ります。</p>
+<h2>表示と更新</h2><p>金の細枠と明るい深緑のセルは日本時間の今日、下線は重賞日です。小は今日以降の次の開催日、中は予定のある直近の月、大は全面月間カレンダーです。開催日のマスに格付けと重賞名を横並びの1行で表示します。GⅠはゴールドの太字、GⅡはシルバーブルー、GⅢはブロンズです。曜日は均等な7列に並び、各レース名は1行です。長い名称は略記し、入りきらない末尾を「…」と表示します。「仮」は認可前、「申」は格付け申請中、同日の「+数字」は残り件数です。「ほか○件」はタップしてカレンダーの各日で確認できます。当日分は結果が取り込まれるまで予定に残ります。</p>
 <p>約6時間を目安に再取得し、日本時間の翌日にも更新を要求します。実際の更新時刻はiOSが決めます。通信に失敗すると保存版を使い、取得後24時間を超えた場合は「古い保存版」と表示します。「資料」は表示レースで最も古い情報確認日です。30日以上経過すると「要確認」を表示します。</p>
 <p>今すぐ再取得するにはScriptableで▶︎を押します。コード更新は再度コピーして既存スクリプトを置き換えます。重賞はうまログ同梱データの範囲です。JRAの変更はマスター更新・公開後に反映されます。個人収支や端末内で修正した予定は送信しません。</p>
 <a href="graded-races.json">公開重賞JSON</a>
@@ -16,7 +16,7 @@
 document.querySelector('#copy').onclick=async()=>{
  const message=document.querySelector('#msg');
  try{
-  const response=fetch('Umalog.js?v=1.3',{cache:'reload'}).then(r=>{if(!r.ok)throw Error();return r.blob()}).then(b=>new Blob([b],{type:'text/plain'}));
+  const response=fetch('Umalog.js?v=1.4',{cache:'reload'}).then(r=>{if(!r.ok)throw Error();return r.blob()}).then(b=>new Blob([b],{type:'text/plain'}));
   await navigator.clipboard.write([new ClipboardItem({'text/plain':response})]);
   message.textContent='コピーしました';
  }catch{message.textContent='下のコードリンクからコピーしてください'}

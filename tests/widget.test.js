@@ -9,21 +9,24 @@ const master = gradedEvents(GRADED_MASTER);
 const code = read('widget/Umalog.js');
 const names = [];
 const drawn = [];
+const fills = [];
+const texts = [];
+class Ink {constructor(value){this.value=value;}}
 class Box {constructor(x,y,w,h){Object.assign(this,{x,y,w,h});}}
 class Stack {
-  addText(s){names.push(s);return {};}
+  addText(s){names.push(s);const item={s,parent:this};texts.push(item);return item;}
   addStack(){return new Stack();}
   addImage(){return {};}
   setPadding(){} addSpacer(){} layoutVertically(){}
 }
 class Draw {
-  setTextAlignedLeft(){} setTextAlignedCenter(){} setTextColor(){} setFont(){} drawTextInRect(s,rect){names.push(s);drawn.push({s,rect});}
-  setFillColor(){} fillEllipse(){} fillRect(){} getImage(){return {};}
+  setTextAlignedLeft(){} setTextAlignedCenter(){} setTextColor(c){this.color=c.value;} setFont(font){this.font=font;} drawTextInRect(s,rect){names.push(s);drawn.push({s,rect,color:this.color,font:this.font});}
+  setFillColor(c){this.fill=c.value;} fillRect(rect){fills.push({color:this.fill,rect});} getImage(){return {};}
 }
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 const api = await new AsyncFunction('ListWidget','DrawContext','Rect','Size','Color','Font','Request',
-  code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,raceTitle,romanGrade,render,acquire,download,meta};')(
-  Stack,Draw,Box,class {},class {},{systemFont(){},boldSystemFont(){}},
+  code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,raceTitle,romanGrade,render,acquire,download,gradeInk,displayName};')(
+  Stack,Draw,Box,class {},Ink,{systemFont(){return "regular";},boldSystemFont(){return "bold";}},
   class {async loadString(){this.response={statusCode:reply.status};if(reply.error) throw Error();return reply.body;}}
 );
 let reply;
@@ -51,7 +54,7 @@ test('small picks next active race; medium crosses years',()=>{
  const rows=['cancelled','changed','planned','entries','program','result'].map((status,i)=>({...sample,id:String(i),status}));
  assert.deepEqual(api.agenda(rows,today,'small'),{rows:[rows[2]],more:2});
  assert.deepEqual(api.agenda([{...sample,date:'2027-01-04'}],'2026-12-31','medium').rows.map(r=>r.date),['2027-01-04']);
- assert.ok(api.meta({...sample,approval:'pending',gradeStatus:'pending'}).includes('認可前'));
+ assert.ok(api.displayName({...sample,approval:'pending',gradeStatus:'pending'},100,8).startsWith('仮申'));
  const updated={...sample,date:'2026-11-10'};
  assert.deepEqual(api.agenda([updated],today,'small').rows,[updated]);
 });
@@ -78,7 +81,7 @@ test('Scriptable drawing calls for three sizes, long names, overflow, stale and 
   const races=Array.from({length:8},(_,i)=>({...sample,id:String(i)}));
   const w=api.render(size,{feed:{...feed,races},mode:'offline',time:now-2*86400000},now);
   if(size==='large'){assert.ok(w.backgroundImage);assert.ok(names.some(t=>t.startsWith('長い')));assert.ok(names.some(t=>/\+\d+$/.test(t)));}
-  else {assert.ok(names.some(t=>t.startsWith('長い') && t.endsWith('...')));assert.ok(names.some(t=>t.includes('ほか')));}
+  else {assert.ok(names.some(t=>t.startsWith('長い') && t.endsWith('…')));assert.ok(names.some(t=>t.includes('ほか')));}
   assert.ok(names.some(t=>t.includes('古い保存版')));assert.match(w.url,/#calendar$/);
   for(const f of [null,{...feed,races:[]}]){
    names.length=0;api.render(size,{feed:f,time:now},now);assert.ok(names.some(t=>/未登録|登録なし|取得できません/.test(t)));
@@ -100,11 +103,11 @@ test('full month places graded names inside the correct shared date and uses the
  for(const [date,weeks] of [['2026-02-01',4],['2026-08-01',6]])assert.equal(api.monthCells(date,[]).length,7*weeks);
  names.length=0;
  api.render('large',{feed,mode:'online',time:now},now);
- for(const grade of ['GⅠ','GⅡ','GⅢ'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
- assert.ok(names.some(t=>t.startsWith('アル')&&t.endsWith('...')));
- assert.ok(names.includes('月間 1.3'));
+ for(const grade of ['GⅠ','GⅡ','GⅢ'])assert.ok(names.some(t=>t===grade));
+ assert.ok(names.some(t=>t.startsWith('アル')&&t.endsWith('…')));
+ assert.ok(names.includes('月間 1.4'));
  for(const day of ['20','24','25','26']) assert.ok(names.includes(day));
- for(const prefix of ['みやこ','アル','武蔵野','デイ','エリザ'])assert.ok(names.some(t=>t.startsWith(prefix)));
+ for(const prefix of ['みやこ','アル','武蔵野','デイ','エリ'])assert.ok(names.some(t=>t.startsWith(prefix)));
 });
 
 test('large widget reserves two-digit date width for every weekday and month length',()=>{
@@ -126,8 +129,40 @@ test('grade labels and single-line race titles in compact cells',()=>{
  const race={...sample,name:'エリザベス女王杯',grade:'JGIII'};
  names.length=0;
  api.render('large',{feed:{...feed,races:[race]},mode:'online',time:now},now);
- const title=api.raceTitle(race.name,342/7-4,7.6);
- assert.ok(title.endsWith('...'));
+ const title=api.raceTitle(race.name,342/7-21-4,7.2);
+ assert.ok(title.endsWith('…'));
  assert.equal(names.filter(s=>s===title).length,1);
  assert.ok(names.some(s=>s.startsWith('J・GⅢ')));
+});
+
+test('today uses same cell boundaries and every grade and name shares a single row',()=>{
+ const palette={GI:'#E6B84A',GII:'#AFC9E3',GIII:'#DDA477'};
+ for(const size of ['small','medium','large']){
+  for(const code of ['GI','GII','GIII','JGI','JGII','JGIII']){
+   drawn.length=fills.length=texts.length=names.length=0;
+   const race={...sample,name:'菊花賞',grade:code};
+   api.render(size,{feed:{...feed,races:[race]},mode:'online',time:now},now);
+   const label=api.romanGrade(code), flat=code.replace(/^J/,'');
+   assert.ok(names.every(s=>!s.includes(race.venue)));
+   if(size==='large'){
+    const grade=drawn.find(t=>t.s===label),name=drawn.find(t=>t.s.startsWith('菊'));
+    assert.equal(grade.rect.y,name.rect.y);assert.ok(grade.rect.x+grade.rect.w<=name.rect.x+0.01);
+    assert.equal(grade.color,palette[flat]);assert.equal(name.color,'#E8EBE2');
+    assert.equal(grade.font,flat==='GI'?'bold':'regular');
+   }else{
+    const grade=texts.find(t=>t.s===label),name=texts.find(t=>t.s==='菊花賞');
+    assert.equal(grade.parent,name.parent);assert.equal(grade.textColor.value,palette[flat]);
+    assert.equal(grade.font,flat==='GI'?'bold':'regular');assert.equal(name.lineLimit,1);
+   }
+   if(size!=='small'){
+    const border=fills.filter(t=>t.color==='#C5A051');assert.equal(border.length,1);
+    const rect=border[0].rect, day=drawn.find(t=>t.s==='8');
+    assert.equal(day.color,'#FFFFFF');assert.equal(day.font,'bold');
+    if(size==='large'){
+     const c=api.monthCells(today,[race]).find(c=>c.date===today);
+     assert.deepEqual(rect,new Box(c.x,c.y,c.w-0.65,c.h-0.65));
+    }else assert.deepEqual(rect,new Box(0,30,18,15));
+   }
+  }
+ }
 });
