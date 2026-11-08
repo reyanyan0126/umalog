@@ -1,4 +1,5 @@
-import { Button, HStack, Image, Rectangle, ZStack, Script, Spacer, Text, VStack, Widget } from "scripting"
+import { Button, HStack, Image, Rectangle, SVG, ZStack, Script, Text, VStack, Widget } from "scripting"
+import { headerArt } from "./header"
 import { SetMonth } from "./app_intents"
 import { jstDay, loadSchedule, monthLayout, monthKey, shift, sixHours, validFeed, validMonth, weeks } from "./calendar"
 
@@ -24,19 +25,18 @@ function MonthArrow({target,forward}:{target:string,forward:boolean}) {
   </Button>
 }
 function Header({month,width}:{month:string,width:number}) {
-  return <HStack spacing={3} frame={{width,height:28}}>
-    <Button intent={SetMonth({target:"today"})} buttonStyle="plain" accessibilityLabel="今月に戻る">
-      <Text font={font(15)} fontWeight="semibold" foregroundStyle="#FFFFFF" lineLimit={1}
-        fixedSize={{horizontal:true,vertical:false}} frame={{width:102,height:28,alignment:"leading"}}>
-        {month.slice(0,4)+"年"+Number(month.slice(5))+"月"}
-      </Text>
-    </Button>
-    <MonthArrow target={shift(month,-1)} forward={false}/>
-    <MonthArrow target={shift(month,1)} forward={true}/>
-    <Spacer/>
-    <Text font={font(9)} foregroundStyle={muted} lineLimit={1} fixedSize={{horizontal:true,vertical:false}}
-      frame={{width:62,alignment:"trailing"}}>うまログ(仮)</Text>
-  </HStack>
+  const date=month.slice(0,4)+"年"+Number(month.slice(5))+"月"
+  return <ZStack alignment="leading" frame={{width,height:28}}>
+    <SVG code={headerArt(month,width)} resizable renderingMode="original"
+      frame={{width,height:28}} accessibilityLabel={date+"　うまログ(仮)"}/>
+    <HStack spacing={3} frame={{width,height:28,alignment:"leading"}}>
+      <Button intent={SetMonth({target:"today"})} buttonStyle="plain" accessibilityLabel={date+"、今月に戻る"}>
+        <Rectangle fill="#FFFFFF" opacity={0.001} frame={{width:102,height:28}}/>
+      </Button>
+      <MonthArrow target={shift(month,-1)} forward={false}/>
+      <MonthArrow target={shift(month,1)} forward={true}/>
+    </HStack>
+  </ZStack>
 }
 async function main() {
   const now=Date.now(), today=jstDay(now), current=today.slice(0,7)

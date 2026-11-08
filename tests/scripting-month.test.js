@@ -34,7 +34,7 @@ sys.path.insert(0,'tools')
 from build_scripting_widget import build
 buf=io.BytesIO();build(buf)
 with zipfile.ZipFile(buf) as z:
- assert set(z.namelist())=={'script.json','index.tsx','widget.tsx','app_intents.tsx','calendar.js','graded-races.json'}
+ assert set(z.namelist())=={'script.json','index.tsx','widget.tsx','app_intents.tsx','calendar.js','header.js','graded-races.json'}
  assert json.loads(z.read('script.json'))['name']=='うまログ月送り'
  assert z.read('graded-races.json')==Path('widget/graded-races.json').read_bytes()
 `])
@@ -47,5 +47,16 @@ test('equal columns and week rows fill the grid with symmetric margins',async()=
   const used=v.header+v.sectionGap+v.weekdays+n*(v.gap+v.cellHeight)+(footer?14:0)
   assert.ok(Math.abs(used-v.contentHeight)<0.001)
   assert.ok(v.cellHeight>=30 && v.contentWidth>=102+60+62+12)
+ }
+})
+
+test('header artwork includes one outlined glyph for each character in both labels',async()=>{
+ const {headerArt}=await import('../widget/scripting/header.js')
+ for(const width of [272,309,344]) for(const year of [1900,2026,2199]) for(let month=1;month<=12;month++){
+  const iso=year+'-'+String(month).padStart(2,'0'), title=year+'年'+month+'月'
+  const svg=headerArt(iso,width)
+  assert.ok(svg.includes('<title>'+title+'　うまログ(仮)</title>'))
+  assert.equal((svg.match(/<path /g)||[]).length,title.length+'うまログ(仮)'.length)
+  assert.doesNotMatch(svg,/NaN|undefined|<text|…/)
  }
 })
