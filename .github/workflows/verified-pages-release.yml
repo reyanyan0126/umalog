@@ -123,6 +123,8 @@ jobs:
             const {data} = await github.rest.repos.getPages(context.repo);
             core.info(JSON.stringify({build_type:data.build_type,source:data.source}));
             if (data.build_type !== 'workflow') core.setFailed('Pages Source must be GitHub Actions before releasing.');
+      - name: Package iPhone import
+        run: python3 tools/build_scripting_widget.py widget/Umalog-Month.zip
       - name: Stamp tested commit
         run: node -e "require('fs').writeFileSync('build.json', JSON.stringify({commit:process.env.GITHUB_SHA}))"
       - uses: actions/configure-pages@v5
