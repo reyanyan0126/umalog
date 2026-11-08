@@ -22,7 +22,7 @@ class Draw {
 }
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 const api = await new AsyncFunction('ListWidget','DrawContext','Rect','Size','Color','Font','Request',
-  code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,nameLines,render,acquire,download,meta};')(
+  code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,raceTitle,romanGrade,render,acquire,download,meta};')(
   Stack,Draw,Box,class {},class {},{systemFont(){},boldSystemFont(){}},
   class {async loadString(){this.response={statusCode:reply.status};if(reply.error) throw Error();return reply.body;}}
 );
@@ -78,7 +78,7 @@ test('Scriptable drawing calls for three sizes, long names, overflow, stale and 
   const races=Array.from({length:8},(_,i)=>({...sample,id:String(i)}));
   const w=api.render(size,{feed:{...feed,races},mode:'offline',time:now-2*86400000},now);
   if(size==='large'){assert.ok(w.backgroundImage);assert.ok(names.some(t=>t.startsWith('長い')));assert.ok(names.some(t=>/\+\d+$/.test(t)));}
-  else {assert.ok(names.includes(sample.name));assert.ok(names.some(t=>t.includes('ほか')));}
+  else {assert.ok(names.some(t=>t.startsWith('長い') && t.endsWith('...')));assert.ok(names.some(t=>t.includes('ほか')));}
   assert.ok(names.some(t=>t.includes('古い保存版')));assert.match(w.url,/#calendar$/);
   for(const f of [null,{...feed,races:[]}]){
    names.length=0;api.render(size,{feed:f,time:now},now);assert.ok(names.some(t=>/未登録|登録なし|取得できません/.test(t)));
@@ -100,9 +100,9 @@ test('full month places graded names inside the correct shared date and uses the
  for(const [date,weeks] of [['2026-02-01',4],['2026-08-01',6]])assert.equal(api.monthCells(date,[]).length,7*weeks);
  names.length=0;
  api.render('large',{feed,mode:'online',time:now},now);
- for(const grade of ['G1','G2','G3'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
- assert.ok(names.includes('アル共杯') || names.join('').includes('アルゼンチン共和国杯'));
- assert.ok(names.includes('月間 1.2'));
+ for(const grade of ['GⅠ','GⅡ','GⅢ'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
+ assert.ok(names.some(t=>t.startsWith('アル')&&t.endsWith('...')));
+ assert.ok(names.includes('月間 1.3'));
  for(const day of ['20','24','25','26']) assert.ok(names.includes(day));
  for(const prefix of ['みやこ','アル','武蔵野','デイ','エリザ'])assert.ok(names.some(t=>t.startsWith(prefix)));
 });
@@ -117,4 +117,17 @@ test('large widget reserves two-digit date width for every weekday and month len
    assert.ok(dateText && dateText.rect.w>=18,'date must fit '+date+' day '+day);
   }
  }
+});
+
+test('grade labels and single-line race titles in compact cells',()=>{
+ assert.deepEqual(['GI','GII','GIII','JGI','JGII','JGIII'].map(api.romanGrade),['GⅠ','GⅡ','GⅢ','J・GⅠ','J・GⅡ','J・GⅢ']);
+ assert.equal(api.raceTitle('京阪杯',44,7.6),'京阪杯');
+ assert.equal(api.raceTitle('武蔵野ステークス',44,7.6),'武蔵野S');
+ const race={...sample,name:'エリザベス女王杯',grade:'JGIII'};
+ names.length=0;
+ api.render('large',{feed:{...feed,races:[race]},mode:'online',time:now},now);
+ const title=api.raceTitle(race.name,342/7-4,7.6);
+ assert.ok(title.endsWith('...'));
+ assert.equal(names.filter(s=>s===title).length,1);
+ assert.ok(names.some(s=>s.startsWith('J・GⅢ')));
 });
