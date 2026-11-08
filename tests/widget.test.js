@@ -8,6 +8,8 @@ const feed = JSON.parse(read('widget/graded-races.json'));
 const master = gradedEvents(GRADED_MASTER);
 const code = read('widget/Umalog.js');
 const names = [];
+const drawn = [];
+class Box {constructor(x,y,w,h){Object.assign(this,{x,y,w,h});}}
 class Stack {
   addText(s){names.push(s);return {};}
   addStack(){return new Stack();}
@@ -15,13 +17,13 @@ class Stack {
   setPadding(){} addSpacer(){} layoutVertically(){}
 }
 class Draw {
-  setTextAlignedLeft(){} setTextAlignedCenter(){} setTextColor(){} setFont(){} drawTextInRect(s){names.push(s);}
+  setTextAlignedLeft(){} setTextAlignedCenter(){} setTextColor(){} setFont(){} drawTextInRect(s,rect){names.push(s);drawn.push({s,rect});}
   setFillColor(){} fillEllipse(){} fillRect(){} getImage(){return {};}
 }
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 const api = await new AsyncFunction('ListWidget','DrawContext','Rect','Size','Color','Font','Request',
   code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,nameLines,render,acquire,download,meta};')(
-  Stack,Draw,class {},class {},class {},{systemFont(){},boldSystemFont(){}},
+  Stack,Draw,Box,class {},class {},{systemFont(){},boldSystemFont(){}},
   class {async loadString(){this.response={statusCode:reply.status};if(reply.error) throw Error();return reply.body;}}
 );
 let reply;
@@ -90,14 +92,29 @@ test('full month places graded names inside the correct shared date and uses the
  for(const [day,expected] of [[8,['みやこステークス','アルゼンチン共和国杯']],[14,['武蔵野ステークス','デイリー杯2歳ステークス']],[15,['エリザベス女王杯']]]){
   const cell=cells.find(c=>c.day===day);
   assert.deepEqual(cell.events.map(r=>r.name).sort(),expected.sort());
-  assert.ok(Math.floor((cell.h-18)/22)>=cell.events.length);
+  assert.ok(Math.floor((cell.h-3)/22)>=cell.events.length);
  }
- assert.ok(cells.find(c=>c.day===8).w>cells.find(c=>c.day===10).w);
+ assert.ok(cells.every(c=>c.w===342/7 && c.h===284/5));
+ assert.deepEqual(cells.filter(c=>c.day).map(c=>c.day),Array.from({length:30},(_,i)=>i+1));
  assert.equal(cells[0].x,9);assert.ok(Math.abs(cells.at(-1).y+cells.at(-1).h-333)<0.01);
  for(const [date,weeks] of [['2026-02-01',4],['2026-08-01',6]])assert.equal(api.monthCells(date,[]).length,7*weeks);
  names.length=0;
  api.render('large',{feed,mode:'online',time:now},now);
  for(const grade of ['G1','G2','G3'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
- assert.ok(names.includes('アルゼンチン共和国杯'));
- for(const prefix of ['みやこ','アルゼン','武蔵野','デイリー','エリザベス'])assert.ok(names.some(t=>t.startsWith(prefix)));
+ assert.ok(names.includes('アル共杯') || names.join('').includes('アルゼンチン共和国杯'));
+ assert.ok(names.includes('月間 1.2'));
+ for(const day of ['20','24','25','26']) assert.ok(names.includes(day));
+ for(const prefix of ['みやこ','アル','武蔵野','デイ','エリザ'])assert.ok(names.some(t=>t.startsWith(prefix)));
+});
+
+test('large widget reserves two-digit date width for every weekday and month length',()=>{
+ for(const date of ['2026-02-08','2026-08-08','2026-11-08']){
+  drawn.length=0;
+  const cells=api.monthCells(date,feed.races);
+  api.render('large',{feed,mode:'online',time:now},Date.parse(date));
+  for(const {day,x,y,w,h} of cells.filter(c=>c.day)){
+   const dateText=drawn.find(t=>t.s===String(day)&&t.rect.x>=x&&t.rect.x<x+w&&t.rect.y>=y&&t.rect.y<y+h);
+   assert.ok(dateText && dateText.rect.w>=18,'date must fit '+date+' day '+day);
+  }
+ }
 });

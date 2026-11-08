@@ -116,8 +116,7 @@ function calendar(parent,today,races) {
   });
   parent.addImage(d.getImage()).imageSize = new Size(126,105);
 }
-// A single canvas fills the large family. Column widths follow the days on
-// which races actually occur; week heights follow the busiest date in each row.
+// Keep the grid independent of the schedule, including on multi-race weekends.
 function monthCells(today, races) {
   const prefix = today.slice(0,8);
   const byDate = new Map();
@@ -127,21 +126,12 @@ function monthCells(today, races) {
   }
   const grid = monthGrid(today);
   const weeks = Math.ceil((grid.findIndex(Boolean) + grid.filter(Boolean).length)/7);
-  const columns = Array(7).fill(0), weights = Array(weeks).fill(1);
-  const cells = grid.slice(0,weeks*7).map((day,i)=>{
-    const date = day ? prefix+String(day).padStart(2,'0') : null;
-    const events = byDate.get(date) || [], col=i%7, week=Math.floor(i/7);
-    if (events.length) columns[col]=1;
-    weights[week]=Math.max(weights[week],1+Math.min(3,events.length)*0.85);
-    return {date,day,events,col,week};
+  const w=342/7, h=284/weeks;
+  return grid.slice(0,weeks*7).map((day,i)=>{
+    const date=day ? prefix+String(day).padStart(2,'0') : null;
+    const col=i%7, week=Math.floor(i/7);
+    return {date,day,events:byDate.get(date)||[],col,week,x:9+col*w,y:49+week*h,w,h};
   });
-  function edges(weights,start,span,min=0) {
-    const sum=weights.reduce((a,b)=>a+b,0), points=[start];
-    for (const weight of weights) points.push(points[points.length-1]+min+weight/sum*(span-min*weights.length));
-    return points;
-  }
-  const xs=edges(columns.some(Boolean)?columns:Array(7).fill(1),9,342,16), ys=edges(weights,49,284);
-  return cells.map(c=>({...c,x:xs[c.col],y:ys[c.week],w:xs[c.col+1]-xs[c.col],h:ys[c.week+1]-ys[c.week]}));
 }
 function nameLines(name,width,lines,size=10) {
   // Treat Japanese glyphs as full-width; leave a small margin for native fonts.
@@ -188,40 +178,49 @@ function largeCalendar(today,state,now) {
     fill(x,y,w-0.8,h-0.8,events.length?'#223638':'#1A2A2E');
     if (!day) continue;
     if(date===today){
-      d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+2,y+1,17,16));
+      d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+1,y,17,14));
     }
-    label(String(day),x+4,y+1,w-3,w<20?10:12,date===today?'#102421':paper,true);
+    label(String(day),x+3,y+1,19,12,date===today?'#102421':paper,true);
     if (!events.length) continue;
-    const capacity=Math.max(1,Math.floor((h-6)/23));
+    const capacity=Math.max(1,Math.floor((h-3)/22));
     const visible=events.slice(0,capacity);
     const extra=events.length-visible.length;
-    const width=w-5;
+    const width=w-4;
+    const titles=visible.map(r=>r.name.replace(/ステークス/g,'S').replace(/カップ/g,'C'));
     const lines=visible.map(()=>1);
-    let spare=Math.floor((h-17-(visible.length-1)*11-1)/12)-visible.length;
+    const dense=visible.length>1;
+    const firstLine=dense?12.5:16, lineStep=dense?8.8:11.5, badgeStep=dense?8.3:10;
+    const titleSize=dense?8.5:10;
+    let spare=Math.floor((h-firstLine-(visible.length-1)*badgeStep-0.5)/lineStep)-visible.length;
     // Give spare lines to titles which would otherwise be shortened.
     for(let i=0;i<visible.length && spare>0;i++){
-      const wanted=nameLines(visible[i].name,width,1)[0].endsWith('…')
-        ? nameLines(visible[i].name,width,3).length-1 : 0;
+      const wanted=nameLines(titles[i],width,1,titleSize)[0].endsWith('…')
+        ? nameLines(titles[i],width,dense?2:3,titleSize).length-1 : 0;
       const added=Math.min(wanted,spare);
       lines[i]+=added;spare-=added;
     }
-    let cursor=y+17;
+    let cursor=y+firstLine;
     visible.forEach((r,i)=>{
-      const grade=r.grade.replace('J','J·').replace('III','3').replace('II','2').replace('I','1');
+      const grade=r.grade.replace('III','3').replace('II','2').replace('I','1');
       const flag=({cancelled:'中止',changed:'変更',planned:r.approval==='pending'?'仮':''})[r.status]||'';
       const status=flag+(r.gradeStatus==='pending'?'申':'');
       const ink=grade.endsWith('1')?'#F1CF86':grade.endsWith('2')?accent:'#B9CCDC';
-      const left=i===0?21:3;
-      const badge=grade+' '+status+(status?' ':'')+r.venue+(i===0&&extra?' +'+extra:'');
-      label(badge,x+left,i===0?y+3:cursor,w-left-1,8,ink,true);
-      if(i) cursor+=11;
-      let fontSize=10, parts=nameLines(r.name,width,lines[i]);
-      // Keep a recognizable whole title when a slightly smaller face fits.
+      const left=i===0?19:2;
+      const badge=grade+(grade.startsWith('J')?'':' ')+(status||r.venue);
+      label(badge,x+left,i===0?y+3:cursor,w-left-1,grade.startsWith('J')?7:7.6,ink,true);
+      if(i===visible.length-1 && extra) label('+'+extra,x+w-13,(i?cursor:y+h-10),13,8,accent,true);
+      if(i) cursor+=badgeStep;
+      let fontSize=titleSize, parts=nameLines(titles[i],width,lines[i],titleSize);
       if(parts[parts.length-1].endsWith('…')){
-        const smaller=nameLines(r.name,width,lines[i],8.2);
-        if(!smaller[smaller.length-1].endsWith('…')){fontSize=8.2;parts=smaller;}
+        const smaller=nameLines(titles[i],width,lines[i],8.5);
+        if(!smaller[smaller.length-1].endsWith('…')){fontSize=8.5;parts=smaller;}
+        else {
+          const compact=titles[i].replace('アルゼンチン共和国杯','アル共杯')
+            .replace('マイルチャンピオンシップ','マイルCS').replace('東京スポーツ杯','東スポ杯');
+          parts=nameLines(compact,width,lines[i],9);fontSize=9;
+        }
       }
-      for(const part of parts){label(part,x+3,cursor,width,fontSize,paper,true);cursor+=12;}
+      for(const part of parts){label(part,x+3,cursor,width,fontSize,paper,true);cursor+=lineStep;}
     });
   }
   const rows=cells.flatMap(c=>c.events);
@@ -231,7 +230,8 @@ function largeCalendar(today,state,now) {
     footer=[footer,state.mode==='offline'?(now-state.time>DAY?'古い保存版':'保存版'):'',
       (rows.length?'資料 ':'配信 ')+short(jst(stamp))+(now-stamp>=30*DAY?'・要確認':'')].filter(Boolean).join('  ');
   }
-  label(footer,14,337,330,9,muted);
+  label(footer,14,337,250,9,muted);
+  label('月間 1.2',301,337,48,9,muted,true);
   return d.getImage();
 }
 function meta(r) {
@@ -280,7 +280,7 @@ function render(size,state,now) {
 if (typeof Script !== 'undefined') {
   const now = Date.now();
   const state = await acquire(now,cacheFiles(),download,!config.runsInWidget);
-  const family = ['small','medium','large'].includes(config.widgetFamily)?config.widgetFamily:'large';
+  const family = config.runsInWidget && ['small','medium','large'].includes(config.widgetFamily) ? config.widgetFamily : 'large';
   const widget = render(family,state,now);
   Script.setWidget(widget);
   if (!config.runsInWidget) await widget.presentLarge();
