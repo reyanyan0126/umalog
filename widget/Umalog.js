@@ -4,7 +4,7 @@ const BASE = 'https://reyanyan0126.github.io/umalog/';
 const HOUR = 3600000;
 const DAY = 24 * HOUR;
 const labels = {planned:'予定', program:'番組', entries:'出馬表', result:'結果', changed:'変更確認', cancelled:'中止'};
-const paper = '#F2F6F5', muted = '#B0C1C3', accent = '#76E3C0';
+const paper = '#E8EBE2', muted = '#B1BDB2', accent = '#A9C6AC';
 const jst = time => new Date(Number(time) + 9 * HOUR).toISOString().slice(0,10);
 const short = date => date.slice(5).replace('-', '/');
 const gradeOK = value => /^(J)?G(I|II|III)$/.test(value);
@@ -133,25 +133,22 @@ function monthCells(today, races) {
     return {date,day,events:byDate.get(date)||[],col,week,x:9+col*w,y:49+week*h,w,h};
   });
 }
-function nameLines(name,width,lines,size=10) {
-  // Treat Japanese glyphs as full-width; leave a small margin for native fonts.
-  const units = s=>Array.from(s).reduce((n,c)=>n+(/[ -~]/.test(c)?0.65:1),0);
-  const limit=width/(size+0.4);
-  let value=name;
-  if(units(value)>limit*lines) value=value.replace(/ステークス/g,'S').replace(/カップ/g,'C');
-  const output=[''];
-  for(const c of value) {
-    if(units(output[output.length-1]+c)>limit) {
-      if(output.length===lines) {
-        let end=output.pop();
-        while(end && units(end+'…')>limit) end=end.slice(0,-1);
-        output.push(end+'…');break;
-      }
-      output.push('');
-    }
-    output[output.length-1]+=c;
+const romanGrade = code => code.replace(/^J/,'J・').replace(/I+$/,n=>['','Ⅰ','Ⅱ','Ⅲ'][n.length]);
+function raceTitle(name,width,size) {
+  // Reserve the width of the three literal dots before adding the final glyph.
+  const clean=name.replace(/\s+/g,' ').trim();
+  const advance=c=>c==='.'?0.35:/[ -~]/.test(c)?0.85:1.04;
+  const length=s=>Array.from(s).reduce((n,c)=>n+advance(c)*size,0);
+  if(length(clean)<=width) return clean;
+  const short=clean.replace(/（/g,'(').replace(/）/g,')').replace(/ステークス/g,'S').replace(/カップ/g,'C');
+  if(length(short)<=width) return short;
+  let result='',used=length('...');
+  for(const c of short){
+    used+=advance(c)*size;
+    if(used>width) break;
+    result+=c;
   }
-  return output;
+  return result+'...';
 }
 function largeCalendar(today,state,now) {
   const cells=monthCells(today,state.feed?.races || []);
@@ -164,63 +161,36 @@ function largeCalendar(today,state,now) {
     d.setTextColor(new Color(color));d.setFont(bold?Font.boldSystemFont(size):Font.systemFont(size));
     d.drawTextInRect(s,new Rect(x,y,w,size+3));
   };
-  fill(0,0,360,360,'#142227');
-  label(Number(today.slice(5,7))+'月',13,7,46,20,paper,true);
+  fill(0,0,360,360,'#19271F');
+  label(Number(today.slice(5,7))+'月',14,9,46,17,paper,true);
   label(today.slice(0,4)+'年',60,14,62,11,muted);
-  label('うまログ  /  重賞',248,13,100,12,accent,true);
+  label('うまログ(仮)',279,14,72,10,accent,false);
   for (const cell of cells) {
     const {x,y,w,h,events,day,date,col,week}=cell;
     if (!week) {
       d.setTextAlignedCenter();
-      label('日月火水木金土'[col],x,33,w,10,col===0?'#F4AA9B':col===6?'#A8C8EE':muted,true);
+      label('日月火水木金土'[col],x,33,w,10,col===0?'#CFAB9F':col===6?'#B2C2CB':muted,true);
       d.setTextAlignedLeft();
     }
-    fill(x,y,w-0.8,h-0.8,events.length?'#223638':'#1A2A2E');
+    fill(x,y,w-0.65,h-0.65,events.length?'#28392E':'#223128');
     if (!day) continue;
     if(date===today){
-      d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+1,y,17,14));
+      d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+1,y,16,13));
     }
-    label(String(day),x+3,y+1,19,12,date===today?'#102421':paper,true);
+    label(String(day),x+3,y+1,19,10.5,date===today?'#19271F':paper,true);
     if (!events.length) continue;
-    const capacity=Math.max(1,Math.floor((h-3)/22));
+    const titleSize=7.6, firstRow=13, rowHeight=16.5;
+    const capacity=Math.max(1,Math.floor((h-firstRow)/rowHeight));
     const visible=events.slice(0,capacity);
-    const extra=events.length-visible.length;
-    const width=w-4;
-    const titles=visible.map(r=>r.name.replace(/ステークス/g,'S').replace(/カップ/g,'C'));
-    const lines=visible.map(()=>1);
-    const dense=visible.length>1;
-    const firstLine=dense?12.5:16, lineStep=dense?8.8:11.5, badgeStep=dense?8.3:10;
-    const titleSize=dense?8.5:10;
-    let spare=Math.floor((h-firstLine-(visible.length-1)*badgeStep-0.5)/lineStep)-visible.length;
-    // Give spare lines to titles which would otherwise be shortened.
-    for(let i=0;i<visible.length && spare>0;i++){
-      const wanted=nameLines(titles[i],width,1,titleSize)[0].endsWith('…')
-        ? nameLines(titles[i],width,dense?2:3,titleSize).length-1 : 0;
-      const added=Math.min(wanted,spare);
-      lines[i]+=added;spare-=added;
-    }
-    let cursor=y+firstLine;
-    visible.forEach((r,i)=>{
-      const grade=r.grade.replace('III','3').replace('II','2').replace('I','1');
-      const flag=({cancelled:'中止',changed:'変更',planned:r.approval==='pending'?'仮':''})[r.status]||'';
-      const status=flag+(r.gradeStatus==='pending'?'申':'');
-      const ink=grade.endsWith('1')?'#F1CF86':grade.endsWith('2')?accent:'#B9CCDC';
-      const left=i===0?19:2;
-      const badge=grade+(grade.startsWith('J')?'':' ')+(status||r.venue);
-      label(badge,x+left,i===0?y+3:cursor,w-left-1,grade.startsWith('J')?7:7.6,ink,true);
-      if(i===visible.length-1 && extra) label('+'+extra,x+w-13,(i?cursor:y+h-10),13,8,accent,true);
-      if(i) cursor+=badgeStep;
-      let fontSize=titleSize, parts=nameLines(titles[i],width,lines[i],titleSize);
-      if(parts[parts.length-1].endsWith('…')){
-        const smaller=nameLines(titles[i],width,lines[i],8.5);
-        if(!smaller[smaller.length-1].endsWith('…')){fontSize=8.5;parts=smaller;}
-        else {
-          const compact=titles[i].replace('アルゼンチン共和国杯','アル共杯')
-            .replace('マイルチャンピオンシップ','マイルCS').replace('東京スポーツ杯','東スポ杯');
-          parts=nameLines(compact,width,lines[i],9);fontSize=9;
-        }
-      }
-      for(const part of parts){label(part,x+3,cursor,width,fontSize,paper,true);cursor+=lineStep;}
+    if(events.length>capacity) label('+'+(events.length-capacity),x+22,y+1,w-24,8,muted);
+    visible.forEach((race,i)=>{
+      const top=y+firstRow+i*rowHeight;
+      const flag=({cancelled:'中止',changed:'変更',planned:race.approval==='pending'?'仮':''})[race.status]||'';
+      const status=flag+(race.gradeStatus==='pending'?'申':'');
+      const ink=race.grade.endsWith('GIII')?muted:race.grade.endsWith('GII')?accent:'#DBC9A0';
+      const badge=romanGrade(race.grade)+' '+(status||race.venue);
+      label(badge,x+2,top,w-4,6.7,ink);
+      label(raceTitle(race.name,w-4,titleSize),x+2,top+7.5,w-4,titleSize,paper);
     });
   }
   const rows=cells.flatMap(c=>c.events);
@@ -231,12 +201,12 @@ function largeCalendar(today,state,now) {
       (rows.length?'資料 ':'配信 ')+short(jst(stamp))+(now-stamp>=30*DAY?'・要確認':'')].filter(Boolean).join('  ');
   }
   label(footer,14,337,250,9,muted);
-  label('月間 1.2',301,337,48,9,muted,true);
+  label('月間 1.3',301,337,48,9,muted,true);
   return d.getImage();
 }
 function meta(r) {
   const status = r.approval==='pending' && r.status==='planned' ? '認可前' : labels[r.status];
-  const grade = r.grade.replace(/^J/,'J・');
+  const grade = romanGrade(r.grade);
   const pending = r.gradeStatus==='pending'?'申請中':r.gradeStatus==='unknown'?'未確認':'';
   return short(r.date)+' '+grade+' '+r.venue+' '+status+(pending?'／格付'+pending:'');
 }
@@ -244,7 +214,7 @@ function render(size,state,now) {
   const today = jst(now), races = state.feed?.races || [];
   const w = new ListWidget();
   w.setPadding(10,12,10,12);
-  w.backgroundColor = new Color('#142227');
+  w.backgroundColor = new Color('#19271F');
   w.url = BASE+'#calendar';
   const midnight = Date.parse(today+'T00:00:00+09:00')+DAY;
   w.refreshAfterDate = new Date(Math.min(midnight,state.mode==='offline'||!state.feed ? now+HOUR : state.time+6*HOUR));
@@ -262,9 +232,10 @@ function render(size,state,now) {
   if (!rows.length) text(list,state.feed?'次の重賞は未登録':'予定を取得できません。通信後に再実行',13,paper,true,3);
   rows.forEach((r,i)=>{
     if(i) list.addSpacer(2);
-    const ink = r.grade.endsWith('GIII')?muted:r.grade.endsWith('GII')?accent:'#F5D38C';
+    const ink = r.grade.endsWith('GIII')?muted:r.grade.endsWith('GII')?accent:'#DBC9A0';
     text(list,meta(r),size==='small'?11:10,ink,true,1);
-    text(list,r.name,size==='small'?19:13,paper,true,size==='small'?3:1);
+    const fontSize=size==='small'?14:11;
+    text(list,raceTitle(r.name,size==='small'?122:140,fontSize),fontSize,paper,true,1);
   });
   if(more) text(list,(size==='small'?'同日 ':'')+'ほか'+more+'件',10,muted);
   w.addSpacer();
