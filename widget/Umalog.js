@@ -87,6 +87,16 @@ function text(parent,value,size,color=paper,bold=false,lines=1) {
   t.minimumScaleFactor = 0.82;
   return t;
 }
+const gradeColors={GI:'#E6B84A',GII:'#AFC9E3',GIII:'#DDA477'};
+const gradeInk=code=>gradeColors[code.replace(/^J/,'')];
+const isGradeOne=code=>code.replace(/^J/,'')==='GI';
+function highlightToday(d,x,y,w,h) {
+  const edge=0.8;
+  d.setFillColor(new Color('#C5A051'));
+  d.fillRect(new Rect(x,y,w,h));
+  d.setFillColor(new Color('#304336'));
+  d.fillRect(new Rect(x+edge,y+edge,w-2*edge,h-2*edge));
+}
 function calendar(parent,today,races) {
   const days = new Set(races.filter(r=>!['cancelled','changed'].includes(r.status)).map(r=>r.date));
   const d = new DrawContext();
@@ -104,11 +114,8 @@ function calendar(parent,today,races) {
     if (!day) return;
     const key = today.slice(0,8)+String(day).padStart(2,'0');
     const x = i%7*18, y = 15+Math.floor(i/7)*15;
-    if (key===today) {
-      d.setFillColor(new Color(accent));
-      d.fillEllipse(new Rect(x+2,y-1,14,14));
-    }
-    cell(String(day),x,y,key===today?'#101C20':days.has(key)?accent:paper,days.has(key));
+    if (key===today) highlightToday(d,x,y,18,15);
+    cell(String(day),x,y,key===today?'#FFFFFF':days.has(key)?accent:paper,key===today||days.has(key));
     if (days.has(key)) {
       d.setFillColor(new Color(accent));
       d.fillRect(new Rect(x+6,y+12,6,1));
@@ -135,20 +142,20 @@ function monthCells(today, races) {
 }
 const romanGrade = code => code.replace(/^J/,'J・').replace(/I+$/,n=>['','Ⅰ','Ⅱ','Ⅲ'][n.length]);
 function raceTitle(name,width,size) {
-  // Reserve the width of the three literal dots before adding the final glyph.
+  // Reserve the width of the ellipsis before adding the final glyph.
   const clean=name.replace(/\s+/g,' ').trim();
   const advance=c=>c==='.'?0.35:/[ -~]/.test(c)?0.85:1.04;
   const length=s=>Array.from(s).reduce((n,c)=>n+advance(c)*size,0);
   if(length(clean)<=width) return clean;
   const short=clean.replace(/（/g,'(').replace(/）/g,')').replace(/ステークス/g,'S').replace(/カップ/g,'C');
   if(length(short)<=width) return short;
-  let result='',used=length('...');
+  let result='',used=length('…');
   for(const c of short){
     used+=advance(c)*size;
     if(used>width) break;
     result+=c;
   }
-  return result+'...';
+  return result+'…';
 }
 function largeCalendar(today,state,now) {
   const cells=monthCells(today,state.feed?.races || []);
@@ -174,23 +181,18 @@ function largeCalendar(today,state,now) {
     }
     fill(x,y,w-0.65,h-0.65,events.length?'#28392E':'#223128');
     if (!day) continue;
-    if(date===today){
-      d.setFillColor(new Color(accent));d.fillEllipse(new Rect(x+1,y,16,13));
-    }
-    label(String(day),x+3,y+1,19,10.5,date===today?'#19271F':paper,true);
+    if(date===today) highlightToday(d,x,y,w-0.65,h-0.65);
+    label(String(day),x+3,y+1,19,10.5,date===today?'#FFFFFF':paper,true);
     if (!events.length) continue;
-    const titleSize=7.6, firstRow=13, rowHeight=16.5;
-    const capacity=Math.max(1,Math.floor((h-firstRow)/rowHeight));
-    const visible=events.slice(0,capacity);
+    const firstRow=15, rowHeight=10.5;
+    const capacity=Math.floor((h-firstRow-1)/rowHeight);
     if(events.length>capacity) label('+'+(events.length-capacity),x+22,y+1,w-24,8,muted);
-    visible.forEach((race,i)=>{
+    events.slice(0,capacity).forEach((race,i)=>{
       const top=y+firstRow+i*rowHeight;
-      const flag=({cancelled:'中止',changed:'変更',planned:race.approval==='pending'?'仮':''})[race.status]||'';
-      const status=flag+(race.gradeStatus==='pending'?'申':'');
-      const ink=race.grade.endsWith('GIII')?muted:race.grade.endsWith('GII')?accent:'#DBC9A0';
-      const badge=romanGrade(race.grade)+' '+(status||race.venue);
-      label(badge,x+2,top,w-4,6.7,ink);
-      label(raceTitle(race.name,w-4,titleSize),x+2,top+7.5,w-4,titleSize,paper);
+      const gradeWidth=race.grade.startsWith('J')?21:13;
+      const nameWidth=w-gradeWidth-4;
+      label(romanGrade(race.grade),x+2,top,gradeWidth,race.grade.startsWith('J')?6.3:7,gradeInk(race.grade),isGradeOne(race.grade));
+      label(displayName(race,nameWidth,7.2),x+2+gradeWidth,top,nameWidth,7.2,paper);
     });
   }
   const rows=cells.flatMap(c=>c.events);
@@ -201,14 +203,14 @@ function largeCalendar(today,state,now) {
       (rows.length?'資料 ':'配信 ')+short(jst(stamp))+(now-stamp>=30*DAY?'・要確認':'')].filter(Boolean).join('  ');
   }
   label(footer,14,337,250,9,muted);
-  label('月間 1.3',301,337,48,9,muted,true);
+  label('月間 1.4',301,337,48,9,muted,true);
   return d.getImage();
 }
-function meta(r) {
-  const status = r.approval==='pending' && r.status==='planned' ? '認可前' : labels[r.status];
-  const grade = romanGrade(r.grade);
-  const pending = r.gradeStatus==='pending'?'申請中':r.gradeStatus==='unknown'?'未確認':'';
-  return short(r.date)+' '+grade+' '+r.venue+' '+status+(pending?'／格付'+pending:'');
+function displayName(race,width,size) {
+  const state={cancelled:'中止',changed:'変更',result:'済'}[race.status]||'';
+  const note=state||(race.approval==='pending'?'仮':'');
+  const mark=note+(race.gradeStatus==='pending'?'申':'');
+  return raceTitle((mark?mark+' ':'')+race.name,width,size);
 }
 function render(size,state,now) {
   const today = jst(now), races = state.feed?.races || [];
@@ -232,10 +234,14 @@ function render(size,state,now) {
   if (!rows.length) text(list,state.feed?'次の重賞は未登録':'予定を取得できません。通信後に再実行',13,paper,true,3);
   rows.forEach((r,i)=>{
     if(i) list.addSpacer(2);
-    const ink = r.grade.endsWith('GIII')?muted:r.grade.endsWith('GII')?accent:'#DBC9A0';
-    text(list,meta(r),size==='small'?11:10,ink,true,1);
-    const fontSize=size==='small'?14:11;
-    text(list,raceTitle(r.name,size==='small'?122:140,fontSize),fontSize,paper,true,1);
+    const row=list.addStack();
+    text(row,short(r.date),9,muted);
+    row.addSpacer(3);
+    text(row,romanGrade(r.grade),10,gradeInk(r.grade),isGradeOne(r.grade));
+    row.addSpacer(3);
+    const fontSize=size==='small'?11:10;
+    text(row,displayName(r,size==='small'?76:100,fontSize),fontSize,paper);
+
   });
   if(more) text(list,(size==='small'?'同日 ':'')+'ほか'+more+'件',10,muted);
   w.addSpacer();
