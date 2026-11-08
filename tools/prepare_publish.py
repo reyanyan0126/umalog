@@ -8,6 +8,7 @@ root=Path(__file__).resolve().parent.parent
 out=root/'publish'
 out.mkdir(exist_ok=True)
 for name in PUBLISH_FILES:
+    (out/name).parent.mkdir(parents=True,exist_ok=True)
     (out/name).write_text((root/name).read_text().replace('./assets/','./'),encoding='utf-8')
 for asset in (root/'assets').iterdir():
     if asset.is_file():shutil.copyfile(asset,out/asset.name)
