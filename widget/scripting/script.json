@@ -1,6 +1,6 @@
 {
   "name": "うまログ月送り",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "icon": "calendar",
   "color": "#285A46",
   "description": "重賞カレンダー。中・大サイズの◀ ▶で月移動、年月で今月に戻ります。"
