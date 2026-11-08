@@ -1,10 +1,10 @@
 {
   "name": "umalog-mvp",
-  "version": "4.5.10",
+  "version": "4.6.0",
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "npm run check:syntax && node --test tests/*.test.js",
+    "test": "node scripts/build-widget.mjs --check && npm run check:syntax && node --test tests/*.test.js",
     "check:syntax": "node scripts/check-syntax.cjs"
   }
 }
