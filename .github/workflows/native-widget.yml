@@ -1,0 +1,36 @@
+name: Native iPhone widget
+on:
+  pull_request:
+    paths: ['ios/**', 'widget/graded-races.json', '.github/workflows/native-widget.yml']
+  push:
+    branches: [main]
+    paths: ['ios/**', 'widget/graded-races.json', '.github/workflows/native-widget.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Xcode project
+        run: |
+          command -v xcodegen || brew install xcodegen
+          cd ios && xcodegen generate
+      - name: Build app with embedded extension and run simulator tests
+        working-directory: ios
+        run: |
+          set -eo pipefail
+          device=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; print(next(d["udid"] for k,v in sorted(json.load(sys.stdin)["devices"].items(),reverse=True) if ".iOS-" in k for d in v if d["name"].startswith("iPhone")))')
+          xcrun simctl boot "$device" || xcrun simctl bootstatus "$device" -b
+          xcodebuild -project Umalog.xcodeproj -scheme Umalog -destination "id=$device" -derivedDataPath "$RUNNER_TEMP/build" -parallel-testing-enabled NO test
+          app="$RUNNER_TEMP/build/Build/Products/Debug-iphonesimulator/Umalog.app"
+          test -f "$app/PlugIns/RaceWidget.appex/graded-races.json"
+          xcrun simctl install "$device" "$app"
+          xcrun simctl launch "$device" jp.umalog.racing
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/Umalog-simulator.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Umalog-iOS-Simulator
+          path: ${{ runner.temp }}/Umalog-simulator.zip
