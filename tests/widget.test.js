@@ -15,12 +15,12 @@ class Stack {
   setPadding(){} addSpacer(){} layoutVertically(){}
 }
 class Draw {
-  setTextAlignedCenter(){} setTextColor(){} setFont(){} drawTextInRect(){}
+  setTextAlignedLeft(){} setTextAlignedCenter(){} setTextColor(){} setFont(){} drawTextInRect(s){names.push(s);}
   setFillColor(){} fillEllipse(){} fillRect(){} getImage(){return {};}
 }
 const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 const api = await new AsyncFunction('ListWidget','DrawContext','Rect','Size','Color','Font','Request',
-  code+'\nreturn {valid,monthGrid,jst,agenda,render,acquire,download,meta};')(
+  code+'\nreturn {valid,monthGrid,jst,agenda,monthCells,nameLines,render,acquire,download,meta};')(
   Stack,Draw,class {},class {},class {},{systemFont(){},boldSystemFont(){}},
   class {async loadString(){this.response={statusCode:reply.status};if(reply.error) throw Error();return reply.body;}}
 );
@@ -45,10 +45,9 @@ test('Sunday-first grid and Tokyo midnight over New Year',()=>{
  assert.equal(api.jst(Date.parse('2026-12-31T14:59:59Z')),'2026-12-31');
  assert.equal(api.jst(Date.parse('2026-12-31T15:00:00Z')),'2027-01-01');
 });
-test('small picks next active race, large includes changed and cancelled; medium crosses years',()=>{
+test('small picks next active race; medium crosses years',()=>{
  const rows=['cancelled','changed','planned','entries','program','result'].map((status,i)=>({...sample,id:String(i),status}));
  assert.deepEqual(api.agenda(rows,today,'small'),{rows:[rows[2]],more:2});
- assert.equal(api.agenda(rows,today,'large').more,1);
  assert.deepEqual(api.agenda([{...sample,date:'2027-01-04'}],'2026-12-31','medium').rows.map(r=>r.date),['2027-01-04']);
  assert.ok(api.meta({...sample,approval:'pending',gradeStatus:'pending'}).includes('認可前'));
  const updated={...sample,date:'2026-11-10'};
@@ -76,10 +75,29 @@ test('Scriptable drawing calls for three sizes, long names, overflow, stale and 
   names.length=0;
   const races=Array.from({length:8},(_,i)=>({...sample,id:String(i)}));
   const w=api.render(size,{feed:{...feed,races},mode:'offline',time:now-2*86400000},now);
-  assert.ok(names.includes(sample.name));assert.ok(names.some(t=>t.includes('ほか')));
+  if(size==='large'){assert.ok(w.backgroundImage);assert.ok(names.some(t=>t.startsWith('長い')));assert.ok(names.some(t=>/\+\d+$/.test(t)));}
+  else {assert.ok(names.includes(sample.name));assert.ok(names.some(t=>t.includes('ほか')));}
   assert.ok(names.some(t=>t.includes('古い保存版')));assert.match(w.url,/#calendar$/);
   for(const f of [null,{...feed,races:[]}]){
    names.length=0;api.render(size,{feed:f,time:now},now);assert.ok(names.some(t=>/未登録|登録なし|取得できません/.test(t)));
   }
  }
+});
+
+test('full month places graded names inside the correct shared date and uses the full grid',()=>{
+ const cells=api.monthCells(today,feed.races);
+ assert.equal(cells.length,35);
+ for(const [day,expected] of [[8,['みやこステークス','アルゼンチン共和国杯']],[14,['武蔵野ステークス','デイリー杯2歳ステークス']],[15,['エリザベス女王杯']]]){
+  const cell=cells.find(c=>c.day===day);
+  assert.deepEqual(cell.events.map(r=>r.name).sort(),expected.sort());
+  assert.ok(Math.floor((cell.h-18)/22)>=cell.events.length);
+ }
+ assert.ok(cells.find(c=>c.day===8).w>cells.find(c=>c.day===10).w);
+ assert.equal(cells[0].x,9);assert.ok(Math.abs(cells.at(-1).y+cells.at(-1).h-333)<0.01);
+ for(const [date,weeks] of [['2026-02-01',4],['2026-08-01',6]])assert.equal(api.monthCells(date,[]).length,7*weeks);
+ names.length=0;
+ api.render('large',{feed,mode:'online',time:now},now);
+ for(const grade of ['G1','G2','G3'])assert.ok(names.some(t=>t.startsWith(grade+' ')));
+ assert.ok(names.includes('アルゼンチン共和国杯'));
+ for(const prefix of ['みやこ','アルゼン','武蔵野','デイリー','エリザベス'])assert.ok(names.some(t=>t.startsWith(prefix)));
 });

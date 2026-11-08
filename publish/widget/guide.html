@@ -3,11 +3,11 @@
 <a href="../#calendar">← うまログ</a><h1>iPhoneに重賞カレンダーを追加</h1>
 <ol><li><a href="https://apps.apple.com/jp/app/scriptable/id1405459188">App StoreでScriptableをインストール</a>して、一度開きます。</li>
 <li>このページで <button id="copy">スクリプトをコピー</button> <span id="msg" role="status"></span>。コピーできない場合は<a href="Umalog.js">コードを開いて全文コピー</a>してください。</li>
-<li>Scriptable右上の「＋」を押し、編集欄に貼り付けます。タイトルを「うまログ重賞」に変更し、▶︎で初回実行。通信許可を求められたら許可します。中サイズのプレビューを閉じ「Done」で保存します。</li>
+<li>Scriptable右上の「＋」を押し、編集欄に貼り付けます。タイトルを「うまログ重賞」に変更し、▶︎で初回実行。通信許可を求められたら許可します。大サイズのプレビューを閉じ「Done」で保存します。</li>
 <li>ホーム画面を長押し →「編集」→「ウィジェットを追加」→「Scriptable」。横にスワイプして中サイズを選び、追加します。</li>
 <li>追加した枠を長押し →「ウィジェットを編集」→「Script」で「うまログ重賞」を選択。戻ると当月カレンダーと直近重賞が表示されます。</li>
 <li>小・大サイズも同じ手順で追加できます。使わないサイズは枠を長押しして削除できます。</li></ol>
-<h2>表示と更新</h2><p>丸は日本時間の今日、下線は重賞日です。小は今日以降の次の開催日、中は予定のある直近の月、大は当月の重賞を今日以降から表示します。「ほか○件」はタップしてカレンダーの各日で確認できます。当日分は結果が取り込まれるまで予定に残ります。</p>
+<h2>表示と更新</h2><p>丸は日本時間の今日、下線は重賞日です。小は今日以降の次の開催日、中は予定のある直近の月、大は全面月間カレンダーです。開催日のマスにG1・G2・G3、競馬場、重賞名を表示します。重賞のある曜日を広げ、長い名称は折り返し・略記します。「仮」は認可前、「申」は格付け申請中、同日の「+数字」は残り件数です。「ほか○件」はタップしてカレンダーの各日で確認できます。当日分は結果が取り込まれるまで予定に残ります。</p>
 <p>約6時間を目安に再取得し、日本時間の翌日にも更新を要求します。実際の更新時刻はiOSが決めます。通信に失敗すると保存版を使い、取得後24時間を超えた場合は「古い保存版」と表示します。「資料」は表示レースで最も古い情報確認日です。30日以上経過すると「要確認」を表示します。</p>
 <p>今すぐ再取得するにはScriptableで▶︎を押します。コード更新は再度コピーして既存スクリプトを置き換えます。重賞はうまログ同梱データの範囲です。JRAの変更はマスター更新・公開後に反映されます。個人収支や端末内で修正した予定は送信しません。</p>
 <a href="graded-races.json">公開重賞JSON</a>
@@ -15,7 +15,7 @@
 document.querySelector('#copy').onclick=async()=>{
  const message=document.querySelector('#msg');
  try{
-  const response=fetch('Umalog.js').then(r=>{if(!r.ok)throw Error();return r.blob()}).then(b=>new Blob([b],{type:'text/plain'}));
+  const response=fetch('Umalog.js',{cache:'reload'}).then(r=>{if(!r.ok)throw Error();return r.blob()}).then(b=>new Blob([b],{type:'text/plain'}));
   await navigator.clipboard.write([new ClipboardItem({'text/plain':response})]);
   message.textContent='コピーしました';
  }catch{message.textContent='下のコードリンクからコピーしてください'}
