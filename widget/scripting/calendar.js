@@ -49,3 +49,12 @@ export async function loadSchedule(now,store,download) {
       : {rows:[],note:'通信後に再実行してください'}
   }
 }
+
+// The header, weekday labels, gaps and optional footer consume space before the weeks.
+export function monthLayout(width,height,rows,hasFooter) {
+  const contentWidth=width-20, contentHeight=height-18
+  const header=28, weekdays=13, sectionGap=3, gap=1, footer=hasFooter?14:0
+  return {contentWidth,contentHeight,header,weekdays,sectionGap,gap,
+    cellWidth:(contentWidth-6*gap)/7,
+    cellHeight:(contentHeight-header-sectionGap-weekdays-rows*gap-footer)/rows}
+}

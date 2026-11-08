@@ -39,3 +39,13 @@ with zipfile.ZipFile(buf) as z:
  assert z.read('graded-races.json')==Path('widget/graded-races.json').read_bytes()
 `])
 })
+test('equal columns and week rows fill the grid with symmetric margins',async()=>{
+ const {monthLayout}=await import('../widget/scripting/calendar.js')
+ for(const width of [292,329,364])for(const height of [311,345,382])for(const n of [4,5,6])for(const footer of [false,true]){
+  const v=monthLayout(width,height,n,footer)
+  assert.ok(Math.abs(7*v.cellWidth+6*v.gap+20-width)<0.001)
+  const used=v.header+v.sectionGap+v.weekdays+n*(v.gap+v.cellHeight)+(footer?14:0)
+  assert.ok(Math.abs(used-v.contentHeight)<0.001)
+  assert.ok(v.cellHeight>=30 && v.contentWidth>=102+60+62+12)
+ }
+})
